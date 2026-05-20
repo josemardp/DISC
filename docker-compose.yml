@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Banco de Dados PostgreSQL para Produção/Staging
+  db:
+    image: postgres:15-alpine
+    container_name: psycho_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: psycho_password
+      POSTGRES_DB: psycho_database
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Backend (FastAPI Application)
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: psycho_backend
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql://postgres:psycho_password@db:5432/psycho_database
+      - SECRET_KEY=antigravity_secret_jwt_token_key_for_multidimensional_psycho
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=120
+      - GEMINI_API_KEY= # Insira sua chave de API aqui se necessário
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  # Frontend (Vite + Nginx Production)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: psycho_frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

@@ -1,0 +1,140 @@
+PLANO DE DESENVOLVIMENTO COMPLETO: SISTEMA DE ANÁLISE DE PERFIL COMPORTAMENTAL E PSICOLÓGICO CORPORATIVO
+Documento de Arquitetura de Software e Engenharia de Produto Sênior
+Foco: Inteligência Psicométrica, EdTech e Análise de Dados Multicamadas (Enterprise Level)
+
+===============================================================================
+1. ESCOPO DA PESQUISA E FUNDAMENTAÇÃO TEÓRICA
+===============================================================================
+
+Para garantir a validade estatística e a aceitação científica do sistema no mercado de capitais humanos e enterprise, a engenharia de dados e a psicometria operarão em simbiose. O sistema afasta-se de abordagens de relatórios fragmentados, adotando uma malha rígida de validação contínua.
+
+1.1 Validação Psicométrica e Validade Científica
+* Modelo Thurstoniano de Teoria de Resposta ao Item (TIRT): Diferente dos testes tradicionais baseados na Teoria Clássica dos Testes (TCT), as escolhas forçadas (ipsativas) serão modeladas sob a ótica de blocos de utilidades latentes comparadas par a par. O motor converterá as respostas em matrizes de preferências binárias implícitas (onde se D > I e I > S, deduz-se logicamente que D > S). Isso elimina o viés de dependência local dos dados ipsativos.
+* Consistência Interna (Alpha de Cronbach e Omega de McDonald): O backend executará análises contínuas de consistência interna sobre as amostras populacionais para calibrar os coeficientes de confiabilidade. O limiar crítico aceitável para produção é de Alpha >= 0.75 e Omega >= 0.80.
+* Análise Fatorial Confirmatória (CFA): Rodada periodicamente via scripts assíncronos de machine learning (Python/SciPy) na base de dados histórica para validar que os itens do questionário mantêm sua carga fatorial alinhada aos construtos teóricos primários.
+
+1.2 Cruzamento de Camadas Temporais: Natural vs. Adaptado
+* Perfil Natural (Essência / Âncora de Reação Rápida): Capturado na primeira fase do teste, onde instruções rígidas de tempo forçam o usuário a selecionar respostas de forma puramente intuitiva e espontânea. Representa o comportamento do indivíduo sob baixo controle consciente.
+* Perfil Adaptado (Ambiente / Âncora de Projeção de Cenário): Capturado na segunda fase do teste através do rebalanceamento dos mesmos vetores de adjetivos conceituais, porém sob uma instrução de ancoragem corporativa (ex: "Como você percebe que seu papel e cargo atuais exigem que você se comporte").
+* Cálculo de Distorção de Perfil e Gasto Energético: O motor do backend calcula a distância euclidiana entre o vetor resultante do Perfil Natural (VN) e o Adaptado (VA) para cada um dos eixos primários (D, I, S, C):
+  Fórmula: Distancia = Raiz_Quadrada((DN - DA)^2 + (IN - IA)^2 + (SN - SA)^2 + (CN - CA)^2)
+  Se a distância resultante violar o limiar crítico padrão (>= 2.5 desvios-padrão populacionais), o sistema sinaliza um indicador de Risco de Burnout por Sobreadaptação.
+
+1.3 Análise e Forças Sob Estresse
+A plataforma detectará o estado latente de estresse cruzando dados de respostas limítrofes (ex: alta pontuação simultânea em eixos opostos do DISC) e anomalias na telemetria de tela. Sob estresse, o algoritmo projeta a perda do controle analítico e mapeia o recuo do indivíduo para seus traços naturais mais primitivos e descontrolados.
+
+===============================================================================
+2. ARQUITETURA DO PRODUTO E FUNCIONALIDADES
+===============================================================================
+
+O sistema é concebido sob uma arquitetura de microsserviços segregados, operando nativamente em ambiente multilocatário (multi-tenant) com isolamento lógico de dados por esquema de banco de dados.
+
+2.1 Módulo do Usuário (Respondente)
+* Experiência de Teste Sem Fricção (Frictionless UX): Interface focada em acessibilidade, livre de elementos decorativos redundantes ou menus de navegação. Minimização radical da carga cognitiva de interface.
+* Interstício Atencional: Injeção de telas de micro-pausas animadas de 3 segundos nas transições de blocos metodológicos, redefinindo o set atencional do cérebro para evitar contaminação de respostas.
+* Painel de Autodesenvolvimento: Área logada liberada sob demanda do RH, exibindo gráficos de radar dinâmicos, barras de intensidade e trilhas de treinamento sugeridas de forma personalizada.
+
+2.2 Módulo da Empresa / RH
+* Engenharia de Cargos (Job Matching): Interface para o gestor ou BP (Business Partner) desenhar o perfil ideal para uma vaga. O sistema realiza o casamento de dados aplicando o algoritmo de Similaridade de Cossenos entre o vetor do candidato (VC) e o vetor do cargo (VJ):
+  Fórmula: Similarity = (VC . VJ) / (||VC|| * ||VJ||)
+* Analytics de Equipe (Team Building Matrix): Agregação volumétrica de dados que plota a equipe em um mapa térmico bidimensional. Permite ao gestor identificar instantaneamente polarizações nocivas, furos de competências ou redundâncias operacionais no time.
+
+2.3 Módulo Administrativo (Backoffice)
+* Painel de Calibração Psicométrica: Permite que administradores modifiquem os pesos dos adjetivos, adicionem itens experimentais para testes A/B de validação estatística e monitorem a curva de distribuição gaussiana da população global em tempo real.
+
+===============================================================================
+3. LÓGICA DO ALGORITMO E DA MATRIZ DE DADOS
+===============================================================================
+
+O diferencial do ecossistema reside na Análise de Matrizes Fundidas (Fused-Matrix Analysis), onde as três correntes psicológicas agem como ondas de interferência lógica contínua.
+
+3.1 Mecânica de Captação e Modelagem Relacional
+As perguntas são divididas estruturalmente em dois modelos de captação no banco de dados para evitar o viés de complacência:
+1. Bloco Ipsativo (DISC): Escolha forçada (+1 / -1), forçando o ordenamento linear de recursos finitos de pontuação.
+2. Escala Likert Corrigida (Spranger e Jung): Escala par de 1 a 6 (removendo explicitamente a opção neutra para mitigar a tendência central de resposta).
+
+Estrutura de Modelagem de Dados dos Itens (Banco de Dados Relacional):
+- Bloco 01 | Item 101 | "Comandante / Direto" | DISC | D (Dominância) | Ipsativa (+1 / -1) | Peso 1.00
+- Bloco 01 | Item 102 | "Persuasivo / Animado" | DISC | I (Influência) | Ipsativa (+1 / -1) | Peso 1.00
+- Bloco 01 | Item 103 | "Paciente / Ouvinte" | DISC | S (Estabilidade) | Ipsativa (+1 / -1) | Peso 1.00
+- Bloco 01 | Item 104 | "Preciso / Detalhista" | DISC | C (Conformidade) | Ipsativa (+1 / -1) | Peso 1.00
+- Bloco 02 | Item 201 | "Busco entender a lógica científica das coisas." | Spranger | Teórico | Likert (1 a 6) | Peso 1.20
+- Bloco 02 | Item 202 | "Maximizar o retorno financeiro é minha prioridade." | Spranger | Econômico | Likert (1 a 6) | Peso 1.00
+- Bloco 03 | Item 301 | "Prefiro refletir sozinho antes de externar uma ideia." | JUNG | Introversão (I) | Likert (1 a 6) | Peso 1.00
+- Bloco 03 | Item 302 | "Ganho energia interagindo ativamente com grupos." | JUNG | Extroversão (E) | Likert (1 a 6) | Peso 1.15
+
+3.2 Lógica de Fusão e Modulação de Intensidade
+Em vez de aninhar condicionais complexas que degradam a manutenção do software, o backend utiliza um Compilador Semântico estruturado no padrão de projeto Strategy. O motor de cálculo realiza as operações e seleciona chaves/identificadores imutáveis cadastrados em uma matriz indexada de âncoras semânticas.
+
+O Tipo Psicológico (Jung) e os Motivadores (Spranger) atuam como moduladores de intensidade e direção sobre os eixos puros do DISC:
+* DISC (Estilo de Ação): Define como a pessoa manifesta suas ações externas.
+* Motivadores (Impulso Interno): Define por que ela decide mover energia.
+* Tipos de Jung (Processamento Cognitivo): Define onde está o foco de recarga energética e absorção de dados.
+
+3.3 Algoritmo de Detecção de Conflitos de Construtos (Fricções Internas)
+O sistema calcula áreas de fricção psíquica ativa que degradam a produtividade de forma invisível:
+* Fricção de Execução (Baixo Alinhamento de Valor): Ativado quando (DISC.C >= 0.70) AND (Spranger.Regulador <= 0.35). O indivíduo segue regras operacionais à perfeição, mas não possui conexão interna com os valores que estruturaram o processo. Gerador de conformismo formal mecânico com alto índice de desmotivação crônica.
+* Fricção de Comunicação (Comunicador Exaurível): Ativado quando (DISC.I >= 0.68) AND (Jung.Attitude == "I"). O colaborador possui alta competência verbal e persuasiva (Alto I), porém a atividade esvazia rapidamente sua bateria de energia latente devido à sua estrutura psicológica orientada à Introversão. O sistema alerta o gestor de que o profissional demanda tempos de isolamento pós-reunião para manter a estabilidade produtiva.
+
+3.4 Pipeline de Normalização Populacional: Score-Z para Percentil
+Para neutralizar distorções geradas por tamanhos de escalas diferentes e o viés cultural de resposta de determinados nichos de mercado, as notas brutas (X) sofrem normalização matemática contínua contra a Média (mu) e o Desvio-Padrão (sigma) da base populacional:
+1. Cálculo de Score-Z: Z = (X - mu) / sigma
+2. Conversão para Percentil Dinâmico: Utilizando a Função de Distribuição Cumulativa de uma distribuição normal padrão (Phi(Z)), o backend projeta a nota exata em percentil de mercado (0 a 100): Percentil = Phi(Z) * 100
+
+===============================================================================
+4. ARQUITETURA TECNOLÓGICA SUGERIDA
+===============================================================================
+
+A infraestrutura foi desenhada para garantir isolamento de dados corporativos, alta escalabilidade vertical durante picos de avaliações em massa e processamento assíncrono acoplável à inteligência artificial.
+
+4.1 Stack de Tecnologia Recomendada
+* Frontend: React.js + TypeScript + TailwindCSS. Bibliotecas gráficas baseadas em manipulação de vetores SVG nativos (D3.js / Recharts) para plotagem hiper-precisa dos perfis.
+* Backend Core: Python (FastAPI) devido à velocidade de execução nativa, suporte assíncrono baseado em ASGI e ecossistema robusto para processamento matemático e estatístico (NumPy, SciPy).
+* Banco de Dados Principal: PostgreSQL. Armazenamento estruturado e relacional dos itens do teste, uso de esquemas dedicados para isolamento multi-tenant de clientes corporativos e suporte extensivo a consultas agregadas complexas.
+* Cache, Mensageria e Filas: Redis associado ao BullMQ (ou Celery) para garantir o enfileiramento assíncrono de relatórios textuais pesados e controle de persistência de sessão de resposta rápida.
+* Camada de Inteligência Artificial: Integração assíncrona via streaming com a API do Gemini (Google) atuando estritamente sob o escopo de um renderizador determinístico guiado por metadados de entrada.
+
+4.2 Telemetria Comportamental e Segurança do Input (Front-End)
+A interface captura metadados comportamentais invisíveis durante a execução do questionário, transformando as interações em variáveis de validação:
+* Time-to-First-Click (TTFC): Tempo em milissegundos até a primeira reação do usuário ao estímulo textual. Mede a identificação primária ou conflito com o termo.
+* Item Response Time (IRT): Tempo total gasto na tela do bloco.
+* Índice de Volatilidade de Resposta (RVI): Contador de modificações de escolha em um mesmo bloco.
+* Filtros de Triagem de Fraude: Se a latência média por bloco despencar abaixo de 800ms por item, o sistema emite um alerta de Linear Response Pattern (usuário respondendo aleatoriamente sem leitura). Caso o TTFC e o RVI sejam anormalmente altos em adjetivos atrelados a valores éticos ou de submissão, o motor insere um marcador de Social Desirability (Tentativa de manipulação teatral de imagem).
+
+===============================================================================
+5. PIPELINE DE INGESTÃO E ENGENHARIA DE PROMPT DA IA (LLM)
+===============================================================================
+
+Para eliminar os problemas de inconsistência e alucinação analítica comuns no uso ingênuo de LLMs, o sistema adota o padrão de Compilador Semântico de Prompt. O modelo de linguagem atua como uma função puramente interpretativa de tags rígidas injetadas por variáveis de backend imutáveis.
+
+5.1 Fluxo de Ingestão Assíncrona e Persistência Fracionada
+1. O usuário submete o teste; o backend processa os scores numéricos, resolve as zonas de fricção e gera um payload de metadados compacto.
+2. O payload é empurrado para uma fila do Redis.
+3. Um Worker consome a fila e monta uma estrutura de prompt enriquecida com instruções de sistema (System Instructions), diretrizes de tom de voz (Consultor Organizacional Sênior, corporativo, analítico e sem clichês motivacionais) e as restrições conceituais baseadas nas âncoras semânticas da aplicação.
+4. A API do Gemini responde em formato de streaming. À medida que os blocos de Markdown chegam, o Worker atualiza o banco e o servidor envia via WebSockets o percentual real de compilação do relatório para o cliente final.
+
+===============================================================================
+6. CRONOGRAMA DE EXECUÇÃO (ROADMAP DE CONSTRUÇÃO)
+===============================================================================
+
+O projeto está estruturado em uma janela de desenvolvimento de 12 Sprints quinzenais (6 meses de execução do zero à homologação de produção).
+
+* Sprints 1 a 3 | Fase 1: Core Psicométrico e Modelagem de Dados
+  - Setup da infraestrutura de banco de dados relacional e isolamento multilocatário.
+  - População e balanceamento de itens e adjetivos com suporte ao modelo TIRT.
+  - Codificação das equações matemáticas do motor: cálculo de Score-Z, percentis normatizados e distância euclidiana temporalizada.
+
+* Sprints 4 a 6 | Fase 2: Motor de Fusão e Pipeline de Mensageria
+  - Desenvolvimento das classes centrais do Motor de Fusão e matrizes de interferência cruzada.
+  - Implementação dos algoritmos de detecção de atrito e fricção de construtos.
+  - Criação e configuração das filas assíncronas em Redis + BullMQ.
+
+* Sprints 7 a 9 | Fase 3: Front-End Telemétrico e Fluxo Resiliente
+  - Codificação das interfaces limpas de teste utilizando React + TypeScript.
+  - Implementação técnica do mecanismo de resiliência anti-drop (IndexedDB + cache local + interceptador assíncrono com Debounce de 1500ms).
+  - Ativação dos capturadores invisíveis de telemetria comportamental (TTFC, IRT, RVI).
+
+* Sprints 10 a 12 | Fase 4: Integração de IA, Geração de Prompt e Homologação
+  - Acoplamento do Compilador Semântico com as rotas de streaming da API do Gemini.
+  - Criação do pipeline de higienização de strings para filtragem antialucinação e remoção de termos banidos.
+  - Homologação do sistema com grupos de teste para aferição estatística final e deploy em nuvem (AWS/GCP) utilizando containers Docker.
