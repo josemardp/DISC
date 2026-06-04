@@ -7,7 +7,7 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-import numpy as np
+
 
 from backend.app.config import settings
 from backend.app.database import engine, Base, get_db

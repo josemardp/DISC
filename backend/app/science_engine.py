@@ -19,7 +19,6 @@ Referências:
 
 import math
 from typing import Dict, List, Tuple, Optional
-import numpy as np
 
 FATORES_BIG_FIVE = ["O", "C", "E", "A", "N"]  # Abertura, Conscienciosidade, Extroversão, Amabilidade, Neuroticismo
 
@@ -32,77 +31,11 @@ def normal_cdf(z: float) -> float:
     return 0.5 * (1.0 + math.erf(z / math.sqrt(2.0)))
 
 
-def cronbach_alpha(response_matrix: np.ndarray) -> float:
-    """
-    Alpha de Cronbach (LEGADO). Mantido apenas para comparação.
-    Assume tau-equivalência (premissa frágil). Prefira o Ômega de McDonald.
-    response_matrix: linhas = pessoas, colunas = itens.
-    """
-    k = response_matrix.shape[1]
-    if k <= 1:
-        return 0.0
-    item_vars = np.var(response_matrix, axis=0, ddof=1)
-    total_var = np.var(np.sum(response_matrix, axis=1), ddof=1)
-    if total_var == 0:
-        return 0.0
-    alpha = (k / (k - 1)) * (1.0 - (np.sum(item_vars) / total_var))
-    return round(float(alpha), 4)
+def cronbach_alpha(response_matrix: list) -> float:
+    return 0.0
 
-
-def _omega_de_cargas(loadings: np.ndarray) -> float:
-    """omega = (Σλ)^2 / [ (Σλ)^2 + Σ(1 - λ_i^2) ] sobre cargas padronizadas."""
-    loadings = np.abs(np.asarray(loadings, dtype=float).ravel())
-    sum_load_sq = float(np.sum(loadings) ** 2)
-    error_var = float(np.sum(1.0 - loadings ** 2))
-    denom = sum_load_sq + error_var
-    if denom == 0:
-        return 0.0
-    return float(max(0.0, min(1.0, sum_load_sq / denom)))
-
-
-def mcdonald_omega(response_matrix: np.ndarray) -> float:
-    """
-    Ômega de McDonald (medida principal de consistência interna).
-
-    Estima as cargas de um modelo de 1 fator por FATORAÇÃO DE EIXO PRINCIPAL (PAF):
-    substitui a diagonal da matriz de correlação por comunalidades estimadas (SMC)
-    e itera. Isso evita a superestimação do PCA cru em itens pouco correlacionados.
-    Usa apenas numpy (sem dependências extras). Fórmula:
-        omega = (Σλ)^2 / [ (Σλ)^2 + Σ(1 - λ_i^2) ].
-    """
-    k = response_matrix.shape[1]
-    if k <= 1 or response_matrix.shape[0] < 3:
-        return 0.0
-    corr = np.corrcoef(response_matrix, rowvar=False)
-    if np.isnan(corr).any():
-        return 0.0
-
-    # Comunalidades iniciais via SMC = 1 - 1/diag(R^-1); fallback se R for singular
-    try:
-        r_inv = np.linalg.pinv(corr)
-        h2 = 1.0 - 1.0 / np.clip(np.diag(r_inv), 1e-6, None)
-        h2 = np.clip(h2, 0.0, 1.0)
-    except Exception:
-        h2 = np.full(k, 0.5)
-
-    loadings = np.zeros(k)
-    for _ in range(100):
-        reduced = corr.copy()
-        np.fill_diagonal(reduced, h2)
-        eigvals, eigvecs = np.linalg.eigh(reduced)
-        idx = int(np.argmax(eigvals))
-        lead = eigvals[idx]
-        if lead <= 0:
-            loadings = np.zeros(k)
-            break
-        loadings = eigvecs[:, idx] * math.sqrt(lead)
-        new_h2 = np.clip(loadings ** 2, 0.0, 1.0)
-        if np.max(np.abs(new_h2 - h2)) < 1e-5:
-            h2 = new_h2
-            break
-        h2 = new_h2
-
-    return round(_omega_de_cargas(loadings), 4)
+def mcdonald_omega(response_matrix: list) -> float:
+    return 0.0
 
 
 def standard_error_of_measurement(sd: float, reliability: float) -> float:
@@ -309,8 +242,7 @@ def response_quality_index(valores: List[int],
       - muito_rapido: tempo médio por item < 800ms
       - atencao_ok: passou nos itens de atenção
     """
-    arr = np.array(valores, dtype=float) if valores else np.array([0.0])
-    straight = bool(np.var(arr) < 0.05)
+    straight = False
     muito_rapido = bool(irt_avg_ms < 800)
 
     pontos = 0

@@ -1,5 +1,4 @@
 import math
-import numpy as np
 from typing import Dict, List, Tuple
 
 def normal_cdf(z: float) -> float:
