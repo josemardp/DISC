@@ -1,5 +1,10 @@
 import os
-import google.generativeai as genai
+try:
+    import google.generativeai as genai
+    GENAI_AVAILABLE = True
+except ImportError:
+    genai = None
+    GENAI_AVAILABLE = False
 from typing import Dict, Any, List
 from backend.app.config import settings
 
@@ -79,8 +84,8 @@ Escreva o relatório em Português do Brasil.
 """
 
     # 4. Execução da Chamada da API
-    if not settings.GEMINI_API_KEY:
-        print("GEMINI_API_KEY não configurada. Gerando relatório simulado de fallback...")
+    if not settings.GEMINI_API_KEY or not GENAI_AVAILABLE:
+        print("GEMINI_API_KEY não configurada ou API indisponível (ex: DLL bloqueada). Gerando relatório simulado de fallback...")
         return generate_mock_report(candidate_name, disc_natural, disc_adapted, burnout_risk, spranger_scores, jung_type, frictions_str)
 
     try:
