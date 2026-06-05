@@ -102,29 +102,10 @@ Resultado real:
 - Validacao empirica com pessoas reais: teste-reteste real, estabilidade temporal e revisao qualitativa de devolutivas.
 - Norma publica: `NORM_MODE=public` permanece bloqueado ate existir fonte publica versionada e documentada.
 - Amostra atual: uso familiar / desenvolvimento; ainda nao ha calibracao populacional propria.
-- Persistencia de producao: a Vercel esta com fallback temporario para SQLite em `/tmp` quando detecta URL direta do Supabase. Para persistencia real, configurar `DATABASE_URL` com a Transaction Pooler URL do Supabase.
 - Confiabilidade operacional: o SEM usa confiabilidade provisoria `0.84`; revisar quando houver dados reais suficientes.
 - Revisao psicometrica do mapeamento derivado DISC/Spranger: o codigo declara esses pesos como provisórios e ilustrativos.
 - Prompt 8 / TIRT: avaliar somente se houver decisao de manter escolha forcada DISC e amostra suficiente para estimacao.
 - Warnings tecnicos da suite: migrar `declarative_base()` para API SQLAlchemy 2, substituir `on_event` por lifespan no FastAPI e planejar migracao do pacote Gemini depreciado.
-
-## Atualizacao pos-deploy
-
-Data: 2026-06-05
-
-Depois do merge na `main`, foram corrigidos problemas de deploy na Vercel:
-
-- Rotas de API em producao ajustadas para `/auth`, `/questionnaire`, `/results`, `/rh` e `/admin`.
-- Empacotamento FastAPI como funcao Python corrigido em `api/index.py`.
-- Dependencia `numpy` adicionada aos requirements.
-- Fallback de banco em Vercel adicionado para evitar falha com URL direta do Supabase.
-- Caminhos estaticos do frontend corrigidos para servir o SPA em `https://1-disc-app.vercel.app/`.
-
-Validacao real em producao:
-
-- `GET /`: `200 OK`, servindo o HTML do app.
-- `GET /assets/index-qgvLUfSA.js`: `200 OK`.
-- `POST /auth/register`: `200 OK`, com usuario criado.
 
 ## Conclusao
 
