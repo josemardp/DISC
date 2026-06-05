@@ -22,6 +22,14 @@ from backend.app.gemini_service import generate_psychometric_report
 # Inicialização da API
 app = FastAPI(title=settings.PROJECT_NAME, version="1.0.0")
 
+# Middleware para normalizar caminhos na Vercel (remove /api se presente)
+@app.middleware("http")
+async def strip_api_prefix(request, call_next):
+    path = request.scope.get("path", "")
+    if path.startswith("/api"):
+        request.scope["path"] = path[4:]
+    return await call_next(request)
+
 # Configuração de CORS para permitir requisições do frontend React
 app.add_middleware(
     CORSMiddleware,
