@@ -65,8 +65,20 @@ export default function App() {
       });
 
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.detail || "Falha ao realizar login.");
+        let errMessage = "Falha ao realizar login.";
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const errData = await res.json();
+          errMessage = errData.detail || errMessage;
+        } else {
+          errMessage = `Erro no servidor (${res.status}): ${res.statusText || "Resposta inválida"}`;
+        }
+        throw new Error(errMessage);
+      }
+
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error(`Resposta do servidor inválida (${res.status})`);
       }
 
       const data = await res.json();
@@ -98,8 +110,20 @@ export default function App() {
       });
 
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.detail || "Erro ao realizar cadastro.");
+        let errMessage = "Erro ao realizar cadastro.";
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const errData = await res.json();
+          errMessage = errData.detail || errMessage;
+        } else {
+          errMessage = `Erro no servidor (${res.status}): ${res.statusText || "Resposta inválida"}`;
+        }
+        throw new Error(errMessage);
+      }
+
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error(`Resposta do servidor inválida (${res.status})`);
       }
 
       const data = await res.json();

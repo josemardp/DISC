@@ -56,7 +56,7 @@ class TestPsychometricMathEngine(unittest.TestCase):
         frictions = detect_frictions(disc_nat, spranger, jung)
         # Deve ter ativado a fricção de "Comunicador Exaurível" devido ao alto I natural e alta introversão do Jung
         frictions_names = [f["name"] for f in frictions]
-        self.assertIn("Comunicador Exaurível", frictions_names)
+        self.assertIn("Fricção de Comunicação (Comunicador Exaurível)", frictions_names)
 
 if __name__ == "__main__":
     unittest.main()

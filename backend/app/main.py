@@ -643,10 +643,26 @@ def get_global_statistics(current_user: User = Depends(get_current_user), db: Se
         
     scores_d = [r.natural_raw_d for r in results]
     
-    # Gera 20 bins para a distribuição gaussiana do eixo D
-    hist, bin_edges = np.histogram(scores_d, bins=15)
+    # Gera 15 bins para a distribuição gaussiana do eixo D em Python puro
+    min_val = min(scores_d)
+    max_val = max(scores_d)
+    if min_val == max_val:
+        min_val -= 1.0
+        max_val += 1.0
+    
+    bin_width = (max_val - min_val) / 15
+    bin_edges = [min_val + i * bin_width for i in range(16)]
+    hist = [0] * 15
+    for val in scores_d:
+        bin_idx = int((val - min_val) / bin_width)
+        if bin_idx >= 15:
+            bin_idx = 14
+        elif bin_idx < 0:
+            bin_idx = 0
+        hist[bin_idx] += 1
+
     gaussian_points = []
-    for i in range(len(hist)):
+    for i in range(15):
         gaussian_points.append({
             "x": round(float((bin_edges[i] + bin_edges[i+1]) / 2.0), 2),
             "y": int(hist[i])
@@ -660,14 +676,14 @@ def get_global_statistics(current_user: User = Depends(get_current_user), db: Se
     
     alpha_value = 0.0
     if len(user_ids) > 3 and len(item_ids) > 3:
-        matrix = np.zeros((len(user_ids), len(item_ids)))
+        matrix = [[0.0] * len(item_ids) for _ in range(len(user_ids))]
         user_to_idx = {uid: idx for idx, uid in enumerate(user_ids)}
         item_to_idx = {iid: idx for idx, iid in enumerate(item_ids)}
         
         for r in all_responses:
             uid = user_to_idx[r.respondent_id]
             iid = item_to_idx[r.item_id]
-            matrix[uid, iid] = r.value
+            matrix[uid][iid] = r.value
             
         alpha_value = calculate_cronbach_alpha(matrix)
 

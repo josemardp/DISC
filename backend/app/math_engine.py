@@ -123,21 +123,46 @@ def detect_frictions(disc_percentiles: Dict[str, float],
 
     return frictions
 
-def calculate_cronbach_alpha(response_matrix: np.ndarray) -> float:
+def calculate_cronbach_alpha(response_matrix) -> float:
     """
     Calcula o Alpha de Cronbach de uma matriz de respostas (amostras x itens).
     Fórmula: (k / (k-1)) * (1 - soma(var_itens) / var_total)
     """
-    k = response_matrix.shape[1]
-    if k <= 1:
+    try:
+        # Se for um numpy array, shape existe
+        n_samples = response_matrix.shape[0]
+        k = response_matrix.shape[1]
+    except AttributeError:
+        # Se for lista de listas
+        n_samples = len(response_matrix)
+        k = len(response_matrix[0]) if n_samples > 0 else 0
+
+    if k <= 1 or n_samples <= 1:
         return 0.0
-    
-    item_vars = np.var(response_matrix, axis=0, ddof=1)
-    total_scores = np.sum(response_matrix, axis=1)
-    total_var = np.var(total_scores, ddof=1)
-    
+
+    def variance(x: List[float]) -> float:
+        n = len(x)
+        if n <= 1:
+            return 0.0
+        mean = sum(x) / n
+        return sum((val - mean) ** 2 for val in x) / (n - 1)
+
+    # Variâncias dos itens (colunas)
+    item_vars = []
+    for col_idx in range(k):
+        col_vals = [response_matrix[row_idx][col_idx] for row_idx in range(n_samples)]
+        item_vars.append(variance(col_vals))
+
+    # Variância do escore total (soma das linhas)
+    total_scores = []
+    for row_idx in range(n_samples):
+        row_sum = sum(response_matrix[row_idx][col_idx] for col_idx in range(k))
+        total_scores.append(row_sum)
+
+    total_var = variance(total_scores)
+
     if total_var == 0:
         return 0.0
-        
-    alpha = (k / (k - 1)) * (1.0 - (np.sum(item_vars) / total_var))
+
+    alpha = (k / (k - 1)) * (1.0 - (sum(item_vars) / total_var))
     return round(float(alpha), 4)
