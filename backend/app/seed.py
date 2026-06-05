@@ -1,10 +1,8 @@
 import os
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
-from backend.app.database import engine, Base, SessionLocal
+import bcrypt
+from backend.app.database import engine, Base
 from backend.app.models import Tenant, User, QuestionnaireItem
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def seed_db(db: Session):
     # 1. Cria tabelas se não existirem
@@ -29,7 +27,7 @@ def seed_db(db: Session):
     for u_data in users_data:
         user = db.query(User).filter(User.email == u_data["email"]).first()
         if not user:
-            hashed_pwd = pwd_context.hash("123456")
+            hashed_pwd = bcrypt.hashpw("123456".encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
             user = User(
                 email=u_data["email"],
                 hashed_password=hashed_pwd,

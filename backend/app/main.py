@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, EmailStr
-from passlib.context import CryptContext
+import bcrypt
 from jose import JWTError, jwt
 
 
@@ -41,8 +41,15 @@ def startup_event():
     except Exception as e:
         print(f"Erro ao executar seed automático: {str(e)}")
 
-# Segurança / JWT
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+def verify_password(password: str, hashed: str) -> bool:
+    try:
+        return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
+    except Exception:
+        return False
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -130,7 +137,7 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
             db.refresh(tenant)
         tenant_id = tenant.id
         
-    hashed_pwd = pwd_context.hash(user_in.password)
+    hashed_pwd = hash_password(user_in.password)
     new_user = User(
         email=user_in.email,
         hashed_password=hashed_pwd,
@@ -158,7 +165,7 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
 @app.post("/auth/token", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == form_data.username).first()
-    if not user or not pwd_context.verify(form_data.password, user.hashed_password):
+    if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="E-mail ou senha incorretos.")
     
     company_name = None
