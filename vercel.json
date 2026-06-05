@@ -4,6 +4,26 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     {
+      "source": "/auth/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/questionnaire/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/results/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/rh/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/admin/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/index.py"
     },

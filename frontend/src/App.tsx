@@ -4,7 +4,7 @@ import Dashboards from "./components/Dashboards";
 import { Brain, LogOut, ArrowRight, UserPlus, LogIn, Sparkles } from "lucide-react";
 
 export default function App() {
-  const apiBaseUrl = import.meta.env.PROD ? "/api" : "http://127.0.0.1:8000";
+  const apiBaseUrl = import.meta.env.PROD ? "" : "http://127.0.0.1:8000";
 
   // Auth States
   const [token, setToken] = useState<string | null>(localStorage.getItem("psico_token"));
