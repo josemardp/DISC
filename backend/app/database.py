@@ -4,17 +4,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from backend.app.config import settings
 
-db_url = settings.DATABASE_URL or "sqlite:///./psicometrico.db"
+db_url = settings.DATABASE_URL
 if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
-# Se estiver rodando na Vercel e o banco for SQLite, usa a pasta /tmp para escrita.
-# O endpoint direto do Supabase (db.*.supabase.co) pode resolver para IPv6 em
-# ambientes serverless; use o pooler do Supabase para persistencia em producao.
-if os.getenv("VERCEL") and db_url and db_url.startswith("postgresql") and ".supabase.co" in db_url and "pooler.supabase.com" not in db_url:
-    print("DATABASE_URL Supabase direta detectada na Vercel; usando SQLite temporario em /tmp. Configure a URL pooler do Supabase para persistencia.")
-    db_url = "sqlite:////tmp/psicometrico.db"
-
+# Se estiver rodando na Vercel e o banco for SQLite, usa a pasta /tmp para escrita
 if os.getenv("VERCEL") and db_url and db_url.startswith("sqlite"):
     db_url = "sqlite:////tmp/psicometrico.db"
 
