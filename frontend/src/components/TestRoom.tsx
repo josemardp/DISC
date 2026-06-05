@@ -23,7 +23,7 @@ interface TestRoomProps {
 
 export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: TestRoomProps) {
   // Estados de Fluxo Geral
-  const [currentTest, setCurrentTest] = useState<"DISC" | "SPRANGER" | "JUNG">("DISC");
+  const [currentTest, setCurrentTest] = useState<"BIGFIVE" | "DISC" | "SPRANGER" | "JUNG">("BIGFIVE");
   const [currentPhase, setCurrentPhase] = useState<"natural" | "adaptado">("natural");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +61,15 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
         return res.json();
       })
       .then(data => {
-        setBlocks(data);
+        const preparedData = currentTest === "BIGFIVE"
+          ? data.flatMap((block: Block) =>
+              block.items.map((item) => ({
+                block_number: block.block_number,
+                items: [item]
+              }))
+            )
+          : data;
+        setBlocks(preparedData);
         setCurrentBlockIndex(0);
         
         // Tenta recuperar rascunho anterior para resiliência
@@ -71,15 +79,13 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
           // Avança para o primeiro bloco sem resposta
           if (currentTest === "DISC") {
             const answeredBlocks = new Set(draft.map((d: any) => d.block_number));
-            const firstUnanswered = data.findIndex((b: Block) => !answeredBlocks.has(b.block_number));
+            const firstUnanswered = preparedData.findIndex((b: Block) => !answeredBlocks.has(b.block_number));
             if (firstUnanswered !== -1) {
               setCurrentBlockIndex(firstUnanswered);
             }
           } else {
-            // Spranger e Jung são respondidos em escala linear de itens únicos
-            // data possui 24 blocos com 1 item cada
             const answeredItems = new Set(draft.map((d: any) => d.item_id));
-            const firstUnanswered = data.findIndex((b: Block) => !answeredItems.has(b.items[0].id));
+            const firstUnanswered = preparedData.findIndex((b: Block) => !answeredItems.has(b.items[0].id));
             if (firstUnanswered !== -1) {
               setCurrentBlockIndex(firstUnanswered);
             }
@@ -89,7 +95,7 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
         }
         
         telemetryTracker.clear();
-        telemetryTracker.startBlock(data[0]?.block_number || 1);
+        telemetryTracker.startBlock(preparedData[0]?.block_number || 1);
         setLoading(false);
       })
       .catch(err => {
@@ -117,7 +123,7 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
   }, [showPause]);
 
   // Função para acionar transição com micro-pausa atencional
-  const triggerCerebralPause = (msg: string, nextTest: "DISC" | "SPRANGER" | "JUNG", nextPhase: "natural" | "adaptado") => {
+  const triggerCerebralPause = (msg: string, nextTest: "BIGFIVE" | "DISC" | "SPRANGER" | "JUNG", nextPhase: "natural" | "adaptado") => {
     setShowPause(true);
     setPauseTimer(3);
     setPauseMessage(msg);
@@ -182,7 +188,7 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
       setDiscSelection({ most: null, least: null });
 
     } else {
-      // Spranger ou Jung (1 item por bloco/tela para visual clean)
+      // Big Five, Spranger ou Jung em escala Likert
       const item = activeBlock.items[0];
       const rating = likertSelections[item.id];
       if (rating === undefined) {
@@ -263,6 +269,8 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
           "JUNG",
           "natural"
         );
+      } else if (currentTest === "BIGFIVE") {
+        onTestComplete();
       } else {
         // Fim de todos os testes!
         onTestComplete();
@@ -314,7 +322,7 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">Avaliação Psicométrica Integrada</h1>
-              <p className="text-sm text-brand-300">DISC + Spranger + Jung</p>
+              <p className="text-sm text-brand-300">Big Five + camadas derivadas</p>
             </div>
           </div>
 
@@ -406,6 +414,9 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
         {currentTest === "JUNG" && (
           <p>⚙️ Avalie o seu estilo cognitivo e preferência na afirmação abaixo de 1 a 6 (1 = Discordo Totalmente, 6 = Concordo Totalmente).</p>
         )}
+        {currentTest === "BIGFIVE" && (
+          <p>Avalie cada afirmação de 1 a 5 (1 = Muito imprecisa, 5 = Muito precisa).</p>
+        )}
       </div>
 
       {/* Bloco de Questões */}
@@ -459,16 +470,18 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
               </div>
             </div>
           ) : (
-            /* Render de Escala Likert para Spranger e Jung (Exibição Unitária) */
+            /* Render de Escala Likert */
             <div className="flex flex-col items-center justify-center gap-8 py-4">
               <h2 className="text-xl font-medium text-white text-center leading-relaxed px-4">
                 "{activeBlock.items[0]?.item_text}"
               </h2>
 
-              {/* Círculos da Escala 1 a 6 */}
+              {/* Círculos da Escala Likert */}
               <div className="flex items-center gap-2 sm:gap-4 mt-4">
-                <span className="text-xs text-red-400 uppercase font-semibold tracking-wider mr-2 hidden sm:block">Discordo</span>
-                {[1, 2, 3, 4, 5, 6].map((score) => {
+                <span className="text-xs text-red-400 uppercase font-semibold tracking-wider mr-2 hidden sm:block">
+                  {currentTest === "BIGFIVE" ? "Imprecisa" : "Discordo"}
+                </span>
+                {(currentTest === "BIGFIVE" ? [1, 2, 3, 4, 5] : [1, 2, 3, 4, 5, 6]).map((score) => {
                   const itemId = activeBlock.items[0]?.id;
                   const isSelected = likertSelections[itemId] === score;
                   return (
@@ -485,11 +498,13 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
                     </button>
                   );
                 })}
-                <span className="text-xs text-brand-300 uppercase font-semibold tracking-wider ml-2 hidden sm:block">Concordo</span>
+                <span className="text-xs text-brand-300 uppercase font-semibold tracking-wider ml-2 hidden sm:block">
+                  {currentTest === "BIGFIVE" ? "Precisa" : "Concordo"}
+                </span>
               </div>
               <div className="flex justify-between w-full px-8 sm:hidden text-[10px] text-gray-400 uppercase tracking-widest font-semibold mt-2">
-                <span>Discordo</span>
-                <span>Concordo</span>
+                <span>{currentTest === "BIGFIVE" ? "Imprecisa" : "Discordo"}</span>
+                <span>{currentTest === "BIGFIVE" ? "Precisa" : "Concordo"}</span>
               </div>
             </div>
           )}

@@ -20,6 +20,9 @@ class Settings:
     
     # Chave Gemini
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+
+    # Normas psicométricas: intra usa a régua interna do próprio usuário.
+    NORM_MODE: str = os.getenv("NORM_MODE", "intra").lower()
     
     # JWT Auth
     SECRET_KEY: str = os.getenv("SECRET_KEY", "SUPER_SECRET_KEY_DISC_12345")

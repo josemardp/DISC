@@ -272,6 +272,30 @@ export default function Dashboards({ token, apiBaseUrl, userRole }: DashboardsPr
     ];
   };
 
+  const getBigFiveFactors = () => {
+    if (!selfData?.bigfive?.factors) return [];
+    const order = ["O", "C", "E", "A", "N"];
+    return order
+      .filter((key) => selfData.bigfive.factors[key])
+      .map((key) => ({ key, ...selfData.bigfive.factors[key] }));
+  };
+
+  const getQualityColor = (label: string) => {
+    if (label === "baixa") return "bg-red-500/20 text-red-300 border-red-500/30";
+    if (label === "media") return "bg-amber-500/20 text-amber-300 border-amber-500/30";
+    return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
+  };
+
+  const getJungAxes = () => {
+    const axes = selfData?.jung_continuo?.eixos || {};
+    return Object.entries(axes).map(([key, value]: any) => ({
+      key,
+      leftLabel: Object.keys(value).find((k) => k !== "borderline") || "",
+      rightLabel: Object.keys(value).filter((k) => k !== "borderline")[1] || "",
+      ...value
+    }));
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Abas Superiores de Controle de Dashboard */}
@@ -339,7 +363,100 @@ export default function Dashboards({ token, apiBaseUrl, userRole }: DashboardsPr
           {/* ==============================================================================
               TAB 1: MEU PERFIL (AUTODESENVOLVIMENTO)
               ============================================================================== */}
-          {activeTab === "self" && selfData && (
+          {activeTab === "self" && selfData?.bigfive && (
+            <div className="grid grid-cols-12 gap-6">
+              <div className="col-span-12 glass-premium p-5 sm:p-6 rounded-3xl">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-1">Big Five</h3>
+                    <p className="text-xs text-gray-400">{selfData.bigfive.norm_label}</p>
+                  </div>
+                  <span className={`w-fit px-3 py-1 rounded-full text-xs font-bold border ${getQualityColor(selfData.quality_label)}`}>
+                    Qualidade {selfData.quality_label || "sem dado"}
+                  </span>
+                </div>
+
+                <div className="space-y-5">
+                  {getBigFiveFactors().map((factor: any) => (
+                    <div key={factor.key} className="grid grid-cols-12 gap-3 items-center">
+                      <div className="col-span-12 sm:col-span-3">
+                        <div className="text-sm font-semibold text-white">{factor.label}</div>
+                        <div className="text-[11px] text-gray-500">{factor.key} bruto {factor.raw}</div>
+                      </div>
+                      <div className="col-span-12 sm:col-span-7">
+                        <div className="relative h-4 rounded-full bg-white/5 overflow-hidden">
+                          <div className="absolute top-0 h-full bg-white/10" style={{ left: `${factor.ci_low}%`, width: `${Math.max(1, factor.ci_high - factor.ci_low)}%` }} />
+                          <div className="h-full rounded-full bg-gradient-to-r from-brand-500 to-sky-400" style={{ width: `${factor.percentile}%` }} />
+                        </div>
+                        <div className="mt-1 flex justify-between text-[10px] text-gray-500">
+                          <span>IC {factor.ci_low}</span>
+                          <span>{factor.ci_high}</span>
+                        </div>
+                      </div>
+                      <div className="col-span-12 sm:col-span-2 text-left sm:text-right text-xl font-black text-brand-300">
+                        {Math.round(factor.percentile)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="col-span-12 lg:col-span-5 glass p-5 sm:p-6 rounded-3xl">
+                <div className="flex items-center justify-between gap-4 mb-5">
+                  <div>
+                    <h3 className="text-base font-bold text-white">Jung Contínuo</h3>
+                    <p className="text-[11px] text-gray-400">Resumo derivado dos fatores Big Five.</p>
+                  </div>
+                  <div className="bg-brand-500/20 text-brand-300 font-bold border border-brand-500/30 text-2xl px-4 py-2 rounded-2xl">
+                    {selfData.jung_continuo?.tipo_resumo}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {getJungAxes().map((axis: any) => (
+                    <div key={axis.key}>
+                      <div className="flex justify-between gap-3 text-xs font-semibold">
+                        <span className="text-gray-300">{axis.leftLabel}: {axis[axis.leftLabel]}%</span>
+                        <span className="text-gray-400">{axis.rightLabel}: {axis[axis.rightLabel]}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden flex mt-1.5">
+                        <div className="h-full bg-brand-500" style={{ width: `${axis[axis.leftLabel]}%` }} />
+                        <div className="h-full bg-sky-400" style={{ width: `${axis[axis.rightLabel]}%` }} />
+                      </div>
+                      {axis.borderline && <div className="mt-1 text-[10px] text-amber-300">Eixo em zona borderline.</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="col-span-12 lg:col-span-3 glass p-5 sm:p-6 rounded-3xl flex flex-col justify-between">
+                <div>
+                  <h3 className="text-base font-bold text-white">Estabilidade Emocional</h3>
+                  <p className="text-[11px] text-gray-400">Inverso do Neuroticismo.</p>
+                </div>
+                <div className="py-8 text-center">
+                  <div className="text-5xl font-black text-emerald-300">{Math.round(selfData.jung_continuo?.estabilidade_emocional || 0)}</div>
+                  <div className="mt-3 h-2 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-400" style={{ width: `${selfData.jung_continuo?.estabilidade_emocional || 0}%` }} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-span-12 lg:col-span-4 glass p-5 sm:p-6 rounded-3xl">
+                <h3 className="text-base font-bold text-white mb-4">DISC Derivado</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {Object.entries(selfData.disc.natural).map(([key, value]: any) => (
+                    <div key={key} className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                      <div className="text-xs text-gray-400">{key}</div>
+                      <div className="text-2xl font-black text-white">{Math.round(value)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "self" && selfData && !selfData.bigfive && (
             <div className="grid grid-cols-12 gap-6">
               
               {/* Radar DISC */}
@@ -712,8 +829,12 @@ export default function Dashboards({ token, apiBaseUrl, userRole }: DashboardsPr
 
               <div className="col-span-12 sm:col-span-6 glass p-6 rounded-3xl flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-gray-400 uppercase tracking-wider">Consistência Alpha de Cronbach</span>
-                  <p className="text-4xl font-black text-emerald-400 mt-1">{adminStats.cronbach_alpha}</p>
+                  <span className="text-xs text-gray-400 uppercase tracking-wider">Ômega Big Five Médio</span>
+                  <p className="text-4xl font-black text-emerald-400 mt-1">
+                    {adminStats.omega_bigfive
+                      ? (Object.values(adminStats.omega_bigfive).reduce((sum: number, value: any) => sum + Number(value || 0), 0) / 5).toFixed(2)
+                      : "0.00"}
+                  </p>
                 </div>
                 <div className="p-4 bg-emerald-500/20 text-emerald-300 rounded-2xl">
                   <TrendingUp className="w-8 h-8" />
