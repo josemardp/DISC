@@ -18,7 +18,11 @@ def generate_psychometric_report(
     jung_type: str,
     jung_scores: Dict[str, float],
     frictions: List[Dict[str, Any]],
-    telemetry_alerts: List[str]
+    telemetry_alerts: List[str],
+    bigfive_factors: Dict[str, Dict[str, float]] = None,
+    jung_continuo: Dict[str, Any] = None,
+    emotional_stability: float = None,
+    quality_label: str = None
 ) -> str:
     """
     Chama a API do Gemini 1.5 Flash para gerar um relatório psicométrico narrativo e analítico estruturado.
@@ -39,29 +43,66 @@ def generate_psychometric_report(
     else:
         telemetry_str = "Telemetria de preenchimento normal (sem sinais de preenchimento automatizado ou inconsistências temporais)."
 
+    bigfive_factors = bigfive_factors or {}
+    jung_continuo = jung_continuo or {}
+    emotional_stability = emotional_stability if emotional_stability is not None else jung_continuo.get("estabilidade_emocional")
+    quality_label = quality_label or "sem dados suficientes"
+
+    factor_names = {
+        "O": "Abertura",
+        "C": "Conscienciosidade",
+        "E": "Extroversão",
+        "A": "Amabilidade",
+        "N": "Neuroticismo",
+    }
+    if bigfive_factors:
+        bigfive_str = "\n".join([
+            (
+                f"- {factor_names.get(key, key)} ({key}): escore={value.get('percentile', 'sem dados suficientes')}, "
+                f"IC95%=[{value.get('ci_low', 'sem dados suficientes')}, {value.get('ci_high', 'sem dados suficientes')}], "
+                f"bruto={value.get('raw', 'sem dados suficientes')}"
+            )
+            for key, value in bigfive_factors.items()
+        ])
+    else:
+        bigfive_str = "- sem dados suficientes"
+
+    jung_continuo_str = jung_continuo if jung_continuo else {
+        "tipo_resumo": jung_type or "sem dados suficientes",
+        "eixos": jung_scores or "sem dados suficientes",
+        "estabilidade_emocional": emotional_stability or "sem dados suficientes",
+    }
+
     # 3. Construção do Prompt Técnico
     prompt = f"""
-Você é um Consultor Organizacional e Psicometrista Sênior. Sua tarefa é compilar um Relatório Corporativo de Alta Performance com base nos metadados psicométricos e de telemetria abaixo:
+Você é um consultor psicométrico sênior. Gere um laudo técnico em Português do Brasil usando apenas os dados fornecidos; se faltar dado, diga "sem dados suficientes".
+
+REGRAS OBRIGATÓRIAS ANTI-BARNUM:
+- Use linguagem de incerteza: "tende a", "indica", "sugere", "é compatível com". Nunca escreva "você é", "o avaliado é" ou afirmações identitárias absolutas.
+- Proíba frases genéricas que sirvam para qualquer pessoa, como "tem grande potencial", "busca equilíbrio", "às vezes é racional e às vezes emocional", "pode melhorar sob pressão" ou equivalentes sem vínculo direto com números.
+- Cada interpretação precisa citar pelo menos um dado fornecido, especialmente escores e intervalos de confiança dos 5 fatores.
+- Jung é apenas uma narrativa derivada do Big Five; nunca trate Jung como medida independente, diagnóstico ou tipo fixo.
+- Inclua exatamente a seção "### Limites desta avaliação" informando que não é diagnóstico, não é imutável e rastreios são triagem.
+- Não invente dados, referências, causas clínicas, histórico pessoal, traços não medidos ou recomendações sem base nos dados abaixo.
 
 DADOS DO AVALIADO:
 - Nome: {candidate_name}
 
-RESULTADOS DISC (Percentis):
-- Perfil Natural (Essência): D={disc_natural.get('D', 0)}%, I={disc_natural.get('I', 0)}%, S={disc_natural.get('S', 0)}%, C={disc_natural.get('C', 0)}%
-- Perfil Adaptado (Ambiente): D={disc_adapted.get('D', 0)}%, I={disc_adapted.get('I', 0)}%, S={disc_adapted.get('S', 0)}%, C={disc_adapted.get('C', 0)}%
-- Gasto Energético (Distância Euclidiana): {burnout_distance} (Risco de Burnout: {burnout_risk})
+BIG FIVE MEDIDO:
+{bigfive_str}
 
-RESULTADOS SPRANGER (Percentis dos Motivadores):
-- Teórico: {spranger_scores.get('teorico', 0)}%
-- Utilitário/Econômico: {spranger_scores.get('economico', 0)}%
-- Estético: {spranger_scores.get('estetico', 0)}%
-- Social: {spranger_scores.get('social', 0)}%
-- Individualista/Político: {spranger_scores.get('individualista', 0)}%
-- Regulador/Tradicional: {spranger_scores.get('regulador', 0)}%
+JUNG CONTÍNUO DERIVADO DO BIG FIVE (apenas narrativa):
+{jung_continuo_str}
 
-RESULTADOS JUNG (Tipo Psicológico):
-- Tipo Dominante: {jung_type}
-- Scores dos Polos: E={jung_scores.get('E', 0)}, I={jung_scores.get('I', 0)}, S={jung_scores.get('S', 0)}, N={jung_scores.get('N', 0)}, T={jung_scores.get('T', 0)}, F={jung_scores.get('F', 0)}, J={jung_scores.get('J', 0)}, P={jung_scores.get('P', 0)}
+ESTABILIDADE EMOCIONAL:
+- {emotional_stability if emotional_stability is not None else "sem dados suficientes"}
+
+QUALIDADE DA RESPOSTA:
+- {quality_label}
+
+DISC E SPRANGER DERIVADOS DO BIG FIVE (camadas de apresentação, não medidas independentes):
+- DISC: D={disc_natural.get('D', 'sem dados suficientes')}, I={disc_natural.get('I', 'sem dados suficientes')}, S={disc_natural.get('S', 'sem dados suficientes')}, C={disc_natural.get('C', 'sem dados suficientes')}
+- Spranger: {spranger_scores}
 
 ZONAS DE FRICÇÃO DE CONSTRUTOS DETECTADAS:
 {frictions_str}
@@ -71,22 +112,25 @@ SINAIS TELEMÉTRICOS DE SESSÃO:
 
 DIRETRIZES DE FORMATO E TOM:
 - Use Markdown limpo para a estrutura.
-- O tom deve ser estritamente analítico, clínico, corporativo, construtivo e livre de clichês motivacionais ou de autoajuda.
+- O tom deve ser analítico, construtivo e livre de clichês motivacionais ou de autoajuda.
 - Estruture o relatório exatamente nas seguintes seções:
-  1. ### Resumo Executivo de Perfil
-  2. ### Dinâmica Comportamental (DISC Natural vs Adaptado e Risco de Burnout)
-  3. ### Direcionadores de Ação (Motivadores de Spranger)
-  4. ### Estilo Cognitivo e Adaptação ao Trabalho (Jung)
-  5. ### Análise de Zonas de Fricção e Telemetria Comportamental
-  6. ### Recomendações de Gestão, Liderança e Plano de Autodesenvolvimento
-
-Escreva o relatório em Português do Brasil.
+  1. ### Resumo Executivo com Incerteza
+  2. ### Big Five medido com intervalos de confiança
+  3. ### Jung contínuo derivado
+  4. ### Estabilidade emocional e qualidade da resposta
+  5. ### Camadas derivadas DISC e Spranger
+  6. ### Recomendações baseadas nos dados
+  7. ### Limites desta avaliação
 """
 
     # 4. Execução da Chamada da API
     if not settings.GEMINI_API_KEY or not GENAI_AVAILABLE:
         print("GEMINI_API_KEY não configurada ou API indisponível (ex: DLL bloqueada). Gerando relatório simulado de fallback...")
-        return generate_mock_report(candidate_name, disc_natural, disc_adapted, burnout_risk, spranger_scores, jung_type, frictions_str)
+        return generate_mock_report(
+            candidate_name, disc_natural, disc_adapted, burnout_risk,
+            spranger_scores, jung_type, frictions_str, bigfive_factors,
+            jung_continuo, emotional_stability, quality_label
+        )
 
     try:
         genai.configure(api_key=settings.GEMINI_API_KEY)
@@ -100,7 +144,11 @@ Escreva o relatório em Português do Brasil.
         return response.text
     except Exception as e:
         print(f"Erro ao chamar a API do Gemini: {str(e)}. Retornando mock...")
-        return generate_mock_report(candidate_name, disc_natural, disc_adapted, burnout_risk, spranger_scores, jung_type, frictions_str)
+        return generate_mock_report(
+            candidate_name, disc_natural, disc_adapted, burnout_risk,
+            spranger_scores, jung_type, frictions_str, bigfive_factors,
+            jung_continuo, emotional_stability, quality_label
+        )
 
 def generate_mock_report(
     candidate_name: str,
@@ -109,57 +157,63 @@ def generate_mock_report(
     burnout_risk: str,
     spranger: Dict[str, float],
     jung_type: str,
-    frictions_str: str
+    frictions_str: str,
+    bigfive_factors: Dict[str, Dict[str, float]] = None,
+    jung_continuo: Dict[str, Any] = None,
+    emotional_stability: float = None,
+    quality_label: str = None
 ) -> str:
     """
     Relatório de fallback realista gerado localmente na ausência de chave de API.
     """
     
-    d_nat, i_nat, s_nat, c_nat = disc_nat.get('D', 0), disc_nat.get('I', 0), disc_nat.get('S', 0), disc_nat.get('C', 0)
-    d_ada, i_ada, s_ada, c_ada = disc_ada.get('D', 0), disc_ada.get('I', 0), disc_ada.get('S', 0), disc_ada.get('C', 0)
-    
-    # Determina o estilo principal do DISC Natural
-    style_map = {"D": d_nat, "I": i_nat, "S": s_nat, "C": c_nat}
-    dominant_disc = max(style_map, key=style_map.get)
-    disc_names = {"D": "Dominante", "I": "Influenciador", "S": "Estável", "C": "Conforme"}
-    
-    # Determina o principal motivador de Spranger
-    dominant_spranger = max(spranger, key=spranger.get)
-    spranger_names = {
-        "teorico": "Teórico (Orientado ao Conhecimento)",
-        "economico": "Utilitário/Econômico (Orientado a Resultados)",
-        "estetico": "Estético (Orientado à Criatividade/Forma)",
-        "social": "Social (Orientado a Pessoas/Empatia)",
-        "individualista": "Individualista/Político (Orientado a Status/Liderança)",
-        "regulador": "Regulador (Orientado a Regras/Processos)"
+    bigfive_factors = bigfive_factors or {}
+    jung_continuo = jung_continuo or {}
+    emotional_stability = emotional_stability if emotional_stability is not None else jung_continuo.get("estabilidade_emocional", "sem dados suficientes")
+    quality_label = quality_label or "sem dados suficientes"
+
+    factor_names = {
+        "O": "Abertura",
+        "C": "Conscienciosidade",
+        "E": "Extroversão",
+        "A": "Amabilidade",
+        "N": "Neuroticismo",
     }
-    
-    return f"""### Resumo Executivo de Perfil
-O avaliado **{candidate_name}** exibe um perfil comportamental focado no eixo **{disc_names[dominant_disc]}** em seu estado natural. Sua energia interna é impulsionada predominantemente pelo motivador **{spranger_names[dominant_spranger]}**, e sua cognição opera sob o arranjo Junguiano **{jung_type}**. Esta combinação sugere um profissional com capacidade de alinhar traços comportamentais específicos com processos lógicos internos estruturados.
+    factor_lines = []
+    for key in ["O", "C", "E", "A", "N"]:
+        factor = bigfive_factors.get(key, {})
+        factor_lines.append(
+            f"- **{factor_names[key]} ({key})**: escore {factor.get('percentile', 'sem dados suficientes')}, "
+            f"IC95% [{factor.get('ci_low', 'sem dados suficientes')}, {factor.get('ci_high', 'sem dados suficientes')}], "
+            f"bruto {factor.get('raw', 'sem dados suficientes')}."
+        )
+    factor_text = "\n".join(factor_lines)
 
-### Dinâmica Comportamental (DISC Natural vs Adaptado e Risco de Burnout)
-* **Perfil Natural (Essência)**: D={d_nat}%, I={i_nat}%, S={s_nat}%, C={c_nat}%
-* **Perfil Adaptado (Ambiente)**: D={d_ada}%, I={i_ada}%, S={s_ada}%, C={c_ada}%
-* **Análise de Sobreadaptação**: O nível de afastamento entre os vetores de ação natural e adaptada indica um **Risco de Burnout {burnout_risk.upper()}**. 
-* *Nota*: O avaliado realiza adaptações em seu comportamento para atender às expectativas de seu cargo atual, gerando um esforço cognitivo compatível com o limiar mapeado.
+    tipo_resumo = jung_continuo.get("tipo_resumo", jung_type or "sem dados suficientes")
+    eixos = jung_continuo.get("eixos", {})
 
-### Direcionadores de Ação (Motivadores de Spranger)
-O perfil de motivadores aponta que as decisões operacionais do avaliado são energizadas por prioridades claras:
-1. **{spranger_names[dominant_spranger]}**: Este é o principal drive motivacional. A pessoa direciona seus recursos cognitivos prioritariamente para satisfazer este construto de valores.
-2. Os motivadores secundários indicam como ela balanceia a busca por resultados econômicos contra a conformidade com regras organizacionais.
+    return f"""### Resumo Executivo com Incerteza
+Os dados de **{candidate_name}** indicam um perfil Big Five descrito por escores com incerteza explícita. A leitura tende a ser mais útil quando cada fator é interpretado junto do seu intervalo de confiança e da qualidade da resposta, registrada como **{quality_label}**. Quando algum dado estiver ausente, a conclusão correspondente deve ser tratada como sem dados suficientes.
 
-### Estilo Cognitivo e Adaptação ao Trabalho (Jung)
-Classificado sob a tipologia **{jung_type}**:
-* O avaliado processa as informações corporativas de acordo com as preferências da sua tipologia, exibindo tendências claras de foco atencional (onde recarrega sua bateria mental) e tomada de decisão lógica/emocional estruturada.
+### Big Five medido com intervalos de confiança
+{factor_text}
 
-### Análise de Zonas de Fricção e Telemetria Comportamental
-**Zonas de Fricção Ativas**:
-{frictions_str}
+Esses números sugerem tendências relativas dentro da régua disponível, mas não autorizam afirmações fixas de identidade. Interpretações devem permanecer vinculadas aos escores e aos IC95% listados acima.
 
-* **Análise Telemétrica**: Os metadados telemétricos indicam consistência de leitura. Não foram disparados gatilhos críticos de preenchimento mecânico rápido, sugerindo confiabilidade e legitimidade na resposta aos itens psicométricos apresentados.
+### Jung contínuo derivado
+O resumo Jung **{tipo_resumo}** deve ser lido apenas como narrativa derivada do Big Five, não como medida independente. Eixos contínuos disponíveis: {eixos if eixos else "sem dados suficientes"}.
 
-### Recomendações de Gestão, Liderança e Plano de Autodesenvolvimento
-* **Para Gestores**: Oferecer autonomia de execução técnica condizente com seus principais motivadores e prover feedbacks estruturados.
-* **Cenário de Estresse**: Em situações de alta pressão ou fadiga extrema, o avaliado tende a recuar para seu perfil Natural (**{disc_names[dominant_disc]}**), reduzindo o esforço adaptado.
-* **Plano de Desenvolvimento (PDI)**: Trabalhar o alinhamento de valores com processos formais e o autocuidado energético para evitar picos de sobreadaptação ao ambiente organizacional.
+### Estabilidade emocional e qualidade da resposta
+A Estabilidade Emocional derivada indica **{emotional_stability}**. A qualidade da resposta foi classificada como **{quality_label}**, o que deve modular a confiança prática nas interpretações.
+
+### Camadas derivadas DISC e Spranger
+DISC derivado: D={disc_nat.get('D', 'sem dados suficientes')}, I={disc_nat.get('I', 'sem dados suficientes')}, S={disc_nat.get('S', 'sem dados suficientes')}, C={disc_nat.get('C', 'sem dados suficientes')}. Spranger derivado: {spranger if spranger else "sem dados suficientes"}. Essas camadas são apresentações derivadas, não medidas independentes.
+
+### Recomendações baseadas nos dados
+- Priorize conversas de devolutiva que citem os fatores com maior distância numérica e seus IC95%, evitando rótulos definitivos.
+- Use o resumo Jung apenas para organizar uma narrativa de preferência, sempre verificando se os eixos estão em zona borderline.
+- Se a qualidade da resposta for média ou baixa, trate o laudo como ponto inicial de conversa e considere reaplicação em contexto mais controlado.
+
+### Limites desta avaliação
+Esta avaliação não é diagnóstico clínico, não descreve características imutáveis e não deve ser usada isoladamente para decisões de alto impacto. Os rastreios e camadas derivadas funcionam como triagem e organização narrativa; quando faltarem dados, a conclusão correta é sem dados suficientes.
 """

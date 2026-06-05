@@ -20,6 +20,8 @@ Referências:
 import math
 from typing import Dict, List, Tuple, Optional
 
+import numpy as np
+
 FATORES_BIG_FIVE = ["O", "C", "E", "A", "N"]  # Abertura, Conscienciosidade, Extroversão, Amabilidade, Neuroticismo
 
 # =====================================================================
@@ -35,7 +37,37 @@ def cronbach_alpha(response_matrix: list) -> float:
     return 0.0
 
 def mcdonald_omega(response_matrix: list) -> float:
-    return 0.0
+    """
+    Estima omega total por um modelo unifatorial aproximado via primeira
+    componente principal sobre a matriz de correlações dos itens.
+    """
+    matrix = np.asarray(response_matrix, dtype=float)
+    if matrix.ndim != 2 or matrix.shape[0] < 2 or matrix.shape[1] < 2:
+        return 0.0
+
+    variances = np.var(matrix, axis=0, ddof=1)
+    valid_cols = variances > 0
+    matrix = matrix[:, valid_cols]
+    if matrix.shape[1] < 2:
+        return 0.0
+
+    corr = np.corrcoef(matrix, rowvar=False)
+    corr = np.nan_to_num(corr, nan=0.0, posinf=0.0, neginf=0.0)
+    eigenvalues, eigenvectors = np.linalg.eigh(corr)
+    first_idx = int(np.argmax(eigenvalues))
+    first_value = max(float(eigenvalues[first_idx]), 0.0)
+    loadings = eigenvectors[:, first_idx] * math.sqrt(first_value)
+
+    if np.sum(loadings) < 0:
+        loadings = -loadings
+
+    communalities = np.clip(loadings ** 2, 0.0, 1.0)
+    common_variance = float(np.sum(loadings) ** 2)
+    error_variance = float(np.sum(1.0 - communalities))
+    denominator = common_variance + error_variance
+    if denominator <= 0:
+        return 0.0
+    return round(max(0.0, min(1.0, common_variance / denominator)), 4)
 
 
 def standard_error_of_measurement(sd: float, reliability: float) -> float:
@@ -243,6 +275,10 @@ def response_quality_index(valores: List[int],
       - atencao_ok: passou nos itens de atenção
     """
     straight = False
+    if valores:
+        media = sum(valores) / len(valores)
+        variancia = sum((v - media) ** 2 for v in valores) / len(valores)
+        straight = variancia < 0.01
     muito_rapido = bool(irt_avg_ms < 800)
 
     pontos = 0

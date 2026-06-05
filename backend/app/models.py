@@ -39,6 +39,7 @@ class QuestionnaireItem(Base):
     dimension = Column(String, nullable=False)  # D, I, S, C / Teorico, Economico, etc. / E, I, S, N, T, F, J, P
     item_text = Column(String, nullable=False)  # Adjetivo ou afirmação
     weight = Column(Float, default=1.0)  # Peso psicométrico
+    reverse_keyed = Column(Boolean, default=False)
 
 class Response(Base):
     __tablename__ = "responses"
@@ -138,6 +139,16 @@ class PsychometricResult(Base):
     # Jung Tipos Cognitivos
     jung_dominant_type = Column(String, nullable=True)  # ex: INTJ, ENFP
     jung_scores = Column(JSON, nullable=True)  # Scores brutos detalhados por polo {"E": 20, "I": 12, ...}
+
+    # Núcleo Big Five (IPIP)
+    bigfive_O = Column(Float, default=0.0)
+    bigfive_C = Column(Float, default=0.0)
+    bigfive_E = Column(Float, default=0.0)
+    bigfive_A = Column(Float, default=0.0)
+    bigfive_N = Column(Float, default=0.0)
+    bigfive_percentis = Column(JSON, nullable=True)
+    jung_continuo = Column(JSON, nullable=True)
+    quality_label = Column(String, nullable=True)
     
     # Fricções identificadas
     frictions = Column(JSON, nullable=True)  # Lista de alertas detectados (Fricção de Execução, Fricção de Comunicação)

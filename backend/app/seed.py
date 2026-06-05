@@ -4,6 +4,7 @@ import hashlib
 import secrets
 from backend.app.database import engine, Base
 from backend.app.models import Tenant, User, QuestionnaireItem
+from backend.app.seed_big_five_ipip import construir_itens_bigfive
 
 def seed_db(db: Session):
     # 1. Cria tabelas se não existirem
@@ -206,7 +207,21 @@ def seed_db(db: Session):
             weight=1.0
         )
         db.add(item)
-    
+
+    # 8. Seed de Itens Big Five (IPIP-50 + atenção, Likert 1-5)
+    for item_data in construir_itens_bigfive():
+        item = QuestionnaireItem(
+            id=item_data["id"],
+            block_number=item_data["block_number"],
+            test_type=item_data["test_type"],
+            dimension=item_data["dimension"],
+            item_text=item_data["item_text"],
+            weight=item_data["weight"],
+            reverse_keyed=item_data["reverse_keyed"]
+        )
+        db.add(item)
+    print("Seed do Big Five finalizado (50 itens IPIP + 3 itens de atenção).")
+
     db.commit()
     print("Seed de Jung finalizado (24 afirmações).")
     print("Banco de dados populado com sucesso!")

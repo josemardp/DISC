@@ -17,6 +17,13 @@ from backend.app.math_engine import (
     raw_to_percentile, calculate_euclidean_distance, calculate_cosine_similarity,
     detect_frictions, calculate_cronbach_alpha
 )
+from backend.app.science_engine import (
+    score_big_five, percentil_intraindividual, derive_jung_from_big_five,
+    derive_disc_from_big_five, derive_spranger_from_big_five,
+    mcdonald_omega, standard_error_of_measurement, confidence_interval,
+    response_quality_index
+)
+from backend.app.seed_big_five_ipip import ITENS_ATENCAO
 from backend.app.gemini_service import generate_psychometric_report
 
 # Inicialização da API
@@ -242,7 +249,8 @@ def get_items(test_type: str, db: Session = Depends(get_db)):
             "id": item.id,
             "dimension": item.dimension,
             "item_text": item.item_text,
-            "weight": item.weight
+            "weight": item.weight,
+            "reverse_keyed": item.reverse_keyed
         })
         
     return [{"block_number": k, "items": v} for k, v in sorted(blocks.items())]
@@ -302,6 +310,10 @@ def submit_responses(submission: TestSubmission, current_user: User = Depends(ge
     db.add(telemetry)
     db.commit()
 
+    if submission.test_type == "BIGFIVE":
+        process_psychometric_results(current_user.id, db)
+        return {"status": "success", "all_completed": True}
+
     # 4. Verifica se completou TODOS os testes requeridos para processar o perfil consolidado
     # Requisitos: DISC natural, DISC adaptado, Spranger natural (fase única), Jung natural (fase única)
     completed_tests = db.query(Response.test_type, Response.phase).filter(
@@ -320,7 +332,131 @@ def submit_responses(submission: TestSubmission, current_user: User = Depends(ge
 # MOTOR DE PROCESSAMENTO DE PERFIL
 # ==============================================================================
 
+def _attention_expected_by_item_id(db: Session) -> Dict[int, int]:
+    attention_items = db.query(QuestionnaireItem).filter(
+        QuestionnaireItem.test_type == "BIGFIVE",
+        QuestionnaireItem.dimension == "attention_check"
+    ).order_by(QuestionnaireItem.id).all()
+    return {
+        item.id: ITENS_ATENCAO[idx]["expected"]
+        for idx, item in enumerate(attention_items)
+        if idx < len(ITENS_ATENCAO)
+    }
+
+
+def _bigfive_raw_history(user_id: int, db: Session) -> Dict[str, List[float]]:
+    previous_results = db.query(PsychometricResult).filter(
+        PsychometricResult.respondent_id == user_id,
+        PsychometricResult.bigfive_percentis.isnot(None)
+    ).order_by(PsychometricResult.created_at.asc()).all()
+    return {
+        "O": [r.bigfive_O for r in previous_results],
+        "C": [r.bigfive_C for r in previous_results],
+        "E": [r.bigfive_E for r in previous_results],
+        "A": [r.bigfive_A for r in previous_results],
+        "N": [r.bigfive_N for r in previous_results],
+    }
+
+
+def _bigfive_norm_label() -> str:
+    if settings.NORM_MODE == "intra":
+        return "régua interna (não é percentil populacional)"
+    return "norma pública indisponível: configure NORM_MODE=intra até versionar uma fonte pública"
+
+
+def _bigfive_scaled_scores(raw_scores: Dict[str, float], history: Dict[str, List[float]]) -> Dict[str, float]:
+    if settings.NORM_MODE != "intra":
+        raise HTTPException(
+            status_code=500,
+            detail="NORM_MODE=public requer arquivo de normas públicas versionado. Use NORM_MODE=intra por enquanto."
+        )
+    return {
+        factor: percentil_intraindividual(raw_scores[factor], history.get(factor, []))["posicao_relativa"]
+        for factor in ["O", "C", "E", "A", "N"]
+    }
+
+
+def _process_bigfive_results(user_id: int, db: Session):
+    rows = db.query(Response, QuestionnaireItem).join(
+        QuestionnaireItem, Response.item_id == QuestionnaireItem.id
+    ).filter(
+        Response.respondent_id == user_id,
+        Response.test_type == "BIGFIVE"
+    ).all()
+
+    scored_inputs = []
+    attention_responses = []
+    for resp, item in rows:
+        if item.dimension == "attention_check":
+            attention_responses.append(resp)
+            continue
+        scored_inputs.append({
+            "dimension": item.dimension,
+            "value": resp.value,
+            "reverse_keyed": item.reverse_keyed
+        })
+
+    scores = score_big_five(scored_inputs)
+    raw_scores = {factor: scores[factor]["raw"] for factor in ["O", "C", "E", "A", "N"]}
+    history = _bigfive_raw_history(user_id, db)
+    scaled_scores = _bigfive_scaled_scores(raw_scores, history)
+    jung_continuo = derive_jung_from_big_five(scaled_scores)
+    disc_derivado = derive_disc_from_big_five(scaled_scores)
+    spranger_derivado = derive_spranger_from_big_five(scaled_scores)
+
+    expected = _attention_expected_by_item_id(db)
+    atencao_ok = all(resp.value == expected.get(resp.item_id) for resp in attention_responses)
+    if not attention_responses:
+        atencao_ok = False
+
+    telemetry = db.query(TelemetrySession).filter(
+        TelemetrySession.respondent_id == user_id,
+        TelemetrySession.test_type == "BIGFIVE"
+    ).order_by(TelemetrySession.created_at.desc()).first()
+
+    quality = response_quality_index(
+        valores=[int(r["value"]) for r in scored_inputs],
+        atencao_ok=atencao_ok,
+        irt_avg_ms=telemetry.irt_avg if telemetry else 0,
+        rvi_count=telemetry.rvi_count if telemetry else 0
+    )
+
+    result = PsychometricResult(
+        respondent_id=user_id,
+        bigfive_O=raw_scores["O"],
+        bigfive_C=raw_scores["C"],
+        bigfive_E=raw_scores["E"],
+        bigfive_A=raw_scores["A"],
+        bigfive_N=raw_scores["N"],
+        bigfive_percentis=scaled_scores,
+        jung_continuo=jung_continuo,
+        quality_label=quality["quality_label"],
+        natural_percentile_d=disc_derivado["D"],
+        natural_percentile_i=disc_derivado["I"],
+        natural_percentile_s=disc_derivado["S"],
+        natural_percentile_c=disc_derivado["C"],
+        spranger_percentile_teorico=spranger_derivado["teorico"],
+        spranger_percentile_economico=spranger_derivado["economico"],
+        spranger_percentile_estetico=spranger_derivado["estetico"],
+        spranger_percentile_social=spranger_derivado["social"],
+        spranger_percentile_individualista=spranger_derivado["individualista"],
+        spranger_percentile_regulador=spranger_derivado["regulador"],
+        jung_dominant_type=jung_continuo["tipo_resumo"],
+        jung_scores=jung_continuo["eixos"],
+        frictions=[]
+    )
+    db.add(result)
+    db.commit()
+    return result
+
 def process_psychometric_results(user_id: int, db: Session):
+    has_bigfive = db.query(Response.id).filter(
+        Response.respondent_id == user_id,
+        Response.test_type == "BIGFIVE"
+    ).first()
+    if has_bigfive:
+        return _process_bigfive_results(user_id, db)
+
     responses = db.query(Response, QuestionnaireItem.dimension).join(
         QuestionnaireItem, Response.item_id == QuestionnaireItem.id
     ).filter(Response.respondent_id == user_id).all()
@@ -465,9 +601,64 @@ def process_psychometric_results(user_id: int, db: Session):
 
 @app.get("/results/me")
 def get_my_results(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    result = db.query(PsychometricResult).filter(PsychometricResult.respondent_id == current_user.id).first()
+    result = db.query(PsychometricResult).filter(
+        PsychometricResult.respondent_id == current_user.id
+    ).order_by(PsychometricResult.created_at.desc()).first()
     if not result:
         raise HTTPException(status_code=404, detail="Você ainda não concluiu todas as fases do teste.")
+
+    if result.bigfive_percentis:
+        sem = standard_error_of_measurement(sd=15.0, reliability=0.84)
+        fatores = {}
+        nomes = {
+            "O": "Abertura",
+            "C": "Conscienciosidade",
+            "E": "Extroversão",
+            "A": "Amabilidade",
+            "N": "Neuroticismo"
+        }
+        raw_scores = {
+            "O": result.bigfive_O,
+            "C": result.bigfive_C,
+            "E": result.bigfive_E,
+            "A": result.bigfive_A,
+            "N": result.bigfive_N
+        }
+        for factor, percentile in result.bigfive_percentis.items():
+            ci_low, ci_high = confidence_interval(percentile, sem, bounds=(0, 100))
+            fatores[factor] = {
+                "label": nomes.get(factor, factor),
+                "raw": raw_scores.get(factor, 0.0),
+                "percentile": percentile,
+                "ci_low": ci_low,
+                "ci_high": ci_high
+            }
+
+        return {
+            "candidate": current_user.full_name,
+            "date": result.created_at,
+            "bigfive": {
+                "factors": fatores,
+                "norm_mode": settings.NORM_MODE,
+                "norm_label": _bigfive_norm_label()
+            },
+            "jung_continuo": result.jung_continuo,
+            "disc": {
+                "natural": {"D": result.natural_percentile_d, "I": result.natural_percentile_i, "S": result.natural_percentile_s, "C": result.natural_percentile_c},
+                "derived_from": "BIGFIVE"
+            },
+            "spranger": {
+                "teorico": result.spranger_percentile_teorico,
+                "economico": result.spranger_percentile_economico,
+                "estetico": result.spranger_percentile_estetico,
+                "social": result.spranger_percentile_social,
+                "individualista": result.spranger_percentile_individualista,
+                "regulador": result.spranger_percentile_regulador,
+                "derived_from": "BIGFIVE"
+            },
+            "quality_label": result.quality_label,
+            "frictions": result.frictions
+        }
         
     return {
         "candidate": current_user.full_name,
@@ -495,12 +686,14 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
 
 @app.get("/results/report")
 def get_narrative_report(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    result = db.query(PsychometricResult).filter(PsychometricResult.respondent_id == current_user.id).first()
+    result = db.query(PsychometricResult).filter(
+        PsychometricResult.respondent_id == current_user.id
+    ).order_by(PsychometricResult.created_at.desc()).first()
     if not result:
         raise HTTPException(status_code=404, detail="Resultados psicométricos não disponíveis.")
         
     report = db.query(Report).filter(Report.result_id == result.id).first()
-    if report and report.status == "completed":
+    if report and report.status == "completed" and (not result.bigfive_percentis or "### Limites desta avaliação" in (report.narrative_text or "")):
         return {"report": report.narrative_text}
         
     # Se não houver, gera na hora (ou simula)
@@ -522,6 +715,27 @@ def get_narrative_report(current_user: User = Depends(get_current_user), db: Ses
         "individualista": result.spranger_percentile_individualista,
         "regulador": result.spranger_percentile_regulador
     }
+    bigfive_factors = None
+    emotional_stability = None
+    if result.bigfive_percentis:
+        sem = standard_error_of_measurement(sd=15.0, reliability=0.84)
+        raw_scores = {
+            "O": result.bigfive_O,
+            "C": result.bigfive_C,
+            "E": result.bigfive_E,
+            "A": result.bigfive_A,
+            "N": result.bigfive_N
+        }
+        bigfive_factors = {}
+        for factor, score in result.bigfive_percentis.items():
+            ci_low, ci_high = confidence_interval(score, sem, bounds=(0, 100))
+            bigfive_factors[factor] = {
+                "raw": raw_scores.get(factor, 0.0),
+                "percentile": score,
+                "ci_low": ci_low,
+                "ci_high": ci_high
+            }
+        emotional_stability = (result.jung_continuo or {}).get("estabilidade_emocional")
     
     narrative = generate_psychometric_report(
         candidate_name=current_user.full_name,
@@ -533,7 +747,11 @@ def get_narrative_report(current_user: User = Depends(get_current_user), db: Ses
         jung_type=result.jung_dominant_type,
         jung_scores=result.jung_scores,
         frictions=result.frictions,
-        telemetry_alerts=alerts
+        telemetry_alerts=alerts,
+        bigfive_factors=bigfive_factors,
+        jung_continuo=result.jung_continuo,
+        emotional_stability=emotional_stability,
+        quality_label=result.quality_label
     )
     
     # Salva relatório no BD
@@ -706,27 +924,29 @@ def get_global_statistics(current_user: User = Depends(get_current_user), db: Se
             "y": int(hist[i])
         })
         
-    # Calcula consistência Alpha de Cronbach global das respostas DISC
-    all_responses = db.query(Response).filter(Response.test_type == "DISC").all()
-    # Cria matriz (usuário x item)
-    user_ids = list(set([r.respondent_id for r in all_responses]))
-    item_ids = sorted(list(set([r.item_id for r in all_responses])))
-    
-    alpha_value = 0.0
-    if len(user_ids) > 3 and len(item_ids) > 3:
-        matrix = [[0.0] * len(item_ids) for _ in range(len(user_ids))]
-        user_to_idx = {uid: idx for idx, uid in enumerate(user_ids)}
-        item_to_idx = {iid: idx for idx, iid in enumerate(item_ids)}
-        
-        for r in all_responses:
-            uid = user_to_idx[r.respondent_id]
-            iid = item_to_idx[r.item_id]
-            matrix[uid][iid] = r.value
-            
-        alpha_value = calculate_cronbach_alpha(matrix)
+    omega_bigfive = {}
+    for factor in ["O", "C", "E", "A", "N"]:
+        factor_rows = db.query(Response).join(
+            QuestionnaireItem, Response.item_id == QuestionnaireItem.id
+        ).filter(
+            Response.test_type == "BIGFIVE",
+            QuestionnaireItem.dimension == factor
+        ).all()
+
+        user_ids = sorted(set(r.respondent_id for r in factor_rows))
+        item_ids = sorted(set(r.item_id for r in factor_rows))
+        omega_value = 0.0
+        if len(user_ids) > 3 and len(item_ids) > 3:
+            matrix = [[0.0] * len(item_ids) for _ in range(len(user_ids))]
+            user_to_idx = {uid: idx for idx, uid in enumerate(user_ids)}
+            item_to_idx = {iid: idx for idx, iid in enumerate(item_ids)}
+            for r in factor_rows:
+                matrix[user_to_idx[r.respondent_id]][item_to_idx[r.item_id]] = r.value
+            omega_value = mcdonald_omega(matrix)
+        omega_bigfive[factor] = omega_value
 
     return {
         "total_evaluations": len(results),
-        "cronbach_alpha": alpha_value,
+        "omega_bigfive": omega_bigfive,
         "gaussian": gaussian_points
     }
