@@ -25,9 +25,22 @@ app = FastAPI(title=settings.PROJECT_NAME, version="1.0.0")
 # Middleware para normalizar caminhos na Vercel (remove /api se presente)
 @app.middleware("http")
 async def strip_api_prefix(request, call_next):
-    path = request.scope.get("path", "")
+    forwarded_path = request.headers.get("x-vercel-forwarded-path") or request.headers.get("x-matched-path")
+    if forwarded_path:
+        path = forwarded_path
+    else:
+        path = request.scope.get("path", "")
+        
+    print(f"DEBUG MIDDLEWARE: Original path = {request.scope.get('path', '')}, Forwarded = {forwarded_path}")
+    
     if path.startswith("/api"):
-        request.scope["path"] = path[4:]
+        path = path[4:]
+        
+    if not path.startswith("/"):
+        path = "/" + path
+        
+    request.scope["path"] = path
+    print(f"DEBUG MIDDLEWARE: Final path = {request.scope.get('path', '')}")
     return await call_next(request)
 
 # Configuração de CORS para permitir requisições do frontend React
