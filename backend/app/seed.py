@@ -1,6 +1,7 @@
 import os
 from sqlalchemy.orm import Session
-import bcrypt
+import hashlib
+import secrets
 from backend.app.database import engine, Base
 from backend.app.models import Tenant, User, QuestionnaireItem
 
@@ -27,7 +28,9 @@ def seed_db(db: Session):
     for u_data in users_data:
         user = db.query(User).filter(User.email == u_data["email"]).first()
         if not user:
-            hashed_pwd = bcrypt.hashpw("123456".encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+            salt = secrets.token_hex(16)
+            dk = hashlib.pbkdf2_hmac("sha256", "123456".encode("utf-8"), salt.encode("utf-8"), 100000)
+            hashed_pwd = f"pbkdf2_sha256$100000${salt}${dk.hex()}"
             user = User(
                 email=u_data["email"],
                 hashed_password=hashed_pwd,

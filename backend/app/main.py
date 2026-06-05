@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, EmailStr
-import bcrypt
+import hashlib
+import secrets
 from jose import JWTError, jwt
 
 
@@ -42,11 +43,20 @@ def startup_event():
         print(f"Erro ao executar seed automático: {str(e)}")
 
 def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    salt = secrets.token_hex(16)
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000)
+    return f"pbkdf2_sha256$100000${salt}${dk.hex()}"
 
 def verify_password(password: str, hashed: str) -> bool:
     try:
-        return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
+        if hashed.startswith("pbkdf2_sha256$"):
+            parts = hashed.split("$")
+            iterations = int(parts[1])
+            salt = parts[2]
+            original_hash = parts[3]
+            dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), iterations)
+            return dk.hex() == original_hash
+        return False
     except Exception:
         return False
 
