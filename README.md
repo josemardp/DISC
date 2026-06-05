@@ -1,11 +1,27 @@
 # Sistema de Análise de Perfil Comportamental e Psicológico Corporativo
 
-Este sistema realiza avaliações psicométricas completas baseadas em:
-1. **DISC**: Perfil comportamental (Estilo de Ação).
-2. **Spranger**: Motivadores e valores internos (Impulso Interno).
-3. **Jung (Tipos Psicológicos)**: Processamento de dados e recarga cognitiva (MBTI/Jung).
+Status atual: **v0.1 Big Five em produção**.
 
-A arquitetura inclui um **Backend em FastAPI (Python)** para cálculo de percentis e Score-Z integrados com IA, e um **Frontend em React (TypeScript)** com gráficos interativos e rastreamento telemétrico do comportamento do candidato.
+O sistema realiza avaliação psicométrica com núcleo medido em:
+
+1. **Big Five (IPIP-50 em PT-BR)**: núcleo medido, Likert 1-5.
+2. **Jung contínuo**: camada narrativa derivada do Big Five.
+3. **DISC e Spranger**: camadas de apresentação derivadas do Big Five.
+
+A arquitetura inclui um **Backend em FastAPI (Python)** para pontuação, régua interna, intervalos de confiança e laudo anti-Barnum, e um **Frontend em React (TypeScript)** com fluxo de resposta e dashboard responsivo.
+
+---
+
+## Status e evolução
+
+- Prompts 0-7 concluídos e mesclados na `main`.
+- Deploy Vercel corrigido e validado em produção: `https://1-disc-app.vercel.app/`.
+- Cadastro em produção confirmado com `POST /auth/register` retornando `200 OK`.
+- Suite backend atual: `22 passed`.
+- Manual técnico: `backend/MANUAL_TECNICO.md`.
+- Relatório de QA: `backend/RELATORIO_QA.md`.
+- Norma atual: `NORM_MODE=intra` (régua interna; não é percentil populacional).
+- Banco em produção: há fallback temporário para SQLite em `/tmp` quando a Vercel detecta URL direta do Supabase. Para persistência real, configurar `DATABASE_URL` com a Transaction Pooler URL do Supabase.
 
 ---
 

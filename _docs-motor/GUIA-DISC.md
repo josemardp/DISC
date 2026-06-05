@@ -9,14 +9,15 @@
 
 | Parte | Status |
 |---|---|
-| Motor científico (Big Five, Ômega, IC, Jung contínuo, qualidade) | ✅ **Construído e testado** (16 testes passando) |
+| Motor científico (Big Five, Ômega, IC, Jung contínuo, qualidade) | ✅ **Construído e testado** |
 | Itens IPIP-50 em PT-BR + itens de atenção | ✅ **Prontos** |
-| Encaixe no backend (`models.py`, `seed.py`, `main.py`) | ⬜ Pendente (Prompts 1–2) |
-| Frontend (responder + exibir) | ⬜ Pendente (Prompt 3) |
-| Normas honestas | ⬜ Pendente (Prompt 4) |
-| Laudo anti-Barnum | ⬜ Pendente (Prompt 5) |
-| Manual técnico | ⬜ Pendente (Prompt 6) |
-| Validação e QA | ⬜ Pendente (Prompt 7) |
+| Encaixe no backend (`models.py`, `seed.py`, `main.py`) | ✅ **Concluído** (Prompts 1–2) |
+| Frontend (responder + exibir) | ✅ **Concluído** (Prompt 3) |
+| Normas honestas | ✅ **Concluído em modo intra** (Prompt 4; `public` bloqueado até fonte versionada) |
+| Laudo anti-Barnum | ✅ **Concluído** (Prompt 5) |
+| Manual técnico | ✅ **Concluído** (Prompt 6; `backend/MANUAL_TECNICO.md`) |
+| Validação e QA | ✅ **Concluído** (Prompt 7; `backend/RELATORIO_QA.md`) |
+| Deploy Vercel | ✅ **Corrigido e validado** (`/` e `/auth/register` em produção) |
 | Validação empírica (teste-reteste, AFC) | ⏳ Depende de dados coletados ao longo do tempo |
 
 ---
@@ -40,27 +41,27 @@ O `LEIA-ME_INTEGRACAO.md` é só referência — **não precisa ir para o projet
 ## 2. CHECKLIST DE IMPLANTAÇÃO (sequencial)
 
 **Preparação**
-- [ ] Python 3.9+ e Node.js 18+ instalados (necessário pra rodar)
-- [ ] `numpy` no `requirements.txt` (já está)
-- [ ] Arquivos do item 1 anexados
+- [x] Python 3.9+ e Node.js 18+ instalados (necessário pra rodar)
+- [x] `numpy` no `requirements.txt` e `backend/requirements.txt`
+- [x] Arquivos do item 1 anexados
 
 **Backend**
-- [ ] Prompt 0 — branch de segurança
-- [ ] Prompt 1 — schema + seed dos itens Big Five
-- [ ] Prompt 2 — processamento + resultados + qualidade
+- [x] Prompt 0 — branch de segurança
+- [x] Prompt 1 — schema + seed dos itens Big Five
+- [x] Prompt 2 — processamento + resultados + qualidade
 
 **Frontend**
-- [ ] Prompt 3 — responder o Big Five e exibir os 5 fatores
+- [x] Prompt 3 — responder o Big Five e exibir os 5 fatores
 
 **Ciência e qualidade**
-- [ ] Prompt 4 — normas honestas
-- [ ] Prompt 5 — laudo anti-Barnum
-- [ ] Prompt 6 — manual técnico
-- [ ] Prompt 7 — validação e QA (final)
+- [x] Prompt 4 — normas honestas
+- [x] Prompt 5 — laudo anti-Barnum
+- [x] Prompt 6 — manual técnico
+- [x] Prompt 7 — validação e QA (final)
 - [ ] Prompt 8 — TIRT (opcional)
 
 **Pós**
-- [ ] Rodar `run_local.bat` e testar o fluxo completo de ponta a ponta
+- [x] Testar fluxo completo de ponta a ponta em backend/local e produção Vercel
 - [ ] Coletar respostas da família para começar a calibrar normas reais
 
 ---
@@ -184,11 +185,11 @@ PARE e mostre a análise de viabilidade antes de implementar.
 
 ## 4. O QUE ESTÁ PENDENTE (resumo honesto)
 
-1. **Encaixe no projeto** (Prompts 0–3): copiar os arquivos e fiar backend + frontend. É a maior parte do trabalho e é mecânica.
-2. **Normas reais** (Prompt 4): use "intra" (régua interna) até ter dados; depois ative "public" com dataset IPIP-NEO.
-3. **Qualidade do laudo** (Prompt 5) e **documentação** (Prompt 6).
-4. **Validação empírica** (⏳ não é código): teste-reteste com pessoas reais e análise fatorial confirmatória exigem **dados coletados ao longo do tempo**. A máquina (Ômega, modo intra-individual) já está pronta para calcular quando os dados existirem.
-5. **Decisão sobre Spranger**: hoje é camada ilustrativa provisória. Decida depois se mede com itens próprios ou mantém só ilustrativo.
+1. **Persistência em produção**: trocar `DATABASE_URL` da Vercel para a Transaction Pooler URL do Supabase. Hoje há fallback temporário para SQLite em `/tmp` quando a URL direta do Supabase falha.
+2. **Normas públicas**: o modo atual é `intra` (régua interna). Ativar `public` somente com fonte pública versionada.
+3. **Validação empírica** (⏳ não é código): teste-reteste com pessoas reais e análise fatorial confirmatória exigem **dados coletados ao longo do tempo**.
+4. **Decisão sobre Spranger**: hoje é camada ilustrativa provisória. Decida depois se mede com itens próprios ou mantém só ilustrativo.
+5. **Prompt 8 / TIRT**: opcional, apenas se houver decisão de manter escolha-forçada DISC e amostra suficiente.
 
 ---
 
