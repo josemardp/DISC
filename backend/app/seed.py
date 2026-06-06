@@ -45,9 +45,9 @@ def seed_db(db: Session):
 
     # 4. Verifica se já existem itens cadastrados
     count_items = db.query(QuestionnaireItem).count()
-    if count_items > 0:
-        print(f"Itens do questionário já cadastrados ({count_items} itens). Pulando seed de itens.")
-        return
+    should_seed_base_items = count_items == 0
+    if not should_seed_base_items:
+        print(f"Itens do questionário já cadastrados ({count_items} itens). Pulando seed DISC/Spranger/Jung.")
 
     # 5. Seed de Itens do DISC (24 Blocos de 4 Adjetivos)
     disc_blocks = [
@@ -102,20 +102,21 @@ def seed_db(db: Session):
     ]
 
     item_id_counter = 100
-    for idx, block in enumerate(disc_blocks):
-        block_num = idx + 1
-        for dim, word in block.items():
-            item_id_counter += 1
-            item = QuestionnaireItem(
-                id=item_id_counter,
-                block_number=block_num,
-                test_type="DISC",
-                dimension=dim,
-                item_text=word,
-                weight=1.0
-            )
-            db.add(item)
-    print("Seed do DISC finalizado (96 adjetivos).")
+    if should_seed_base_items:
+        for idx, block in enumerate(disc_blocks):
+            block_num = idx + 1
+            for dim, word in block.items():
+                item_id_counter += 1
+                item = QuestionnaireItem(
+                    id=item_id_counter,
+                    block_number=block_num,
+                    test_type="DISC",
+                    dimension=dim,
+                    item_text=word,
+                    weight=1.0
+                )
+                db.add(item)
+        print("Seed do DISC finalizado (96 adjetivos).")
 
     # 6. Seed de Itens de Spranger (24 Afirmações, Likert 1-6)
     spranger_items = [
@@ -151,18 +152,19 @@ def seed_db(db: Session):
         {"dim": "regulador", "text": "Prefiro seguir métodos tradicionais validados do que inovações conceituais arriscadas."}
     ]
 
-    for idx, item_data in enumerate(spranger_items):
-        item_id_counter += 1
-        item = QuestionnaireItem(
-            id=item_id_counter,
-            block_number=idx + 1,
-            test_type="SPRANGER",
-            dimension=item_data["dim"],
-            item_text=item_data["text"],
-            weight=1.0
-        )
-        db.add(item)
-    print("Seed do Spranger finalizado (24 afirmações).")
+    if should_seed_base_items:
+        for idx, item_data in enumerate(spranger_items):
+            item_id_counter += 1
+            item = QuestionnaireItem(
+                id=item_id_counter,
+                block_number=idx + 1,
+                test_type="SPRANGER",
+                dimension=item_data["dim"],
+                item_text=item_data["text"],
+                weight=1.0
+            )
+            db.add(item)
+        print("Seed do Spranger finalizado (24 afirmações).")
 
     # 7. Seed de Itens de Jung (24 Afirmações, Likert 1-6)
     jung_items = [
@@ -196,34 +198,41 @@ def seed_db(db: Session):
         {"dim": "P", "text": "Sinto que a rigidez exagerada de cronogramas e planos sufoca minha criatividade e adaptabilidade."}
     ]
 
-    for idx, item_data in enumerate(jung_items):
-        item_id_counter += 1
-        item = QuestionnaireItem(
-            id=item_id_counter,
-            block_number=idx + 1,
-            test_type="JUNG",
-            dimension=item_data["dim"],
-            item_text=item_data["text"],
-            weight=1.0
-        )
-        db.add(item)
+    if should_seed_base_items:
+        for idx, item_data in enumerate(jung_items):
+            item_id_counter += 1
+            item = QuestionnaireItem(
+                id=item_id_counter,
+                block_number=idx + 1,
+                test_type="JUNG",
+                dimension=item_data["dim"],
+                item_text=item_data["text"],
+                weight=1.0
+            )
+            db.add(item)
+        print("Seed de Jung finalizado (24 afirmações).")
 
     # 8. Seed de Itens Big Five (IPIP-50 + atenção, Likert 1-5)
-    for item_data in construir_itens_bigfive():
-        item = QuestionnaireItem(
-            id=item_data["id"],
-            block_number=item_data["block_number"],
-            test_type=item_data["test_type"],
-            dimension=item_data["dimension"],
-            item_text=item_data["item_text"],
-            weight=item_data["weight"],
-            reverse_keyed=item_data["reverse_keyed"]
-        )
-        db.add(item)
-    print("Seed do Big Five finalizado (50 itens IPIP + 3 itens de atenção).")
+    bigfive_exists = db.query(QuestionnaireItem).filter(
+        QuestionnaireItem.test_type == "BIGFIVE"
+    ).first()
+    if bigfive_exists:
+        print("Itens Big Five já cadastrados. Pulando seed do Big Five.")
+    else:
+        for item_data in construir_itens_bigfive():
+            item = QuestionnaireItem(
+                id=item_data["id"],
+                block_number=item_data["block_number"],
+                test_type=item_data["test_type"],
+                dimension=item_data["dimension"],
+                item_text=item_data["item_text"],
+                weight=item_data["weight"],
+                reverse_keyed=item_data["reverse_keyed"]
+            )
+            db.add(item)
+        print("Seed do Big Five finalizado (50 itens IPIP + 3 itens de atenção).")
 
     db.commit()
-    print("Seed de Jung finalizado (24 afirmações).")
     print("Banco de dados populado com sucesso!")
 
 if __name__ == "__main__":
