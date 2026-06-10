@@ -36,9 +36,11 @@
 | **F6** | Decisão sobre Spranger | 🟢 Baixa | Delineado |
 | **F7** | Higiene técnica (deprecações) | 🟢 Baixa | Delineado |
 | **F8** | TIRT (escolha-forçada do DISC) | ⚪ Opcional | Delineado |
-| **F9** | Camada de Autoconhecimento (Bloco 2: perguntas + IA) | 🔵 Visão futura | Delineado (depende de F1 + pgvector) |
+| **F9** | Camada de Autoconhecimento (Bloco 2: perguntas + IA) | 🔵 Visão futura | Delineado (material ✅; depende de F1 + pgvector) |
 
 > **Onde entram as Perguntas Mestres:** a pasta `2-perguntas` é **irmã** do app (`1-disc-app`), nunca dentro dele. As perguntas **não entram no motor de pontuação**. Elas só "entram" na **F9**, numa camada de IA que lê o *perfil pontuado* (do DISC) + as *respostas biográficas* (das perguntas). A integração acontece na **saída/aconselhamento**, não na medição.
+>
+> **⚠️ Sincronização (importante):** o repositório git é o **`1-disc-app`** — o `.git` mora lá dentro. Logo, `2-perguntas` e `3-terapia` estão **fora do repo** e NÃO entram no `git push` (ficam "soltas"). Cada uma precisa de uma casa que sincronize (REGRA_MESTRE_SYNC). Recomendado: **`2-perguntas` no Google Drive sincronizado** (conteúdo pessoal e sensível — Blocos 05 e 11), privado nas duas máquinas. Alternativa: repositório git privado próprio só para `2-perguntas`. Não misturar com o repo do app.
 
 ---
 
@@ -139,19 +141,23 @@ Critério: decisão fundamentada, sem quebrar nada.
 
 ### ▶️ FASE F9 — Camada de Autoconhecimento (Bloco 2) — *visão futura, delineada*
 
-> Esta é a fase que junta o DISC com as Perguntas Mestres — **na ponta**, não fundindo questionários. Ainda não tem prompt pronto porque depende de (a) a F1 concluída (Postgres) com **pgvector ativo**, e (b) você trazer a pasta `2-perguntas`. Quando essas duas condições existirem, montamos os prompts de P1/P2/P3.
+> Esta é a fase que junta o DISC com as Perguntas Mestres — **na ponta**, não fundindo questionários. Depende de (a) a F1 concluída (Postgres) com **pgvector ativo**, e (b) a pasta `2-perguntas` (✅ **já disponível** — 1.242 perguntas em 11 blocos, com versões bruta e parametrizada). Quando a F1 estiver de pé, montamos os prompts de P1/P2/P3.
 
-**Pré-requisitos:** F1 concluída + extensão pgvector ativa no Supabase + pasta `2-perguntas` disponível.
+**Pré-requisitos:** F1 concluída + extensão pgvector ativa no Supabase. (Material `2-perguntas` ✅ pronto.)
 
 **Arquitetura (três camadas):**
 - Base: Supabase Postgres + pgvector (guarda e busca as respostas por similaridade).
 - Fontes: o **perfil pontuado** (do DISC) + as **respostas biográficas** (das Perguntas Mestres).
 - Topo: a IA de aconselhamento, que lê as duas fontes já *condicionada* ao perfil.
 
+**O material `2-perguntas` tem DOIS níveis (descoberto ao inspecionar a pasta) — e isso divide o P1:**
+- **Nível 1 — Narrativo (Blocos 01–10, ~1.030 perguntas).** Respostas em texto livre. Vão para o **pgvector/RAG** (embeddings + busca por similaridade). Analisadas depois por 9 lentes clínicas. NÃO pré-codificar — pré-codificar mata a riqueza narrativa.
+- **Nível 2 — Rastreio psicométrico (Bloco 11, 212 itens).** Derivado de instrumentos clínicos validados (ASRS-1.1, WURS-25, DIVA-5, AQ, RAADS-R, CAT-Q, OEQ-II, HSP, GAD-7, OCI-R, CBI, PCL-5). É **quantitativo**: pontua contra os pontos de corte do `schema-bloco-11.json`. Tratar separado da narrativa, e **com o aviso clínico que já existe: rastreio NÃO é diagnóstico.**
+
 **Partes:**
-- **P1 — Banco de perguntas com pgvector.** Ingerir as Perguntas Mestres da pasta `2-perguntas`, gerar embeddings e indexar no pgvector (RAG). As perguntas vivem em projeto/pasta **separada** do DISC; só os dados entram no banco.
-- **P2 — Contrato de laudo (report contract).** Definir o formato de saída do aconselhamento: o que a IA recebe (perfil + trechos recuperados), o que ela pode e não pode afirmar (mesmas regras anti-Barnum e de incerteza já usadas no DISC), e a seção de limites.
-- **P3 — MVP de Terapia/Aconselhamento.** A IA gera o aconselhamento condicionado ao perfil pontuado, citando apenas o que veio dos dados (âncora anti-alucinação).
+- **P1 — Banco de perguntas (dois fluxos).** (a) Narrativa (Blocos 01–10) → embeddings no pgvector (RAG). (b) Bloco 11 → pontuação quantitativa contra os cortes do schema. As perguntas vivem **separadas** do DISC; só os dados entram no banco.
+- **P2 — Contrato de laudo (report contract).** Formato de saída do aconselhamento: o que a IA recebe (perfil + trechos narrativos recuperados + escores do rastreio), o que pode e não pode afirmar (mesmas regras anti-Barnum/incerteza do DISC), e a seção de limites.
+- **P3 — MVP de Terapia/Aconselhamento.** A IA gera o aconselhamento condicionado ao perfil, citando apenas o que veio dos dados (âncora anti-alucinação). Temas de risco tratados com cuidado, direcionando a ajuda real.
 
 **Regra que não muda:** as perguntas **nunca** entram no motor de pontuação do DISC. A junção é só nesta camada de saída.
 
