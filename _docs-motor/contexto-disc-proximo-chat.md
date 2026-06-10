@@ -1,25 +1,23 @@
-# Contexto DISC - proximo chat
+# Contexto DISC — retomada (2026-06-09)
 
-## Status atual
+## O que está pronto
 
-**Reversão de deploy:** ✅ Feita (2026-06-05)
-- 7 commits de Vercel/Supabase revertidos da main (commits 700284d–2c67126)
-- Main equivalente ao merge 83ff74a
-- Nota: database.py mantém 3 linhas de fallback VERCEL/tmp do baseline — inofensivas local
-- Deploy suspenso até F1 concluída (Supabase Postgres)
-
-**Sessão 2026-06-09:** ✅ Arrumação de docs e Drive
-- PLANO_EVOLUCAO_DISC_v2.md refinado: F9 agora documenta dois níveis (Nível 1 — Narrativo / Nível 2 — Rastreio psicométrico) e nota de sincronização — commitado e pushed (387e4cd)
-- Drive limpo: `COMO_SUBIR_sem_token.md` renomeado para `COMO_SUBIR.md`; `sync-backups` (vazia) removida; `3-terapia` mantida (reservada para F9/P3)
-
-## Caminho real do Google Drive
-
-```
-G:\Meu Drive\Arquivos Josemar\Projetos não vercionados\autoconhecimento pessoal\
-```
-(não `G:\autoconhecimento-pessoal` — esse caminho curto não existe)
+- **Núcleo científico Big Five** integrado e testado (Prompts 0–7 concluídos): 50 itens IPIP, Ômega de McDonald, intervalos de confiança, Jung contínuo derivado, qualidade de resposta, laudo anti-Barnum, NORM_MODE intra/public.
+- **Sincronização resolvida:** o app (`1-disc-app`) vive no GitHub; conteúdo pessoal (`2-perguntas`, `3-terapia`, docs antigos) vive no Google Drive, fora do repo.
+  - Caminho real do Drive: `G:\Meu Drive\Arquivos Josemar\Projetos não vercionados\autoconhecimento pessoal\`
+- **Material `2-perguntas` pronto** (1.242 perguntas, 11 blocos, dois níveis: narrativo Blocos 01–10 + rastreio psicométrico Bloco 11). Mora no Drive — nunca entra no repo.
 
 ## Próximo passo
 
-**F1 — Persistência (Supabase Postgres).** Prompt pronto em PLANO_EVOLUCAO_DISC_v2.md § 3.
-Pré-requisito manual (fora do Codex): criar projeto Postgres no Supabase, ativar extensão `vector` (pgvector), copiar a connection string do pooler (Transaction mode) como variável `DATABASE_URL`.
+**F1 — Persistência (Supabase Postgres + pgvector).**
+
+Pré-requisito manual (fora do Codex, fazer antes de rodar o prompt F1):
+1. Criar projeto Postgres no Supabase.
+2. Ativar extensão `vector` (pgvector) em *Database → Extensions*.
+3. Copiar a connection string do pooler (Transaction mode, `sslmode=require`) e setar como `DATABASE_URL` nas variáveis de ambiente da Vercel.
+
+Prompt pronto em `_docs-motor/PLANO_EVOLUCAO_DISC_v2.md` § 3 (PROMPT F1).
+
+## Fonte única da verdade do roadmap
+
+`_docs-motor/PLANO_EVOLUCAO_DISC_v2.md`
