@@ -2,9 +2,9 @@
 
 ## 1. Versão e data
 
-- Versão: v0.1
-- Data: 2026-06-05
-- Branch de trabalho: evolucao-cientifica
+- Versão: v0.2
+- Data: 2026-06-10
+- Branch de trabalho: main (F1 concluída — Supabase Postgres em produção)
 
 ## 2. Construtos e origem dos itens
 
@@ -251,4 +251,5 @@ Amostra atual:
 
 ## 9. Changelog
 
+- v0.2 — 2026-06-10 — atualizado para refletir F1 concluída (Supabase Postgres em produção, Vercel deploy estável).
 - v0.1 — 2026-06-05 — versão inicial do manual técnico, refletindo Big Five IPIP-50, itens de atenção, camadas derivadas, régua interna, confiabilidade, IC95%, qualidade de resposta e laudo anti-Barnum conforme código atual.

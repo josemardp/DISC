@@ -1,81 +1,131 @@
-# Sistema de Análise de Perfil Comportamental e Psicológico Corporativo
+# Sistema Psicométrico DISC — Plataforma Corporativa
 
-Este sistema realiza avaliações psicométricas completas baseadas em:
-1. **DISC**: Perfil comportamental (Estilo de Ação).
-2. **Spranger**: Motivadores e valores internos (Impulso Interno).
-3. **Jung (Tipos Psicológicos)**: Processamento de dados e recarga cognitiva (MBTI/Jung).
-
-A arquitetura inclui um **Backend em FastAPI (Python)** para cálculo de percentis e Score-Z integrados com IA, e um **Frontend em React (TypeScript)** com gráficos interativos e rastreamento telemétrico do comportamento do candidato.
+Plataforma de avaliação psicométrica baseada em Big Five (IPIP-50) com derivação de DISC, Jung contínuo e Spranger. Backend FastAPI + Frontend React, deployado na Vercel com banco Supabase Postgres.
 
 ---
 
-## 🛠️ Como Executar o Projeto Localmente (Windows)
+## Stack
 
-O sistema foi preparado para rodar de forma híbrida: **SQLite** localmente para desenvolvimento rápido (sem instalações complexas) e **Docker/PostgreSQL/Redis** para ambientes de produção.
-
-### Opção 1: Inicialização Rápida por Script (SQLite)
-
-1. Certifique-se de ter o **Python (3.9+)** e **Node.js (16+)** instalados na sua máquina.
-2. Crie ou configure o arquivo `.env` na raiz do projeto (use o `.env.template` como base se necessário) e adicione sua `GEMINI_API_KEY`.
-3. Dê um duplo clique ou execute no PowerShell o script na raiz do projeto:
-   ```powershell
-   .\run_local.bat
-   ```
-   *Este script instalará automaticamente as dependências do Python, criará o banco local `psicometrico.db`, carregará os questionários pesquisados e instalará as dependências do React para rodar os servidores simultaneamente.*
-
-### Opção 2: Inicialização via Docker Compose (PostgreSQL + Redis)
-
-1. Altere a variável `DATABASE_URL` no seu arquivo `.env` para apontar para a conexão do PostgreSQL:
-   ```env
-   DATABASE_URL=postgresql://postgres:postgres@db:5432/disc_db
-   ```
-2. Execute o comando na raiz:
-   ```bash
-   docker-compose up --build
-   ```
+- **Backend:** FastAPI (Python), SQLAlchemy, psycopg2-binary, python-jose, Pydantic
+- **Frontend:** React, TypeScript, Vite, Tailwind CSS
+- **Banco:** Supabase Postgres (produção) / SQLite (dev local)
+- **Deploy:** Vercel (Serverless Functions via proxy ASGI em `api/index.py`)
+- **IA:** Google Gemini (laudos narrativos) com fallback local
 
 ---
 
-## 🚀 Como Publicar este Projeto no GitHub
+## Como rodar localmente
 
-Sim, você pode publicar este projeto inteiro no GitHub facilmente! O arquivo `.gitignore` já foi criado na raiz do repositório para evitar que você suba arquivos indesejados (como a pasta `node_modules`, ambientes virtuais `.venv`, banco de dados local `.db` e a sua chave secreta `.env`).
+### Pré-requisitos
 
-Para publicar, siga este passo a passo usando o terminal (PowerShell ou Bash):
+- Python 3.10+
+- Node.js 18+
 
-1. **Inicialize o Git no repositório local**:
-   ```bash
-   git init
-   ```
-2. **Adicione os arquivos para versionamento**:
-   ```bash
-   git add .
-   ```
-3. **Crie o primeiro commit**:
-   ```bash
-   git commit -m "feat: setup inicial do sistema de analise comportamental"
-   ```
-4. **Crie um repositório vazio no seu GitHub** (ex: `disc-analysis-system`).
-5. **Vincule o repositório local ao GitHub** (substitua pelo link do seu repositório):
-   ```bash
-   git remote add origin https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
-   ```
-6. **Altere o nome da branch principal para `main`**:
-   ```bash
-   git branch -M main
-   ```
-7. **Envie os arquivos para o GitHub**:
-   ```bash
-   git push -u origin main
-   ```
+### Backend
 
-Pronto! Seu código estará salvo e versionado com segurança no GitHub.
+```powershell
+cd backend
+pip install -r requirements.txt
+```
+
+Crie `.env` na raiz do `backend/` (copie `.env.template`):
+
+```env
+DATABASE_URL=sqlite:///./psicometrico.db   # dev local
+SECRET_KEY=qualquer-string-longa-aleatoria
+GEMINI_API_KEY=sua-chave-aqui
+NORM_MODE=intra
+```
+
+```powershell
+uvicorn backend.app.main:app --reload
+# API disponível em http://localhost:8000
+```
+
+### Frontend
+
+```powershell
+cd frontend
+npm install
+npm run dev
+# UI disponível em http://localhost:5173
+```
+
+### Script all-in-one (Windows)
+
+```powershell
+.\run_local.bat
+```
 
 ---
 
-## 📁 Estrutura do Projeto
+## Configuração para produção (Vercel + Supabase)
 
-* `/backend`: Código do FastAPI, rotas, modelos e motores de cálculo matemático.
-* `/frontend`: Código React, Vite, Tailwind CSS e componentes da interface (Dashboard RH, Testes e Backoffice).
-* `docker-compose.yml`: Orquestração de contêineres Docker.
-* `run_local.bat`: Script de instalação e execução do Windows.
-* `.env`: Variáveis de ambiente configuradas.
+### 1. Supabase
+
+1. Crie um projeto em [supabase.com](https://supabase.com)
+2. Em *Database → Extensions*, ative **`vector` (pgvector)** (necessário para F9)
+3. Em *Project Settings → Database*, copie a **connection string do pooler Transaction** (port 6543)
+
+### 2. Vercel
+
+Em *Settings → Environment Variables*, adicione:
+
+| Variável | Valor |
+|---|---|
+| `DATABASE_URL` | `postgresql://postgres.<ref>:<senha>@aws-1-<região>.pooler.supabase.com:6543/postgres?sslmode=require` |
+| `GEMINI_API_KEY` | sua chave Gemini |
+| `SECRET_KEY` | string longa aleatória |
+| `NORM_MODE` | `intra` |
+
+O deploy é automático via push na branch `main`.
+
+---
+
+## Rodar testes
+
+```powershell
+pytest backend/app/ -v
+# Esperado: 21/22 verdes (F2 resolve o último)
+```
+
+---
+
+## Documentação
+
+| Documento | Conteúdo |
+|---|---|
+| `_docs-motor/ROADMAP.md` | Fases F1–F9 com status e critério de pronto |
+| `_docs-motor/STATUS.md` | Estado atual: deploy, testes, variáveis de ambiente |
+| `_docs-motor/DECISOES.md` | ADRs: por que cada decisão de arquitetura foi tomada |
+| `_docs-motor/PLANO_EVOLUCAO_DISC_v2.md` | Plano completo com prompts prontos para cada fase |
+| `backend/MANUAL_TECNICO.md` | Instrumento: construtos, itens, pontuação, confiabilidade |
+| `backend/RELATORIO_QA.md` | Resultados da suíte de testes e QA |
+| `CHANGELOG.md` | Histórico de versões |
+
+---
+
+## Estrutura
+
+```
+1-disc-app/
+├── api/
+│   └── index.py              # Proxy ASGI (Vercel entrypoint)
+├── backend/
+│   ├── app/
+│   │   ├── main.py           # FastAPI: rotas de auth, questionário, resultados, RH
+│   │   ├── science_engine.py # Big Five, Jung, DISC, Spranger, Ômega, IC, qualidade
+│   │   ├── math_engine.py    # Percentil, distâncias, detecção de fricções
+│   │   ├── gemini_service.py # Laudo narrativo + fallback local
+│   │   ├── database.py       # Engine SQLAlchemy (Postgres / SQLite)
+│   │   ├── models.py         # ORM models
+│   │   ├── config.py         # Pydantic settings
+│   │   ├── seed.py           # Seed DISC (24 blocos)
+│   │   └── seed_big_five_ipip.py  # 50 itens IPIP + atenção
+│   └── requirements.txt
+├── frontend/                 # React + Vite + Tailwind
+├── _docs-motor/              # Documentação técnica e roadmap
+├── vercel.json               # Build config
+├── CHANGELOG.md
+└── README.md
+```

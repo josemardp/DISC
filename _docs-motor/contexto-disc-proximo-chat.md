@@ -1,23 +1,30 @@
-# Contexto DISC — retomada (2026-06-09)
+# Contexto DISC — retomada (2026-06-10)
 
 ## O que está pronto
 
 - **Núcleo científico Big Five** integrado e testado (Prompts 0–7 concluídos): 50 itens IPIP, Ômega de McDonald, intervalos de confiança, Jung contínuo derivado, qualidade de resposta, laudo anti-Barnum, NORM_MODE intra/public.
-- **Sincronização resolvida:** o app (`1-disc-app`) vive no GitHub; conteúdo pessoal (`2-perguntas`, `3-terapia`, docs antigos) vive no Google Drive, fora do repo.
-  - Caminho real do Drive: `G:\Meu Drive\Arquivos Josemar\Projetos não vercionados\autoconhecimento pessoal\`
-- **Material `2-perguntas` pronto** (1.242 perguntas, 11 blocos, dois níveis: narrativo Blocos 01–10 + rastreio psicométrico Bloco 11). Mora no Drive — nunca entra no repo.
+- **F1 CONCLUÍDA — Supabase Postgres + Vercel deploy:** banco de dados persistente em produção, autenticação (register/login) e questionário DISC funcionando end-to-end.
+  - DATABASE_URL: pooler de transações Supabase `aws-1-sa-east-1` (salvo no Vercel + `Drive/segredos/disc-env.txt`)
+  - Deploy: Vercel, branch `main`, proxy ASGI em `api/index.py`
+- **Sincronização resolvida:** app (`1-disc-app`) no GitHub; conteúdo pessoal (`2-perguntas`, `3-terapia`) no Google Drive.
+  - Segredos: `Drive/segredos/disc-env.txt` (REGRA_MESTRE_SYNC)
 
 ## Próximo passo
 
-**F1 — Persistência (Supabase Postgres + pgvector).**
+**F2 — Suíte 100% verde + higiene de imports.**
 
-Pré-requisito manual (fora do Codex, fazer antes de rodar o prompt F1):
-1. Criar projeto Postgres no Supabase.
-2. Ativar extensão `vector` (pgvector) em *Database → Extensions*.
-3. Copiar a connection string do pooler (Transaction mode, `sslmode=require`) e setar como `DATABASE_URL` nas variáveis de ambiente da Vercel.
+Prompt pronto em `_docs-motor/PLANO_EVOLUCAO_DISC_v2.md` § 3 (PROMPT F2).
 
-Prompt pronto em `_docs-motor/PLANO_EVOLUCAO_DISC_v2.md` § 3 (PROMPT F1).
+Tarefas concretas:
+1. `conftest.py` com fixture autouse que garante tabelas antes dos testes.
+2. Ajustar `test_bigfive_submit_to_results_e2e` (usar `with TestClient(app)` para disparar startup).
+3. Adicionar `httpx>=0.27` em `backend/requirements.txt`.
+4. Verificar e remover import órfão de `calculate_cronbach_alpha` em `backend/app/main.py` linha 21 (importado mas não usado no arquivo).
+5. Rodar `pytest backend/app/` e confirmar 22/22 verdes.
 
-## Fonte única da verdade do roadmap
+## Fonte única da verdade
 
-`_docs-motor/PLANO_EVOLUCAO_DISC_v2.md`
+- Roadmap: `_docs-motor/ROADMAP.md`
+- Estado atual: `_docs-motor/STATUS.md`
+- Decisões de arquitetura: `_docs-motor/DECISOES.md`
+- Plano completo com prompts: `_docs-motor/PLANO_EVOLUCAO_DISC_v2.md`

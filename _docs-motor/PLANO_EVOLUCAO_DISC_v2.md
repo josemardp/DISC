@@ -18,7 +18,7 @@
 | Manual técnico | ✅ | backend/MANUAL_TECNICO.md |
 | QA (teste-reteste r=0,993; convergente OK; e2e HTTP 200) | ✅ | backend/RELATORIO_QA.md |
 | Suíte de testes | ⚠️ | 21/22 — 1 falha de harness (não de lógica) |
-| Deploy Vercel | ⚠️ | roda, mas **SQLite em /tmp não persiste** |
+| Deploy Vercel + Supabase Postgres | ✅ | F1 concluída — banco persiste, auth e questionário funcionando |
 
 **Conclusão:** o produto funciona de ponta a ponta. Faltam dois ajustes para uso real e a maturação científica que depende de dados.
 
@@ -28,8 +28,8 @@
 
 | Fase | Tema | Prioridade | Tipo |
 |---|---|---|---|
-| **F1** | Persistência do banco (Supabase Postgres) | 🔴 Crítica | Prompt pronto |
-| **F2** | Suíte 100% verde + higiene de imports | 🟠 Alta | Prompt pronto |
+| **F1** | Persistência do banco (Supabase Postgres) | ✅ CONCLUÍDA | — |
+| **F2** | Suíte 100% verde + higiene de imports | 🔜 PRÓXIMA | Prompt pronto |
 | **F3** | Documentação viva (auto-documentar a evolução) | 🟠 Alta | Prompt-mestre |
 | **F4** | Normas públicas reais (sair do `intra` quando quiser) | 🟡 Média | Delineado |
 | **F5** | Validação com dados reais (teste-reteste humano, AFC) | 🟡 Média | Depende de dados |
