@@ -24,6 +24,7 @@ if is_postgres:
         db_url,
         pool_pre_ping=True,
         pool_recycle=300,
+        connect_args={"connect_timeout": 5},
     )
 else:
     engine = create_engine(
