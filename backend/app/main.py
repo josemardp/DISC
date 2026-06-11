@@ -62,13 +62,16 @@ app.add_middleware(
 # Inicialização automática do banco e seeds na primeira execução
 @app.on_event("startup")
 def startup_event():
-    Base.metadata.create_all(bind=engine)
-    from backend.app.seed import seed_db
-    db = SessionLocal_startup = next(get_db())
     try:
+        Base.metadata.create_all(bind=engine)
+        from backend.app.seed import seed_db
+        db = next(get_db())
         seed_db(db)
+        db.close()
     except Exception as e:
-        print(f"Erro ao executar seed automático: {str(e)}")
+        import traceback
+        print(f"[startup] erro não-fatal: {e}", flush=True)
+        traceback.print_exc()
 
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(16)
