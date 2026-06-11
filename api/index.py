@@ -50,9 +50,24 @@ async def _error_response(send, status, message, detail=""):
 async def _db_info_response(send):
     import os, re
     raw = os.getenv("DATABASE_URL", "NOT SET")
-    # oculta a senha mas mostra user@host
     safe = re.sub(r':[^:@]+@', ':***@', raw)
-    body = json.dumps({"DATABASE_URL": safe}).encode()
+
+    # Tenta criar tabelas e seed agora
+    result = "not attempted"
+    try:
+        from backend.app.database import engine, Base, SessionLocal
+        Base.metadata.create_all(bind=engine)
+        from backend.app.seed import seed_db
+        db = SessionLocal()
+        try:
+            seed_db(db)
+        finally:
+            db.close()
+        result = "tables + seed OK"
+    except Exception as e:
+        result = f"ERROR: {e}"
+
+    body = json.dumps({"DATABASE_URL": safe, "init": result}).encode()
     await send({"type": "http.response.start", "status": 200,
                 "headers": [(b"content-type", b"application/json")]})
     await send({"type": "http.response.body", "body": body})
