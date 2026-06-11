@@ -47,6 +47,16 @@ async def _error_response(send, status, message, detail=""):
     })
     await send({"type": "http.response.body", "body": body})
 
+async def _db_info_response(send):
+    import os, re
+    raw = os.getenv("DATABASE_URL", "NOT SET")
+    # oculta a senha mas mostra user@host
+    safe = re.sub(r':[^:@]+@', ':***@', raw)
+    body = json.dumps({"DATABASE_URL": safe}).encode()
+    await send({"type": "http.response.start", "status": 200,
+                "headers": [(b"content-type", b"application/json")]})
+    await send({"type": "http.response.body", "body": body})
+
 async def app(scope, receive, send):
     # Lifespan gerenciado pelo proxy — não delega ao backend
     # (evita que o startup event trave na conexão ao Postgres)
@@ -59,6 +69,11 @@ async def app(scope, receive, send):
         return
 
     if scope["type"] != "http":
+        return
+
+    # Diagnóstico temporário — remover depois
+    if scope.get("path") == "/api/db-info":
+        await _db_info_response(send)
         return
 
     _load()
