@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException, status, APIRouter
+from fastapi import FastAPI, Depends, HTTPException, status, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
@@ -7,6 +8,7 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, EmailStr
 import hashlib
 import secrets
+import traceback as _traceback
 from jose import JWTError, jwt
 
 
@@ -28,6 +30,16 @@ from backend.app.gemini_service import generate_psychometric_report
 
 # Inicialização da API
 app = FastAPI(title=settings.PROJECT_NAME, version="1.0.0")
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    tb = _traceback.format_exc()
+    print(f"[error] {type(exc).__name__}: {exc}", flush=True)
+    print(tb, flush=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"{type(exc).__name__}: {str(exc)[:300]}"}
+    )
 
 # Middleware para normalizar caminhos na Vercel (remove /api se presente)
 @app.middleware("http")

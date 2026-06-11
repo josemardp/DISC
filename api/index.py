@@ -75,4 +75,7 @@ async def app(scope, receive, send):
     except Exception as e:
         tb = traceback.format_exc()
         print("RUNTIME ERROR:", tb, file=sys.stderr)
-        await _error_response(send, 500, "runtime error", tb)
+        try:
+            await _error_response(send, 500, "runtime error", tb)
+        except Exception:
+            pass  # response already started by ServerErrorMiddleware
