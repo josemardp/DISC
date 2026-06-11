@@ -11,7 +11,9 @@ O que já está no `.gitignore` hoje está correto e permanece. Mas NÃO adicion
 ## Regra 3 — Segredos: ordem de preferência
 Nunca basta jogar um segredo (chave, senha, token, connection string) num arquivo e ignorá-lo. Siga esta ordem:
 1. Variável de ambiente (no host/Vercel e/ou no SO) — sem arquivo no repo. É o padrão.
-2. Google Drive — se precisar de um arquivo de segredo, ele vive numa pasta sincronizada do Google Drive (nas duas máquinas) e é referenciado de lá. Nunca commitado, nunca só-local.
+2. Google Drive — se precisar de um arquivo de segredo, ele vive na pasta de segredos do projeto dentro do Google Drive (sincronizada nas duas máquinas) e é referenciado de lá. Nunca commitado, nunca só-local.
+   - Caminho obrigatório: `G:\Meu Drive\Arquivos Josemar\Projetos não vercionados\autoconhecimento pessoal\segredos\`
+   - Arquivo de segredos deste projeto: `disc-env.txt` (contém DATABASE_URL e GEMINI_API_KEY)
 3. Último recurso — arquivo local ignorado pelo git, SOMENTE se 1 e 2 forem inviáveis, e mesmo assim avise explicitamente e lembre de replicar o arquivo na outra máquina.
 
 ## Regra 4 — Pare e pergunte
