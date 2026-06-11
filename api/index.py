@@ -1,20 +1,38 @@
 import sys
 import traceback
-from fastapi import FastAPI
 
-try:
-    from backend.app.main import app
-except Exception as e:
-    tb = traceback.format_exc()
-    print("CRITICAL IMPORT ERROR IN API/INDEX.PY:", file=sys.stderr)
-    print(tb, file=sys.stderr)
-    
-    app = FastAPI(title="Fallback Debug App")
-    
-    @app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"])
-    def debug_route(path_name: str):
-        return {
-            "error": "Failed to import application backend.",
-            "exception": str(e),
-            "traceback": tb.split("\n")
-        }
+_backend = None
+_load_error = None
+
+def _load():
+    global _backend, _load_error
+    if _backend is not None or _load_error is not None:
+        return
+    try:
+        from backend.app.main import app as backend_app
+        _backend = backend_app
+    except Exception as e:
+        _load_error = str(e)
+        print("IMPORT ERROR:", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+
+async def app(scope, receive, send):
+    if scope["type"] == "lifespan":
+        await send({"type": "lifespan.startup.complete"})
+        msg = await receive()
+        if msg["type"] == "lifespan.shutdown":
+            await send({"type": "lifespan.shutdown.complete"})
+        return
+
+    _load()
+
+    if _backend is None:
+        body = f'{{"error":"backend failed to load","detail":{repr(_load_error)}}}'.encode()
+        await send({
+            "type": "http.response.start", "status": 500,
+            "headers": [(b"content-type", b"application/json; charset=utf-8")]
+        })
+        await send({"type": "http.response.body", "body": body})
+        return
+
+    await _backend(scope, receive, send)
