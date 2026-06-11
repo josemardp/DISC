@@ -1,5 +1,6 @@
 import sys
 import traceback
+import json
 
 _backend = None
 _load_error = None
@@ -16,6 +17,15 @@ def _load():
         print("IMPORT ERROR:", file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
 
+async def _error_response(send, status, message, detail=""):
+    body = json.dumps({"error": message, "detail": detail}).encode()
+    await send({
+        "type": "http.response.start", "status": status,
+        "headers": [(b"content-type", b"application/json; charset=utf-8"),
+                    (b"content-length", str(len(body)).encode())]
+    })
+    await send({"type": "http.response.body", "body": body})
+
 async def app(scope, receive, send):
     if scope["type"] == "lifespan":
         await send({"type": "lifespan.startup.complete"})
@@ -24,15 +34,18 @@ async def app(scope, receive, send):
             await send({"type": "lifespan.shutdown.complete"})
         return
 
+    if scope["type"] != "http":
+        return
+
     _load()
 
     if _backend is None:
-        body = f'{{"error":"backend failed to load","detail":{repr(_load_error)}}}'.encode()
-        await send({
-            "type": "http.response.start", "status": 500,
-            "headers": [(b"content-type", b"application/json; charset=utf-8")]
-        })
-        await send({"type": "http.response.body", "body": body})
+        await _error_response(send, 500, "backend failed to load", _load_error)
         return
 
-    await _backend(scope, receive, send)
+    try:
+        await _backend(scope, receive, send)
+    except Exception as e:
+        tb = traceback.format_exc()
+        print("RUNTIME ERROR:", tb, file=sys.stderr)
+        await _error_response(send, 500, "runtime error", tb)
