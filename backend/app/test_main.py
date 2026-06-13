@@ -62,100 +62,100 @@ class TestPsychometricMathEngine(unittest.TestCase):
         self.assertIn("Fricção de Comunicação (Comunicador Exaurível)", frictions_names)
 
     def test_bigfive_submit_to_results_e2e(self):
-        client = TestClient(app)
-        email = f"bigfive-{uuid4().hex}@example.com"
-        register = client.post("/auth/register", json={
-            "email": email,
-            "password": "123456",
-            "full_name": "Pessoa Big Five"
-        })
-        self.assertEqual(register.status_code, 200)
-        token = register.json()["access_token"]
-        headers = {"Authorization": f"Bearer {token}"}
+        with TestClient(app) as client:
+            email = f"bigfive-{uuid4().hex}@example.com"
+            register = client.post("/auth/register", json={
+                "email": email,
+                "password": "123456",
+                "full_name": "Pessoa Big Five"
+            })
+            self.assertEqual(register.status_code, 200)
+            token = register.json()["access_token"]
+            headers = {"Authorization": f"Bearer {token}"}
 
-        items_response = client.get("/questionnaire/items?test_type=BIGFIVE", headers=headers)
-        self.assertEqual(items_response.status_code, 200)
-        blocks = items_response.json()
-        answers = []
-        likert = [1, 2, 3, 4, 5]
-        idx = 0
-        for block in blocks:
-            for item in block["items"]:
-                value = likert[idx % len(likert)]
-                if item["dimension"] == "attention_check":
-                    text = item["item_text"]
-                    if "Muito imprecisa" in text:
-                        value = 1
-                    elif "Muito precisa" in text:
-                        value = 5
+            items_response = client.get("/questionnaire/items?test_type=BIGFIVE", headers=headers)
+            self.assertEqual(items_response.status_code, 200)
+            blocks = items_response.json()
+            answers = []
+            likert = [1, 2, 3, 4, 5]
+            idx = 0
+            for block in blocks:
+                for item in block["items"]:
+                    value = likert[idx % len(likert)]
+                    if item["dimension"] == "attention_check":
+                        text = item["item_text"]
+                        if "Muito imprecisa" in text:
+                            value = 1
+                        elif "Muito precisa" in text:
+                            value = 5
+                        else:
+                            value = 3
+                    answers.append({
+                        "item_id": item["id"],
+                        "block_number": block["block_number"],
+                        "value": value
+                    })
+                    idx += 1
+
+            submit = client.post("/questionnaire/submit", json={
+                "test_type": "BIGFIVE",
+                "phase": "natural",
+                "answers": answers,
+                "ttfc_avg": 1200,
+                "irt_avg": 2500,
+                "rvi_count": 1,
+                "raw_telemetry": []
+            }, headers=headers)
+            self.assertEqual(submit.status_code, 200)
+            self.assertTrue(submit.json()["all_completed"])
+
+            results = client.get("/results/me", headers=headers)
+            self.assertEqual(results.status_code, 200)
+            data = results.json()
+            self.assertEqual(set(data["bigfive"]["factors"].keys()), {"O", "C", "E", "A", "N"})
+            self.assertEqual(data["bigfive"]["norm_mode"], "intra")
+            self.assertEqual(data["bigfive"]["norm_label"], "régua interna (não é percentil populacional)")
+            for factor in data["bigfive"]["factors"].values():
+                self.assertIn("ci_low", factor)
+                self.assertIn("ci_high", factor)
+            self.assertIn("tipo_resumo", data["jung_continuo"])
+            self.assertIn("eixos", data["jung_continuo"])
+
+            high_answers = []
+            for block in blocks:
+                for item in block["items"]:
+                    if item["dimension"] == "attention_check":
+                        text = item["item_text"]
+                        if "Muito imprecisa" in text:
+                            value = 1
+                        elif "Muito precisa" in text:
+                            value = 5
+                        else:
+                            value = 3
                     else:
-                        value = 3
-                answers.append({
-                    "item_id": item["id"],
-                    "block_number": block["block_number"],
-                    "value": value
-                })
-                idx += 1
+                        value = 1 if item["reverse_keyed"] else 5
+                    high_answers.append({
+                        "item_id": item["id"],
+                        "block_number": block["block_number"],
+                        "value": value
+                    })
 
-        submit = client.post("/questionnaire/submit", json={
-            "test_type": "BIGFIVE",
-            "phase": "natural",
-            "answers": answers,
-            "ttfc_avg": 1200,
-            "irt_avg": 2500,
-            "rvi_count": 1,
-            "raw_telemetry": []
-        }, headers=headers)
-        self.assertEqual(submit.status_code, 200)
-        self.assertTrue(submit.json()["all_completed"])
+            submit_again = client.post("/questionnaire/submit", json={
+                "test_type": "BIGFIVE",
+                "phase": "natural",
+                "answers": high_answers,
+                "ttfc_avg": 1200,
+                "irt_avg": 2500,
+                "rvi_count": 1,
+                "raw_telemetry": []
+            }, headers=headers)
+            self.assertEqual(submit_again.status_code, 200)
 
-        results = client.get("/results/me", headers=headers)
-        self.assertEqual(results.status_code, 200)
-        data = results.json()
-        self.assertEqual(set(data["bigfive"]["factors"].keys()), {"O", "C", "E", "A", "N"})
-        self.assertEqual(data["bigfive"]["norm_mode"], "intra")
-        self.assertEqual(data["bigfive"]["norm_label"], "régua interna (não é percentil populacional)")
-        for factor in data["bigfive"]["factors"].values():
-            self.assertIn("ci_low", factor)
-            self.assertIn("ci_high", factor)
-        self.assertIn("tipo_resumo", data["jung_continuo"])
-        self.assertIn("eixos", data["jung_continuo"])
-
-        high_answers = []
-        for block in blocks:
-            for item in block["items"]:
-                if item["dimension"] == "attention_check":
-                    text = item["item_text"]
-                    if "Muito imprecisa" in text:
-                        value = 1
-                    elif "Muito precisa" in text:
-                        value = 5
-                    else:
-                        value = 3
-                else:
-                    value = 1 if item["reverse_keyed"] else 5
-                high_answers.append({
-                    "item_id": item["id"],
-                    "block_number": block["block_number"],
-                    "value": value
-                })
-
-        submit_again = client.post("/questionnaire/submit", json={
-            "test_type": "BIGFIVE",
-            "phase": "natural",
-            "answers": high_answers,
-            "ttfc_avg": 1200,
-            "irt_avg": 2500,
-            "rvi_count": 1,
-            "raw_telemetry": []
-        }, headers=headers)
-        self.assertEqual(submit_again.status_code, 200)
-
-        second_results = client.get("/results/me", headers=headers)
-        self.assertEqual(second_results.status_code, 200)
-        second_data = second_results.json()
-        for factor in second_data["bigfive"]["factors"].values():
-            self.assertEqual(factor["percentile"], 100.0)
+            second_results = client.get("/results/me", headers=headers)
+            self.assertEqual(second_results.status_code, 200)
+            second_data = second_results.json()
+            for factor in second_data["bigfive"]["factors"].values():
+                self.assertEqual(factor["percentile"], 100.0)
 
 if __name__ == "__main__":
     unittest.main()

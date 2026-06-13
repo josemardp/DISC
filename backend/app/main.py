@@ -17,7 +17,7 @@ from backend.app.database import engine, Base, get_db
 from backend.app.models import Tenant, User, QuestionnaireItem, Response, TelemetrySession, PsychometricResult, Report, Job
 from backend.app.math_engine import (
     raw_to_percentile, calculate_euclidean_distance, calculate_cosine_similarity,
-    detect_frictions, calculate_cronbach_alpha
+    detect_frictions
 )
 from backend.app.science_engine import (
     score_big_five, percentil_intraindividual, derive_jung_from_big_five,
