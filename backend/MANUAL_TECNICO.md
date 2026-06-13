@@ -1,62 +1,60 @@
 # Manual Técnico do Instrumento
 
+> Ver também: [ROADMAP](_docs-motor/ROADMAP.md) | [DECISOES](_docs-motor/DECISOES.md) | [STATUS](_docs-motor/STATUS.md)
+
 ## 1. Versão e data
 
-- Versão: v0.2
-- Data: 2026-06-10
-- Branch de trabalho: main (F1 concluída — Supabase Postgres em produção)
+- Versão: v0.3
+- Data: 2026-06-13
+- Branch de trabalho: main (F1 + F2 + F3 concluídas — 22/22 testes passando)
+
+---
 
 ## 2. Construtos e origem dos itens
 
-### Big Five medido
+### Big Five — núcleo medido
 
-O núcleo medido do sistema é o Big Five, com 50 itens em PT-BR carregados por `backend/app/seed_big_five_ipip.py`.
+O único construto medido diretamente por itens é o Big Five, com 50 itens em PT-BR carregados por `backend/app/seed_big_five_ipip.py`.
 
-Origem documentada no código: IPIP Big-Five Factor Markers, 50 itens, Goldberg (1992), domínio público IPIP (`https://ipip.ori.org`). A tradução PT-BR está no arquivo `seed_big_five_ipip.py`.
+**Origem:** IPIP Big-Five Factor Markers, 50 itens, Goldberg (1992), domínio público (`https://ipip.ori.org`). Tradução PT-BR versionada no código. Escala de resposta: 1 = Muito imprecisa, 5 = Muito precisa.
 
-Fatores medidos:
+**Fatores medidos (5):**
 
-- O: Abertura / Intelecto
-- C: Conscienciosidade
-- E: Extroversão
-- A: Amabilidade
-- N: Neuroticismo
-
-Escala de resposta documentada no código: 1 = Muito imprecisa até 5 = Muito precisa.
+| Sigla | Nome |
+|---|---|
+| O | Abertura / Intelecto |
+| C | Conscienciosidade |
+| E | Extroversão |
+| A | Amabilidade |
+| N | Neuroticismo |
 
 ### Itens de atenção
 
-O sistema inclui 3 itens com `dimension="attention_check"`. Eles não entram no escore Big Five (`weight=0.0`) e são usados na qualidade de resposta.
+3 itens com `dimension="attention_check"` e `weight=0.0`. Não entram no escore Big Five. Usados em `response_quality_index()`.
 
-Itens de atenção definidos no código:
+| Item | Resposta esperada |
+|---|---|
+| "Para esta questão, marque 'Muito imprecisa' (1)." | 1 |
+| "Por favor, selecione 'Muito precisa' (5) nesta frase." | 5 |
+| "Marque a opção do meio (3) para confirmar que está atento." | 3 |
 
-- "Para esta questão, marque 'Muito imprecisa' (1)." Resposta esperada: 1.
-- "Por favor, selecione 'Muito precisa' (5) nesta frase." Resposta esperada: 5.
-- "Marque a opção do meio (3) para confirmar que está atento." Resposta esperada: 3.
+### Camadas derivadas (não medidas por itens)
 
-### Camadas derivadas
+| Camada | Função | Observação |
+|---|---|---|
+| Jung contínuo | `derive_jung_from_big_five()` | 4 eixos + borderline + Estabilidade Emocional |
+| DISC | `derive_disc_from_big_five()` | heurístico, provisório |
+| Spranger | `derive_spranger_from_big_five()` | heurístico, provisório |
 
-Jung contínuo, DISC e Spranger são derivados do Big Five no código. Eles não são medidos diretamente por itens próprios no fluxo atual Big Five.
+Ver [ADR-01](../&#95;docs-motor/DECISOES.md#adr-01), [ADR-02](../&#95;docs-motor/DECISOES.md#adr-02), [ADR-05](../&#95;docs-motor/DECISOES.md#adr-05).
 
-- Jung contínuo: derivado por `derive_jung_from_big_five()`.
-- DISC: derivado por `derive_disc_from_big_five()`.
-- Spranger: derivado por `derive_spranger_from_big_five()`.
+---
 
 ## 3. Itens reverse_keyed
 
-No código, `reverse_keyed=True` significa que o item é invertido por `6 - valor` em escala 1-5 antes da soma.
+`reverse_keyed=True` significa que o item é invertido por `6 − valor` (em escala 1–5) antes da soma, via `_aplica_reverso()` em `science_engine.py`.
 
-Dimensões com itens invertidos:
-
-- E: Extroversão
-- A: Amabilidade
-- C: Conscienciosidade
-- N: Neuroticismo
-- O: Abertura / Intelecto
-
-Itens invertidos reais definidos em `seed_big_five_ipip.py`:
-
-### E - Extroversão
+### E — Extroversão (5 itens invertidos)
 
 - "Não falo muito."
 - "Fico em segundo plano."
@@ -64,192 +62,207 @@ Itens invertidos reais definidos em `seed_big_five_ipip.py`:
 - "Não gosto de chamar atenção para mim."
 - "Sou quieto perto de estranhos."
 
-### A - Amabilidade
+### A — Amabilidade (4 itens invertidos)
 
 - "Sinto pouca preocupação com os outros."
 - "Insulto as pessoas."
 - "Não me interesso pelos problemas dos outros."
 - "Não tenho muito interesse pelos outros."
 
-### C - Conscienciosidade
+### C — Conscienciosidade (4 itens invertidos)
 
 - "Deixo minhas coisas espalhadas."
 - "Faço uma bagunça das coisas."
 - "Costumo esquecer de colocar as coisas de volta no lugar."
 - "Fujo das minhas obrigações."
 
-### N - Neuroticismo
+### N — Neuroticismo (2 itens invertidos)
 
 - "Fico relaxado na maior parte do tempo."
 - "Raramente fico para baixo."
 
-### O - Abertura / Intelecto
+### O — Abertura / Intelecto (3 itens invertidos)
 
 - "Tenho dificuldade em entender ideias abstratas."
 - "Não me interesso por ideias abstratas."
 - "Não tenho boa imaginação."
 
-## 4. Método de pontuação de cada camada
+---
 
-### Big Five
+## 4. Método de pontuação
 
-A pontuação é feita por `score_big_five()` em `backend/app/science_engine.py`.
+### Big Five — `score_big_five()` em `science_engine.py`
 
-Comportamento documentado no código:
+- Ignora itens com `dimension` fora de `["O", "C", "E", "A", "N"]` (inclui `attention_check`).
+- Aplica reversão quando `reverse_keyed=True`: `valor_final = 6 − valor`.
+- Retorna por fator: `{"raw": soma, "mean": média, "n_itens": k}`.
+- Calcula também `ES` (Estabilidade Emocional) como `raw = 60.0 − raw_N`, `mean = 6.0 − mean_N`.
 
-- Ignora itens cuja dimensão não está em `["O", "C", "E", "A", "N"]`, incluindo `attention_check`.
-- Aplica reversão quando `reverse_keyed=True`.
-- Retorna por fator: escore bruto (`raw`), média (`mean`) e número de itens (`n_itens`).
-- Calcula também `ES` (Estabilidade Emocional) como inverso de N.
+### Percentis — `percentil_intraindividual()` em `science_engine.py`
 
-### Percentis / régua interna
+Modo atual: `NORM_MODE=intra`. A régua interna compara cada fator do respondente com seus próprios históricos anteriores. Retorna posição relativa no próprio histórico.
 
-O modo atual é `NORM_MODE=intra`, lido de `.env` por `backend/app/config.py`.
+O rótulo retornado pela API é: `"régua interna (não é percentil populacional)"`.
 
-No modo atual, o sistema usa régua interna do próprio respondente por `percentil_intraindividual()`. O rótulo retornado pela API é: "régua interna (não é percentil populacional)".
+Modo `public` está bloqueado no código até existir fonte pública versionada (F4).
 
-O modo `public` está bloqueado no código até existir fonte pública versionada.
+### Jung contínuo — `derive_jung_from_big_five()` em `science_engine.py`
 
-### Jung contínuo
+Mapeamento (McCrae & Costa, 1989):
 
-O Jung contínuo é derivado por `derive_jung_from_big_five()` em `science_engine.py`.
+| Eixo Jung | Fator Big Five |
+|---|---|
+| E/I | Extroversão (E) |
+| S/N | Abertura (O) |
+| T/F | Amabilidade (A) |
+| J/P | Conscienciosidade (C) |
+| Estabilidade Emocional* | 100 − Neuroticismo (N) |
 
-Mapeamento implementado:
+*Não é eixo Junguiano — reportado como "eixo extra".
 
-- E/I deriva de Extroversão.
-- S/N deriva de Abertura.
-- T/F deriva de Amabilidade.
-- J/P deriva de Conscienciosidade.
-- Estabilidade Emocional deriva do inverso de Neuroticismo.
+Eixos marcados como `borderline` quando percentil está entre 45 e 55. `tipo_resumo` de 4 letras é resumo dos escores contínuos, não tipo fixo.
 
-O código também marca eixos `borderline` quando o percentil está entre 45 e 55.
+### DISC derivado — `derive_disc_from_big_five()` em `science_engine.py`
 
-### DISC derivado
+| Dimensão | Fórmula (provisória) |
+|---|---|
+| D | (E + (100 − A)) / 2 |
+| I | (E + A) / 2 |
+| S | (A + ES) / 2 |
+| C | C (Conscienciosidade) |
 
-DISC é derivado por `derive_disc_from_big_five()` em `science_engine.py`.
+Todos marcados como `[provisório]` no código.
 
-Mapeamento implementado no código:
+### Spranger derivado — `derive_spranger_from_big_five()` em `science_engine.py`
 
-- D: média de Extroversão e baixa Amabilidade.
-- I: média de Extroversão e Amabilidade.
-- S: média de Amabilidade e Estabilidade Emocional.
-- C: Conscienciosidade.
+| Dimensão | Fórmula (provisória) |
+|---|---|
+| teorico | O (Abertura) |
+| estetico | O (Abertura) |
+| social | A (Amabilidade) |
+| regulador | C (Conscienciosidade) |
+| individualista | E (Extroversão) |
+| economico | (C + (100 − O)) / 2 |
 
-O próprio código rotula esses pesos como provisórios e como camada de apresentação.
+Todos marcados como `[provisório]` no código. Mapeamento heurístico e ilustrativo.
 
-### Spranger derivado
-
-Spranger é derivado por `derive_spranger_from_big_five()` em `science_engine.py`.
-
-Mapeamento implementado no código:
-
-- teorico: Abertura
-- estetico: Abertura
-- social: Amabilidade
-- regulador: Conscienciosidade
-- individualista: Extroversão
-- economico: média de Conscienciosidade e baixa Abertura
-
-O próprio código informa que esse mapeamento é heurístico, provisório e ilustrativo.
+---
 
 ## 5. Confiabilidade e intervalos de confiança
 
-### Ômega de McDonald
+### Ômega de McDonald — `mcdonald_omega()` em `science_engine.py`
 
-A função `mcdonald_omega()` está em `science_engine.py`.
-
-Implementação atual:
-
-- Estima ômega total por modelo unifatorial aproximado via primeira componente principal sobre matriz de correlações dos itens.
-- Remove colunas com variância zero.
-- Retorna valor limitado entre 0.0 e 1.0.
+Estima ômega total por modelo unifatorial aproximado via primeira componente principal sobre a matriz de correlações dos itens. Remove colunas com variância zero. Retorna valor entre 0.0 e 1.0.
 
 Em `/admin/stats`, o sistema calcula `omega_bigfive` por fator Big Five quando há dados suficientes.
 
-### SEM
+### SEM — `standard_error_of_measurement()` em `science_engine.py`
 
-A função `standard_error_of_measurement()` está em `science_engine.py`.
+```
+SEM = sd × √(1 − confiabilidade)
+```
 
-Fórmula implementada:
+No motor de resultados: `sd=15.0`, `reliability=0.84` (provisório — revisar quando houver dados reais).
 
-- `SEM = sd * sqrt(1 - reliability)`
+### IC95% — `confidence_interval()` em `science_engine.py`
 
-No endpoint de resultados e relatório, o código usa `sd=15.0` e confiabilidade provisória `reliability=0.84`.
-
-### IC95%
-
-A função `confidence_interval()` está em `science_engine.py`.
-
-Implementação atual:
-
-- Usa `z=1.96` por padrão.
-- Aplica limites opcionais; para percentis, o código usa `bounds=(0, 100)`.
+- `z=1.96` por padrão.
+- `bounds=(0, 100)` para percentis.
 - Retorna `ci_low` e `ci_high`.
 
-## 6. Qualidade de resposta
+### Alpha de Cronbach — `calculate_cronbach_alpha()` em `math_engine.py`
 
-A qualidade de resposta é calculada por `response_quality_index()` em `science_engine.py`.
+Disponível para uso avulso (usado nos testes automatizados). **Não é usado nas rotas de produção** — substituído pelo Ômega de McDonald. Ver [ADR-04](../&#95;docs-motor/DECISOES.md#adr-04).
 
-Critérios implementados:
+---
 
-- Atenção: verifica se os itens `attention_check` foram respondidos com os valores esperados.
-- Straight-lining: detecta variância menor que `0.01` nos valores respondidos.
-- `irt_avg`: marca `too_fast` quando o tempo médio por item é menor que 800 ms.
+## 6. Qualidade de resposta — `response_quality_index()` em `science_engine.py`
 
-O código também considera `rvi_count > 10` na pontuação de qualidade.
+| Critério | Condição | Pontos |
+|---|---|---|
+| Atenção | item `attention_check` com valor errado | +2 |
+| Straight-lining | variância dos valores < 0.01 | +2 |
+| Muito rápido | `irt_avg` < 800 ms | +1 |
+| RVI excessivo | `rvi_count` > 10 | +1 |
 
-Labels possíveis:
+| Total de pontos | Label |
+|---|---|
+| 0 | `alta` |
+| 1–2 | `media` |
+| ≥3 | `baixa` |
 
-- `alta`
-- `media`
-- `baixa`
+Retorna também `attention_passed`, `straight_lining` e `too_fast`.
 
-Pontuação implementada:
-
-- Falha em atenção: +2 pontos.
-- Straight-lining: +2 pontos.
-- Muito rápido: +1 ponto.
-- `rvi_count > 10`: +1 ponto.
-- 0 pontos: `alta`.
-- 1 a 2 pontos: `media`.
-- 3 ou mais pontos: `baixa`.
+---
 
 ## 7. Normas
 
-Modo atual:
+| Modo | Função | Estado |
+|---|---|---|
+| `intra` (padrão) | `percentil_intraindividual()` | Ativo — régua interna honesta |
+| `public` | `percentil_por_norma()` | Bloqueado no código até F4 |
 
-- `NORM_MODE=intra`
-- Usa régua interna do próprio respondente.
-- A saída é rotulada como "régua interna (não é percentil populacional)".
+Lido de `.env` por `backend/app/config.py`: `NORM_MODE=intra`.
 
-Modo `public`:
+Mensagem quando `public`: `"NORM_MODE=public requer arquivo de normas públicas versionado. Use NORM_MODE=intra por enquanto."`
 
-- Bloqueado no código.
-- Mensagem implementada: `NORM_MODE=public requer arquivo de normas públicas versionado. Use NORM_MODE=intra por enquanto.`
-- Fonte pública versionada: a verificar.
+---
 
-## 8. Limites e usos vedados
+## 8. Laudo narrativo — `gemini_service.py`
 
-Limites documentados conforme o comportamento atual do código:
+**Modelo:** Gemini 1.5 Flash (`gemini-1.5-flash`), temperatura 0.3. Fallback local quando `GEMINI_API_KEY` ausente ou API indisponível.
 
-- Não é diagnóstico clínico.
+**Seções obrigatórias (7):**
+1. Resumo Executivo com Incerteza
+2. Big Five medido com intervalos de confiança
+3. Jung contínuo derivado
+4. Estabilidade emocional e qualidade da resposta
+5. Camadas derivadas DISC e Spranger
+6. Recomendações baseadas nos dados
+7. Limites desta avaliação
+
+**Regras anti-Barnum no prompt:**
+- Linguagem de incerteza obrigatória: "tende a", "indica", "sugere".
+- Proibição de frases genéricas sem vínculo com dados numéricos.
+- Cada interpretação deve citar pelo menos um escore ou IC95%.
+- Jung é narrativa derivada — nunca tratado como medida independente.
+- Seção de limites obrigatória.
+
+**Dados passados ao prompt:**
+- Nome do candidato
+- Big Five: escore, IC95%, bruto por fator
+- Jung contínuo: tipo_resumo, eixos
+- Estabilidade Emocional
+- Qualidade da resposta (label)
+- DISC e Spranger derivados
+- Fricções de construtos detectadas
+- Alertas telemétricos
+
+---
+
+## 9. Limites e usos vedados
+
+**Limites documentados conforme o código:**
+
+- Não é diagnóstico clínico, psiquiátrico ou médico.
 - Não descreve características imutáveis.
-- Jung, DISC e Spranger são camadas derivadas do Big Five, não medidas independentes no fluxo atual.
-- O modo atual de norma é uma régua interna, não percentil populacional.
-- O laudo gerado via Gemini e fallback local usa linguagem de incerteza e seção de limites, mas deve ser lido como apoio interpretativo.
+- Jung, DISC e Spranger são camadas derivadas do Big Five — não são medidas independentes no fluxo atual.
+- O modo atual de norma (`intra`) é régua interna, não percentil populacional.
+- SEM usa confiabilidade provisória (0.84) — revisar quando houver dados reais suficientes.
+- Mapeamentos DISC e Spranger têm pesos provisórios documentados como heurísticos.
 
-Usos vedados ou que exigem validação adicional:
+**Usos vedados ou que exigem validação adicional:**
 
-- Não usar isoladamente para decisões de admissão, desligamento, promoção ou outras decisões de alto impacto sem validação adicional.
-- Não usar como diagnóstico clínico, psiquiátrico ou médico.
-- Não interpretar resultados como traços fixos ou imutáveis.
+- Não usar isoladamente para decisões de admissão, desligamento, promoção ou outras decisões de alto impacto.
+- Não usar como diagnóstico clínico.
+- Não interpretar resultados como traços fixos.
 
-Amostra atual:
+**Amostra atual:** uso familiar / desenvolvimento. Validação empírica com amostra própria: a realizar na F5.
 
-- Uso familiar / desenvolvimento.
-- Validação empírica com amostra própria: a verificar.
+---
 
-## 9. Changelog
+## 10. Changelog interno
 
-- v0.2 — 2026-06-10 — atualizado para refletir F1 concluída (Supabase Postgres em produção, Vercel deploy estável).
-- v0.1 — 2026-06-05 — versão inicial do manual técnico, refletindo Big Five IPIP-50, itens de atenção, camadas derivadas, régua interna, confiabilidade, IC95%, qualidade de resposta e laudo anti-Barnum conforme código atual.
+- v0.3 — 2026-06-13 — F3: documentação viva concluída. Referências cruzadas adicionadas. Seções de Alpha e laudo narrativo expandidas. Tabelas de DISC/Spranger/Jung com fórmulas reais do código.
+- v0.2 — 2026-06-10 — F1 + F2 concluídas: Supabase Postgres em produção; 22/22 testes passando; conftest.py com fixture autouse; import órfão `calculate_cronbach_alpha` removido de `main.py`.
+- v0.1 — 2026-06-05 — versão inicial: Big Five IPIP-50, itens de atenção, camadas derivadas, régua interna, confiabilidade, IC95%, qualidade de resposta, laudo anti-Barnum.

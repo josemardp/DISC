@@ -1,46 +1,55 @@
 # DECISOES — Registro de Decisões de Arquitetura (ADR)
 
-> Cada decisão tem: contexto / decisão / consequências. Atualizado em 2026-06-10.
+> Cada decisão: contexto / decisão / consequências.
+> Última atualização: 2026-06-13 (F3 — documentação viva).
+> Ver também: [ROADMAP.md](ROADMAP.md) | [STATUS.md](STATUS.md)
 
 ---
 
 ## ADR-01 — Big Five como núcleo medido
 
-**Contexto:** o projeto iniciou medindo DISC e Spranger com itens próprios. Esses instrumentos têm problemas psicométricos conhecidos (ipsatividade no DISC, normas não publicadas).
+**Contexto:** o projeto iniciou medindo DISC e Spranger com itens próprios. Esses instrumentos têm problemas psicométricos conhecidos: DISC usa escolha-forçada ipsativa (escores interdependentes), Spranger não tem normas publicadas amplamente.
 
-**Decisão:** o núcleo medido é o Big Five (IPIP-50), com itens de domínio público, validados internacionalmente. DISC e Spranger são camadas de apresentação derivadas matematicamente do Big Five.
+**Decisão:** o núcleo medido é o Big Five (IPIP-50), com itens de domínio público, validados internacionalmente. DISC e Spranger são camadas de apresentação derivadas matematicamente do Big Five — não têm itens próprios no fluxo atual.
 
-**Consequências:** escores Big Five são os únicos com confiabilidade calculável (Ômega de McDonald). DISC e Spranger têm validade construtal limitada enquanto forem derivados — documentar isso claramente nos laudos.
+**Consequências:** escores Big Five são os únicos com confiabilidade calculável (Ômega de McDonald). DISC e Spranger têm validade construtal limitada enquanto forem derivados — os docstrings do código marcam explicitamente os pesos como `[provisório]`. Documentar nos laudos.
 
 ---
 
 ## ADR-02 — Jung contínuo derivado do Big Five + Estabilidade Emocional
 
-**Contexto:** tipos Jungnianos (MBTI-like) são categorias discretas com baixa validade psicométrica.
+**Contexto:** tipos Jungnianos (MBTI-like) são categorias discretas com baixa validade psicométrica. A literatura (McCrae & Costa, 1989) documenta correlações entre os polos MBTI e os fatores Big Five.
 
-**Decisão:** Jung é derivado do Big Five como escala contínua: E/I ← Extroversão; S/N ← Abertura; T/F ← Amabilidade; J/P ← Conscienciosidade; Estabilidade Emocional ← inverso de Neuroticismo. Eixos marcados como `borderline` quando percentil está entre 45 e 55.
+**Decisão:** Jung é derivado do Big Five como escala contínua em `derive_jung_from_big_five()`:
+- E/I ← Extroversão (E)
+- S/N ← Abertura (O)
+- T/F ← Amabilidade (A)
+- J/P ← Conscienciosidade (C)
+- Estabilidade Emocional ← inverso de Neuroticismo (não é eixo Junguiano — reportado como "eixo extra")
 
-**Consequências:** sem dicotomias artificiais; representa incerteza honestamente. Mapeamento é heurístico — documentar nos laudos.
+Eixos são marcados como `borderline` quando o percentil está entre 45 e 55.
+
+**Consequências:** sem dicotomias artificiais; incerteza representada explicitamente. Mapeamento é heurístico — documentar nos laudos e na UI. O `tipo_resumo` de 4 letras é um resumo de escores contínuos, não um tipo fixo.
 
 ---
 
 ## ADR-03 — Funções cognitivas Jungnianas como narrativa apenas
 
-**Contexto:** funções cognitivas (Ti, Fe, Ni etc.) não têm itens próprios no sistema.
+**Contexto:** funções cognitivas (Ti, Fe, Ni, Se etc.) do modelo Junguiano não têm itens próprios no sistema e não são derivadas pelos algoritmos atuais.
 
-**Decisão:** não medir funções cognitivas por itens. Usar apenas como narrativa opcional nos laudos, condicionada ao tipo dominante derivado.
+**Decisão:** não medir funções cognitivas por itens nem derivá-las numericamente. Usar apenas como narrativa opcional nos laudos, condicionada ao tipo-resumo derivado.
 
-**Consequências:** nenhuma pontuação de função cognitiva no motor. Qualquer menção nos laudos deve ser marcada como inferência narrativa.
+**Consequências:** nenhuma pontuação de função cognitiva no motor (`science_engine.py`). O docstring de `derive_jung_from_big_five()` registra explicitamente: "A pilha de funções cognitivas NÃO é calculada (sem suporte empírico) — fica para a narrativa."
 
 ---
 
 ## ADR-04 — Ômega de McDonald no lugar do Alpha de Cronbach
 
-**Contexto:** Alpha de Cronbach assume tau-equivalência (cargas iguais) e subestima a confiabilidade com itens de pesos diferentes.
+**Contexto:** Alpha de Cronbach assume tau-equivalência (cargas fatoriais iguais entre itens) — suposição frequentemente violada. O Ômega total de McDonald é mais apropriado para instrumentos com itens de pesos diferentes.
 
-**Decisão:** usar Ômega total de McDonald (via PCA unifatorial aproximado) como medida de confiabilidade. Alpha permanece disponível em `math_engine.py` mas não é usado na rota principal.
+**Decisão:** usar Ômega total de McDonald (`mcdonald_omega()` em `science_engine.py`) via modelo unifatorial aproximado (primeira componente principal sobre matriz de correlações). Alpha permanece disponível em `math_engine.py:calculate_cronbach_alpha()` mas não é usado em nenhuma rota de produção.
 
-**Consequências:** confiabilidade mais precisa para instrumentos heterogêneos. Import de `calculate_cronbach_alpha` em `main.py` é órfão — remover na F2.
+**Consequências:** confiabilidade mais precisa. Import de `calculate_cronbach_alpha` foi removido de `main.py` em F2 (commit 05c74fa) — a função permanece em `math_engine.py` pois é usada em `test_main.py`.
 
 ---
 
@@ -48,58 +57,56 @@
 
 **Contexto:** RH e empresas reconhecem DISC e Spranger como linguagem. Big Five é mais preciso mas menos reconhecido no contexto corporativo.
 
-**Decisão:** DISC e Spranger são derivados do Big Five via mapeamento heurístico (pesos provisórios no código) e apresentados como "estilo de ação" e "motivadores", respectivamente. Os próprios docstrings no código marcam esses mapeamentos como provisórios.
+**Decisão:** DISC e Spranger são derivados do Big Five via mapeamento heurístico e apresentados como "estilo de ação" e "motivadores", respectivamente. Os docstrings em `derive_disc_from_big_five()` e `derive_spranger_from_big_five()` marcam todos os pesos como `[provisório]`. A F6 decidirá se Spranger passa a ter itens próprios ou se mantém o rótulo ilustrativo.
 
-**Consequências:** facilita adoção corporativa sem abrir mão do núcleo científico. A validade do mapeamento é limitada e deve ser explicitada nos laudos e na UI.
+**Consequências:** facilita adoção corporativa sem abrir mão do núcleo científico. A validade do mapeamento é limitada e deve ser explicitada nos laudos (o prompt do Gemini já inclui essa ressalva) e na UI.
 
 ---
 
-## ADR-06 — NORM_MODE=intra como padrão
+## ADR-06 — NORM_MODE=intra como padrão honesto
 
-**Contexto:** usar percentis populacionais exige normas publicadas e versionadas. O sistema ainda não tem base de dados suficiente nem fonte pública versionada.
+**Contexto:** usar percentis populacionais exige normas publicadas e versionadas para a população-alvo. O sistema ainda não tem base de dados própria suficiente nem fonte pública versionada integrada.
 
-**Decisão:** padrão é `NORM_MODE=intra` — régua interna do próprio respondente (comparação entre fatores do mesmo indivíduo). O modo `public` está bloqueado no código com mensagem explicativa até existir uma fonte pública versionada.
+**Decisão:** padrão é `NORM_MODE=intra` — régua interna do próprio respondente (`percentil_intraindividual()` em `science_engine.py`). O modo `public` está bloqueado no código com mensagem: `"NORM_MODE=public requer arquivo de normas públicas versionado. Use NORM_MODE=intra por enquanto."` A F4 desbloqueará o modo `public`.
 
-**Consequências:** resultados são honestos sobre o que medem. Não é possível afirmar "você está no percentil 80 da população". Documentar isso nos laudos.
+**Consequências:** resultados são honestos sobre o que medem. O rótulo retornado pela API é `"régua interna (não é percentil populacional)"`. Não é possível afirmar "você está no percentil 80 da população". Documentar nos laudos.
 
 ---
 
 ## ADR-07 — Itens IPIP de domínio público
 
-**Contexto:** instrumentos comerciais (NEO PI-R, 16PF etc.) têm licenças restritivas e custo por aplicação.
+**Contexto:** instrumentos comerciais (NEO PI-R, 16PF, MBTI etc.) têm licenças restritivas e custo por aplicação.
 
-**Decisão:** usar IPIP Big-Five Factor Markers (Goldberg, 1992), 50 itens, domínio público (`https://ipip.ori.org`). Tradução PT-BR versionada no código.
+**Decisão:** usar IPIP Big-Five Factor Markers (Goldberg, 1992), 50 itens, domínio público (`https://ipip.ori.org`). Tradução PT-BR versionada em `seed_big_five_ipip.py`. Origem documentada no código com citação da fonte.
 
-**Consequências:** sem custo por aplicação. Citação da fonte obrigatória em qualquer publicação derivada.
+**Consequências:** sem custo por aplicação. Citação da fonte obrigatória em qualquer publicação derivada. A tradução PT-BR não foi validada por linguistas — revisar antes de uso em publicações.
 
 ---
 
-## ADR-08 — Perguntas Mestres em pasta separada, integração apenas na F9
+## ADR-08 — Perguntas Mestres em pasta separada; integração apenas na F9
 
-**Contexto:** o projeto tem 1.242 perguntas biográficas (`2-perguntas`) que poderiam ser integradas ao questionário.
+**Contexto:** o projeto tem 1.242 perguntas biográficas (`2-perguntas`, 11 blocos) que poderiam ser integradas ao questionário DISC. Misturá-las com itens psicométricos invalidaria a medição do Big Five.
 
-**Decisão:** `2-perguntas` fica em pasta irmã fora do repo (`Drive/Arquivos Josemar/...`). As perguntas **nunca entram no motor de pontuação**. A integração acontece na F9, via pgvector/RAG, apenas na camada de saída (aconselhamento).
+**Decisão:** `2-perguntas` fica em pasta irmã fora do repo git (`1-disc-app`), sincronizada via Google Drive (ver `REGRA_MESTRE_SYNC.md`). As perguntas **nunca entram no motor de pontuação**. A integração acontece na F9, via pgvector/RAG, apenas na camada de saída (aconselhamento condicionado ao perfil pontuado).
 
-**Consequências:** núcleo DISC permanece limpo e psicometricamente justificável. Misturar as perguntas narrativas com itens psicométricos invalidaria a medição.
+**Consequências:** núcleo DISC permanece limpo e psicometricamente justificável. A F9 requer pgvector ativo no Supabase (já habilitado) e material `2-perguntas` disponível (já existe). Os dois níveis de material têm tratamentos distintos: narrativo (Blocos 01–10) vai para embeddings; rastreio psicométrico (Bloco 11) tem pontuação quantitativa contra pontos de corte do `schema-bloco-11.json`.
 
 ---
 
 ## ADR-09 — Supabase Postgres para persistência em produção
 
-**Contexto:** SQLite em `/tmp` na Vercel é efêmero e por instância — dados da família não persistiam entre cold starts.
+**Contexto:** SQLite em `/tmp` na Vercel é efêmero e por instância — dados não persistem entre cold starts.
 
-**Decisão:** usar Supabase Postgres com Transaction pooler (port 6543, `sslmode=require`). `database.py` normaliza `postgres://` → `postgresql+psycopg2://` e configura `pool_pre_ping`, `pool_recycle=300`, `connect_timeout=5`.
+**Decisão:** usar Supabase Postgres com Transaction pooler (port 6543, `sslmode=require`). `database.py` normaliza `postgres://` → `postgresql+psycopg2://` e configura `pool_pre_ping=True`, `pool_recycle=300`, `connect_timeout=5`. O fallback SQLite `/tmp` só é ativado quando `DATABASE_URL` já aponta para sqlite.
 
-**Consequências:** dados persistem. Cada cold start da Vercel abre conexão nova — o pooler de transações é o modo correto para serverless (não o pooler de sessão).
+**Consequências:** dados persistem entre cold starts. Transaction pooler é o modo correto para Vercel Serverless (não session pooler). Segredos guardados em `Drive/segredos/disc-env.txt` e setados no Vercel.
 
 ---
 
 ## ADR-10 — Proxy ASGI em `api/index.py` para Vercel Serverless
 
-**Contexto:** Vercel Serverless Functions não suportam ASGI diretamente de forma confiável com lifespan.
+**Contexto:** Vercel Serverless Functions não suportam ASGI diretamente com lifespan de forma confiável. Conflito entre `ServerErrorMiddleware` do Starlette e o exception handler do FastAPI resultava em erros em plain text.
 
-**Decisão:** `api/index.py` é um proxy ASGI leve que: (a) faz lazy import do backend; (b) gerencia o lifespan próprio (não delega ao backend) para evitar conflito com `ServerErrorMiddleware`; (c) chama `_init_db()` na primeira request; (d) captura erros de runtime e retorna JSON.
+**Decisão:** `api/index.py` é um proxy ASGI leve que: (a) faz lazy import do backend para evitar timeout de cold start; (b) gerencia lifespan próprio (não delega ao backend); (c) chama `_init_db()` na primeira requisição; (d) captura erros de runtime e retorna JSON. O `main.py` mantém `@app.exception_handler(Exception)` como segunda linha de defesa.
 
-**`main.py`** tem `@app.exception_handler(Exception)` para garantir que erros virem JSON antes de chegar ao `ServerErrorMiddleware` (que enviaria plain text e re-raise).
-
-**Consequências:** deploy serverless estável. Qualquer erro em produção retorna `{"detail": "..."}` em vez de "Internal Server Error" em plain text.
+**Consequências:** deploy serverless estável. Qualquer erro em produção retorna `{"detail": "..."}` em vez de "Internal Server Error" em plain text. O lifespan separado é necessário porque o `ServerErrorMiddleware` re-raise exceções do lifespan do app, quebrando o deploy.
