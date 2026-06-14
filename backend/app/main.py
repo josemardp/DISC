@@ -1,12 +1,15 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, status, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, EmailStr
+import csv
 import hashlib
+import io
 import json
 import os
 import secrets
@@ -31,8 +34,24 @@ from backend.app.science_engine import (
 from backend.app.seed_big_five_ipip import ITENS_ATENCAO
 from backend.app.gemini_service import generate_psychometric_report
 
+
+@asynccontextmanager
+async def lifespan(app):
+    try:
+        Base.metadata.create_all(bind=engine)
+        from backend.app.seed import seed_db
+        db = next(get_db())
+        seed_db(db)
+        db.close()
+    except Exception as e:
+        import traceback
+        print(f"[startup] erro não-fatal: {e}", flush=True)
+        traceback.print_exc()
+    yield
+
+
 # Inicialização da API
-app = FastAPI(title=settings.PROJECT_NAME, version="1.0.0")
+app = FastAPI(title=settings.PROJECT_NAME, version="1.0.0", lifespan=lifespan)
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
@@ -74,19 +93,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Inicialização automática do banco e seeds na primeira execução
-@app.on_event("startup")
-def startup_event():
-    try:
-        Base.metadata.create_all(bind=engine)
-        from backend.app.seed import seed_db
-        db = next(get_db())
-        seed_db(db)
-        db.close()
-    except Exception as e:
-        import traceback
-        print(f"[startup] erro não-fatal: {e}", flush=True)
-        traceback.print_exc()
 
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(16)
@@ -111,9 +117,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
@@ -998,3 +1004,39 @@ def get_global_statistics(current_user: User = Depends(get_current_user), db: Se
         "omega_bigfive": omega_bigfive,
         "gaussian": gaussian_points
     }
+
+
+@app.get("/admin/export/bigfive")
+def export_bigfive_csv(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Acesso exclusivo ao Administrador Global.")
+
+    rows = db.query(PsychometricResult).filter(
+        PsychometricResult.bigfive_percentis.isnot(None)
+    ).order_by(PsychometricResult.created_at.asc()).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "respondent_id", "applied_at",
+        "O_raw", "C_raw", "E_raw", "A_raw", "N_raw",
+        "O_pct", "C_pct", "E_pct", "A_pct", "N_pct",
+        "quality_label"
+    ])
+    for r in rows:
+        pct = r.bigfive_percentis or {}
+        writer.writerow([
+            r.respondent_id,
+            r.created_at.isoformat() if r.created_at else "",
+            r.bigfive_O, r.bigfive_C, r.bigfive_E, r.bigfive_A, r.bigfive_N,
+            pct.get("O", ""), pct.get("C", ""), pct.get("E", ""),
+            pct.get("A", ""), pct.get("N", ""),
+            r.quality_label or ""
+        ])
+
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=\"bigfive_export.csv\""}
+    )

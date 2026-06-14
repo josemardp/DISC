@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, DateTime, Text, JSON
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from backend.app.database import Base
 
 class Tenant(Base):
@@ -8,7 +8,7 @@ class Tenant(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     users = relationship("User", back_populates="tenant", cascade="all, delete-orphan")
     jobs = relationship("Job", back_populates="tenant", cascade="all, delete-orphan")
@@ -22,7 +22,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, nullable=False)
     role = Column(String, default="respondent")  # admin, hr, respondent
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     tenant = relationship("Tenant", back_populates="users")
     responses = relationship("Response", back_populates="respondent", cascade="all, delete-orphan")
@@ -51,7 +51,7 @@ class Response(Base):
     test_type = Column(String, nullable=False)  # DISC, SPRANGER, JUNG
     phase = Column(String, nullable=False)  # natural, adaptado
     value = Column(Integer, nullable=False)  # DISC: +1 (Mais), -1 (Menos), 0 (Neutro). Spranger/Jung: Likert 1-6.
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     respondent = relationship("User", back_populates="responses")
 
@@ -68,7 +68,7 @@ class TelemetrySession(Base):
     is_fraud_suspect = Column(Boolean, default=False)
     fraud_reasons = Column(JSON, nullable=True)  # Lista de motivos (LinearPattern, SocialDesirability)
     raw_telemetry = Column(JSON, nullable=True)  # Registro detalhado por item
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     respondent = relationship("User", back_populates="telemetry_sessions")
 
@@ -90,7 +90,7 @@ class Job(Base):
     target_spranger = Column(JSON, nullable=True)  # {"teorico": 40, "economico": 50, ...}
     target_jung = Column(JSON, nullable=True)      # {"E": 60, "I": 40, "S": 50, "N": 50, "T": 60, "F": 40, "J": 70, "P": 30}
     
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     tenant = relationship("Tenant", back_populates="jobs")
 
@@ -99,7 +99,7 @@ class PsychometricResult(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     respondent_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # DISC Raw Scores (Perfil Natural)
     natural_raw_d = Column(Float, default=0.0)
@@ -164,7 +164,7 @@ class Report(Base):
     result_id = Column(Integer, ForeignKey("psychometric_results.id"), nullable=False)
     status = Column(String, default="pending")  # pending, generating, completed, failed
     narrative_text = Column(Text, nullable=True)  # Texto markdown gerado pelo Gemini
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     respondent = relationship("User", back_populates="reports")
     result = relationship("PsychometricResult", back_populates="reports")

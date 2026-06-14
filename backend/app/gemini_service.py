@@ -1,6 +1,6 @@
 import os
 try:
-    import google.generativeai as genai
+    from google import genai
     GENAI_AVAILABLE = True
 except ImportError:
     genai = None
@@ -133,13 +133,11 @@ DIRETRIZES DE FORMATO E TOM:
         )
 
     try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        
-        # Chamada síncrona simples (pode ser executada assincronamente pelo executor do backend)
-        response = model.generate_content(
-            prompt,
-            generation_config={"temperature": 0.3}
+        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt,
+            config=genai.types.GenerateContentConfig(temperature=0.3)
         )
         return response.text
     except Exception as e:

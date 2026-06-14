@@ -161,6 +161,37 @@ if __name__ == "__main__":
     unittest.main()
 
 
+def test_test_retest_perfeito():
+    from backend.app.validacao import test_retest_reliability
+    # 10 itens por fator, valores distintos — correlação perfeita quando A == B
+    aplicacao = [
+        {"fator": f, "escore_raw": float(i + 1)}
+        for f in ["O", "C", "E", "A", "N"]
+        for i in range(10)
+    ]
+    resultado = test_retest_reliability(aplicacao, aplicacao)
+    for f in ["O", "C", "E", "A", "N"]:
+        assert resultado[f] == 1.0, f"Correlação perfeita esperada para {f}, obteve {resultado[f]}"
+
+
+def test_omega_por_fator_coerente():
+    from backend.app.validacao import omega_por_fator
+    # 20 respondentes, 10 itens para fator O com alta consistência interna
+    # true_score varia de 2.0 a 5.0; noise determinístico e pequeno
+    respostas = []
+    for resp_idx in range(20):
+        true_score = 2.0 + (resp_idx / 19) * 3.0
+        for item_idx in range(10):
+            noise = (item_idx % 3 - 1) * 0.05
+            respostas.append({
+                "item_id": f"O_{item_idx + 1}",
+                "fator": "O",
+                "escore": true_score + noise
+            })
+    resultado = omega_por_fator(respostas)
+    assert resultado["O"] > 0.7, f"Ômega esperado > 0.7, obteve {resultado['O']}"
+
+
 def test_bigfive_public_norm(monkeypatch):
     from backend.app.config import settings as _settings
     monkeypatch.setattr(_settings, "NORM_MODE", "public")
