@@ -708,7 +708,8 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
                 "social": result.spranger_percentile_social,
                 "individualista": result.spranger_percentile_individualista,
                 "regulador": result.spranger_percentile_regulador,
-                "derived_from": "BIGFIVE"
+                "derived_from": "BIGFIVE",
+                "aviso": "Estimativa ilustrativa derivada do Big Five — não é instrumento independente validado."
             },
             "quality_label": result.quality_label,
             "frictions": result.frictions
@@ -729,7 +730,8 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
             "estetico": result.spranger_percentile_estetico,
             "social": result.spranger_percentile_social,
             "individualista": result.spranger_percentile_individualista,
-            "regulador": result.spranger_percentile_regulador
+            "regulador": result.spranger_percentile_regulador,
+            "aviso": "Estimativa ilustrativa derivada do Big Five — não é instrumento independente validado."
         },
         "jung": {
             "dominant_type": result.jung_dominant_type,

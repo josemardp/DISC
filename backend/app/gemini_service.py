@@ -103,6 +103,7 @@ QUALIDADE DA RESPOSTA:
 DISC E SPRANGER DERIVADOS DO BIG FIVE (camadas de apresentação, não medidas independentes):
 - DISC: D={disc_natural.get('D', 'sem dados suficientes')}, I={disc_natural.get('I', 'sem dados suficientes')}, S={disc_natural.get('S', 'sem dados suficientes')}, C={disc_natural.get('C', 'sem dados suficientes')}
 - Spranger: {spranger_scores}
+- INSTRUÇÃO: Spranger é uma estimativa ilustrativa derivada do Big Five, não um instrumento independente. Mencione isso brevemente ao apresentar os motivadores.
 
 ZONAS DE FRICÇÃO DE CONSTRUTOS DETECTADAS:
 {frictions_str}

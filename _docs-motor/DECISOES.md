@@ -61,6 +61,8 @@ Eixos são marcados como `borderline` quando o percentil está entre 45 e 55.
 
 **Consequências:** facilita adoção corporativa sem abrir mão do núcleo científico. A validade do mapeamento é limitada e deve ser explicitada nos laudos (o prompt do Gemini já inclui essa ressalva) e na UI.
 
+Decisão F6 (2026-06-13): opção (b) escolhida — manter ilustrativo. Opção (a) descartada: exigiria ~30 itens próprios e N ≥ 200 para validação, incompatível com escopo familiar. Rótulo "estimativa ilustrativa" adicionado à saída da API e ao prompt do laudo.
+
 ---
 
 ## ADR-06 — NORM_MODE=intra como padrão honesto

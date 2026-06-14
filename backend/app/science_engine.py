@@ -256,7 +256,7 @@ def derive_spranger_from_big_five(bf_percentis: Dict[str, float]) -> Dict[str, f
         "regulador": round(consc, 2),                    # [provisório] ordem ~ Conscienciosidade
         "individualista": round(extr, 2),                # [provisório] status/liderança ~ Extroversão
         "economico": round((consc + (100 - aber)) / 2, 2),  # [provisório]
-        "_aviso": "Spranger não mapeia bem no Big Five; valores PROVISÓRIOS e ilustrativos.",
+        "aviso": "Estimativa ilustrativa derivada do Big Five — não é instrumento independente validado.",
     }
 
 
