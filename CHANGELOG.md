@@ -4,6 +4,21 @@ Formato: [Versão Semântica](https://semver.org/) — `[MAJOR.MINOR.PATCH] — 
 
 ---
 
+## [1.6.0] — 2026-06-14 — Refazer teste + invariante de preservação Big Five
+
+### Adicionado
+- Frontend: botão "Refazer teste" na aba "Meu Perfil" — `App.tsx` (estado `forceRetake` + gate de render) e `Dashboards.tsx` (prop `onRetake` + botão com `window.confirm`). Reabre o TestRoom no Big Five; sessão-only (não persiste em reload); histórico preservado no banco. (commit d9482e2)
+- `test_main.py`: `test_delete_consolidado_preserva_bigfive` — prova que o DELETE consolidado não remove resultados Big Five. (commit 16c656c)
+- `DECISOES.md`: ADR-11 — invariante de preservação do histórico Big Five (caminho Big Five é append-only). (commit 16c656c)
+
+### Corrigido
+- `main.py`: DELETE do ramo consolidado restrito a `bigfive_percentis IS NULL` — nunca remove histórico Big Five (base do teste-reteste F5 e do NORM_MODE=intra). (commit 16c656c)
+
+### Resultado
+- Suíte: **26/26 passed**
+
+---
+
 ## [1.5.0] — 2026-06-13 — F6: Spranger rotulado como ilustrativo
 
 ### Alterado

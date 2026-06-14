@@ -1,6 +1,6 @@
 # STATUS — Fotografia do estado atual
 
-> Última atualização: 2026-06-13 (F6 concluída; F1–F7 fechadas; 25/25 verdes).
+> Última atualização: 2026-06-14 (Refazer teste + invariante Big Five; F1–F7 fechadas; 26/26 verdes).
 > Para o roadmap e próximas fases, ver [ROADMAP.md](ROADMAP.md).
 
 ---
@@ -22,9 +22,10 @@
 
 | Item | Estado | Detalhe |
 |---|---|---|
-| Total de testes | ✅ **25/25 passando** | commit f6d98d9 — F5+F7 concluídas |
+| Total de testes | ✅ **26/26 passando** | commit 16c656c — invariante Big Five |
 | Tempo de execução | ✅ ~2.7s | `pytest backend/app/ -v` |
 | test_bigfive_submit_to_results_e2e | ✅ Passando | usa `with TestClient(app) as client:` |
+| test_delete_consolidado_preserva_bigfive | ✅ Passando | prova a invariante de preservação Big Five (DELETE IS NULL não remove histórico) |
 | conftest.py | ✅ Fixture autouse | cria tabelas + seed antes de qualquer teste |
 | Warnings próprios | ✅ Zero | F7 eliminou: google.generativeai, on_event, utcnow |
 | Warnings de terceiros | ⚠️ 3 (não-bloqueantes) | starlette/httpx, SQLAlchemy 2.0, google.genai types — externos, fora do escopo |
@@ -46,6 +47,8 @@
 | NORM_MODE=public com normas reais | `main.py`, `norms_ipip_neo.json` | fonte `open_psychometrics_2018` (N≈603k); `NORM_SOURCE` configurável por env (F4) |
 | Exportação CSV Big Five | `main.py` | `GET /admin/export/bigfive` — 13 colunas, role admin (F5) |
 | Infraestrutura de validação | `validacao.py` | `test_retest_reliability()` e `omega_por_fator()` — usa `mcdonald_omega` do science_engine (F5) |
+| Refazer teste (nova rodada) | `App.tsx`, `Dashboards.tsx` | botão na aba "Meu Perfil"; sessão-only; reabre TestRoom no Big Five; histórico preservado no DB |
+| Invariante de preservação Big Five | `main.py` | DELETE consolidado restrito a `bigfive_percentis IS NULL`; ADR-11; teste dedicado |
 | Ômega de McDonald | `science_engine.py` | `mcdonald_omega()` — via PCA unifatorial aproximado |
 | SEM e IC95% | `science_engine.py` | `standard_error_of_measurement()` + `confidence_interval()` |
 | Qualidade de resposta | `science_engine.py` | `response_quality_index()` — atenção, straight-lining, velocidade |
@@ -157,4 +160,4 @@ pytest backend/app/ -v
 
 **F9** — Camada de Autoconhecimento (próximo passo real). Depende de: (a) dados reais acumulados via F5 para validação empírica; (b) decisão de trazer pasta `2-perguntas`.
 
-**Pendência F5 empírica:** infraestrutura pronta; teste-reteste real (Josemar + Esdra, intervalo 2–4 semanas) ainda não executado. Quando tiver os dois snapshots, rodar `test_retest_reliability()` conforme `PROTOCOLO_VALIDACAO.md`.
+**Pendência F5 empírica:** infraestrutura pronta; teste-reteste real (Josemar + Esdra, intervalo 2–4 semanas) ainda não executado. A rodada 2 agora é feita pelo botão "Refazer teste" na aba "Meu Perfil" — não depende mais de intervenção manual no backend. Quando tiver os dois snapshots, rodar `test_retest_reliability()` conforme `PROTOCOLO_VALIDACAO.md`.
