@@ -23,6 +23,9 @@ export default function App() {
   // Status de conclusão de teste
   const [hasFinishedTest, setHasFinishedTest] = useState(false);
   const [checkingTest, setCheckingTest] = useState(false);
+  // forceRetake é estado de sessão (não persistido); se a página for recarregada no meio
+  // da nova rodada, /results/me retorna resultado anterior e volta aos Dashboards normalmente.
+  const [forceRetake, setForceRetake] = useState(false);
 
   // Verifica se o usuário logado concluiu os testes ao carregar a página
   useEffect(() => {
@@ -318,20 +321,26 @@ export default function App() {
             <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
             <p className="text-gray-400 text-sm">Verificando status de avaliações...</p>
           </div>
-        ) : hasFinishedTest ? (
+        ) : hasFinishedTest && !forceRetake ? (
           /* Se já respondeu o teste ou se for do RH, exibe os Dashboards */
-          <Dashboards token={token} apiBaseUrl={apiBaseUrl} userRole={user.role} />
+          <Dashboards
+            token={token}
+            apiBaseUrl={apiBaseUrl}
+            userRole={user.role}
+            onRetake={() => setForceRetake(true)}
+          />
         ) : (
-          /* Se for candidato e não concluiu os testes, entra na sala de testes */
+          /* Se for candidato e não concluiu os testes (ou forceRetake), entra na sala de testes */
           <div className="py-6">
-            <TestRoom 
-              userId={user.id} 
-              token={token} 
-              apiBaseUrl={apiBaseUrl} 
+            <TestRoom
+              userId={user.id}
+              token={token}
+              apiBaseUrl={apiBaseUrl}
               onTestComplete={() => {
                 setHasFinishedTest(true);
+                setForceRetake(false);
                 checkUserTestStatus();
-              }} 
+              }}
             />
           </div>
         )}

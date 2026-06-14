@@ -6,16 +6,17 @@ import {
 } from "recharts";
 import {
   User, Users, Shield, Briefcase, Plus, TrendingUp, AlertTriangle,
-  FileText, Award, Layers, Zap, Info, HelpCircle
+  FileText, Award, Layers, Zap, Info, HelpCircle, RotateCcw
 } from "lucide-react";
 
 interface DashboardsProps {
   token: string;
   apiBaseUrl: string;
   userRole: string;
+  onRetake?: () => void;
 }
 
-export default function Dashboards({ token, apiBaseUrl, userRole }: DashboardsProps) {
+export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: DashboardsProps) {
   const [activeTab, setActiveTab] = useState<"self" | "rh" | "admin">("self");
 
   // Estado Geral
@@ -371,9 +372,25 @@ export default function Dashboards({ token, apiBaseUrl, userRole }: DashboardsPr
                     <h3 className="text-lg font-bold text-white mb-1">Big Five</h3>
                     <p className="text-xs text-gray-400">{selfData.bigfive.norm_label}</p>
                   </div>
-                  <span className={`w-fit px-3 py-1 rounded-full text-xs font-bold border ${getQualityColor(selfData.quality_label)}`}>
-                    Qualidade {selfData.quality_label || "sem dado"}
-                  </span>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className={`w-fit px-3 py-1 rounded-full text-xs font-bold border ${getQualityColor(selfData.quality_label)}`}>
+                      Qualidade {selfData.quality_label || "sem dado"}
+                    </span>
+                    {onRetake && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm("Iniciar uma nova rodada do teste? Seu resultado atual fica guardado.")) {
+                            onRetake();
+                          }
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition"
+                        title="Refazer teste"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        Refazer teste
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-5">
