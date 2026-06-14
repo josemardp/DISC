@@ -112,3 +112,15 @@ Decisão F6 (2026-06-13): opção (b) escolhida — manter ilustrativo. Opção 
 **Decisão:** `api/index.py` é um proxy ASGI leve que: (a) faz lazy import do backend para evitar timeout de cold start; (b) gerencia lifespan próprio (não delega ao backend); (c) chama `_init_db()` na primeira requisição; (d) captura erros de runtime e retorna JSON. O `main.py` mantém `@app.exception_handler(Exception)` como segunda linha de defesa.
 
 **Consequências:** deploy serverless estável. Qualquer erro em produção retorna `{"detail": "..."}` em vez de "Internal Server Error" em plain text. O lifespan separado é necessário porque o `ServerErrorMiddleware` re-raise exceções do lifespan do app, quebrando o deploy.
+
+---
+
+## ADR-11 — Invariante de preservação do histórico Big Five (2026-06-14)
+
+**Contexto:** `process_psychometric_results()` tem dois caminhos: (a) se há respostas Big Five, faz early return para `_process_bigfive_results()`, que é append-only (cria novo `PsychometricResult` sem deletar os anteriores); (b) se não há Big Five, cai no ramo consolidado (DISC+Spranger+Jung), que continha um `DELETE` em massa de todos os `PsychometricResult` do usuário. Esse delete-all era um landmine: se o gate `has_bigfive` mudasse ou o fluxo DISC/Spranger/Jung fosse revivido, uma nova submissão apagaria todo o histórico Big Five, quebrando o teste-reteste (F5) e o NORM_MODE=intra.
+
+**Decisão:** o delete do ramo consolidado foi estreitado para remover apenas linhas com `bigfive_percentis IS NULL` (resultados consolidados/legados). Resultados Big Five, identificados por `bigfive_percentis IS NOT NULL`, nunca são removidos por esse caminho. O caminho Big Five permanece append-only. Um comentário de invariante foi adicionado acima do delete em `main.py`.
+
+**Motivo:** sustentar o teste-reteste da F5 (Josemar + Esdra, dois snapshots com 2–4 semanas de intervalo) e o `_bigfive_raw_history()` que alimenta o `NORM_MODE=intra`. Remover o landmine antes que o fluxo seja alterado.
+
+**Consequências:** o histórico de `PsychometricResult` Big Five é imutável por código de aplicação. O delete consolidado continua funcionando para seu propósito original (substituir resultado consolidado antes de criar novo). Um teste unitário (`test_delete_consolidado_preserva_bigfive`) prova o invariante diretamente no filtro.

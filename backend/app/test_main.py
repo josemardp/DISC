@@ -231,3 +231,61 @@ def test_bigfive_public_norm(monkeypatch):
         assert data["bigfive"]["norm_info"]["mode"] == "public"
         for factor in data["bigfive"]["factors"].values():
             assert 0.0 <= factor["percentile"] <= 100.0
+
+
+def test_delete_consolidado_preserva_bigfive():
+    """
+    Prova a invariante F5: o filtro do delete consolidado (bigfive_percentis IS NULL)
+    remove apenas resultados sem Big Five e preserva o histórico Big Five intacto.
+    """
+    from backend.app.database import SessionLocal
+    from backend.app.models import PsychometricResult
+
+    db = SessionLocal()
+    try:
+        # ID de usuário fictício isolado para este teste
+        user_id = 999999
+
+        # Limpa qualquer resíduo de execuções anteriores
+        db.query(PsychometricResult).filter(
+            PsychometricResult.respondent_id == user_id
+        ).delete()
+        db.commit()
+
+        # Linha Big Five: bigfive_percentis preenchido com dict (como _process_bigfive_results faz)
+        r_bigfive = PsychometricResult(
+            respondent_id=user_id,
+            bigfive_O=35.0, bigfive_C=40.0, bigfive_E=30.0, bigfive_A=45.0, bigfive_N=25.0,
+            bigfive_percentis={"O": 60.0, "C": 70.0, "E": 50.0, "A": 80.0, "N": 40.0},
+        )
+        # Linha consolidada: bigfive_percentis NÃO setado (SQL NULL), como process_psychometric_results
+        # faz no ramo sem-Big-Five (linhas 610-639 de main.py nunca setam bigfive_percentis).
+        # Não usar bigfive_percentis=None explícito: o JSON type armazena isso como "null" (string),
+        # não como SQL NULL, e IS NULL não o encontraria.
+        r_consolidado = PsychometricResult(
+            respondent_id=user_id,
+        )
+        db.add(r_bigfive)
+        db.add(r_consolidado)
+        db.commit()
+
+        # Executa exatamente o filtro do ramo consolidado em main.py
+        db.query(PsychometricResult).filter(
+            PsychometricResult.respondent_id == user_id,
+            PsychometricResult.bigfive_percentis.is_(None)
+        ).delete(synchronize_session=False)
+        db.commit()
+
+        restantes = db.query(PsychometricResult).filter(
+            PsychometricResult.respondent_id == user_id
+        ).all()
+
+        assert len(restantes) == 1, f"Esperava 1 resultado, encontrou {len(restantes)}"
+        assert restantes[0].bigfive_percentis is not None, "Resultado Big Five foi removido — invariante violada"
+    finally:
+        # Limpeza
+        db.query(PsychometricResult).filter(
+            PsychometricResult.respondent_id == user_id
+        ).delete()
+        db.commit()
+        db.close()

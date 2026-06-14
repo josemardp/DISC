@@ -605,7 +605,15 @@ def process_psychometric_results(user_id: int, db: Session):
     frictions = detect_frictions(disc_percentile["natural"], spranger_percentile, jung_pct)
 
     # Salva ou Atualiza os Resultados Psicométricos
-    db.query(PsychometricResult).filter(PsychometricResult.respondent_id == user_id).delete()
+    # INVARIANTE F5 (teste-reteste): NUNCA apagar resultados Big Five. O caminho Big Five é
+    # append-only (early return has_bigfive -> _process_bigfive_results). Este delete pertence
+    # ao caminho consolidado (sem Big Five) e remove APENAS resultados consolidados/legados
+    # (bigfive_percentis IS NULL), preservando todo o histórico Big Five que sustenta a
+    # exportação e o teste-reteste.
+    db.query(PsychometricResult).filter(
+        PsychometricResult.respondent_id == user_id,
+        PsychometricResult.bigfive_percentis.is_(None)
+    ).delete(synchronize_session=False)
     
     result = PsychometricResult(
         respondent_id=user_id,
