@@ -23,6 +23,7 @@ class Settings:
 
     # Normas psicométricas: intra usa a régua interna do próprio usuário.
     NORM_MODE: str = os.getenv("NORM_MODE", "intra").lower()
+    NORM_SOURCE: str = os.getenv("NORM_SOURCE", "open_psychometrics_2018")
     
     # JWT Auth
     SECRET_KEY: str = os.getenv("SECRET_KEY", "SUPER_SECRET_KEY_DISC_12345")

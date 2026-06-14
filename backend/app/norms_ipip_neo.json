@@ -1,0 +1,35 @@
+{
+  "_meta": {
+    "instrument": "IPIP Big-Five Factor Markers, 50 itens (Goldberg, 1992)",
+    "scale": "Soma de 10 itens por fator, escala Likert 1-5, range 10-50 por fator",
+    "reverse_scoring": "Aplicado antes da soma conforme codebook de cada fonte",
+    "nota_N": "N = Neuroticismo (escore bruto, range 10-50). Para calcular Estabilidade Emocional: ES_raw = 60 - N_raw",
+    "generated": "2026-06-13",
+    "usage": "Setar NORM_SOURCE=<chave_da_fonte> no .env para selecionar a norma ativa"
+  },
+  "sources": {
+    "open_psychometrics_2018": {
+      "description": "Open Psychometrics Project, IPIP Big-Five Factor Markers, coleta online 2016-2018. N=603.322 respondentes válidos (filtro IPC=1, sem zeros, valores 1-5). Amostra internacional auto-selecionada — viés: maior Abertura e Amabilidade vs. população geral. URL: https://openpsychometrics.org/_rawdata/IPIP-FFM-data-8Nov2018.zip",
+      "n": 603322,
+      "collection_years": "2016-2018",
+      "sample_note": "Amostra online internacional auto-selecionada. NÃO é representativa da população geral nem da população brasileira.",
+      "O": {"mean": 39.3888, "sd": 6.1826},
+      "C": {"mean": 33.4256, "sd": 7.3905},
+      "E": {"mean": 29.1382, "sd": 9.1123},
+      "A": {"mean": 37.5891, "sd": 7.3633},
+      "N": {"mean": 30.8132, "sd": 8.6068}
+    },
+    "goldberg_ipip_ori": {
+      "description": "IPIP.ORI (ipip.ori.org/newNorms.htm) — página verificada em 2026-06-13. A página declara explicitamente 'No norms are available on the IPIP website' e recomenda uso de dados locais ou datasets alternativos. Fonte inativa.",
+      "n": null,
+      "collection_years": null,
+      "sample_note": null,
+      "nota": "não encontrado — página IPIP.ORI não disponibiliza tabelas de normas públicas para os 50 itens",
+      "O": {"mean": null, "sd": null},
+      "C": {"mean": null, "sd": null},
+      "E": {"mean": null, "sd": null},
+      "A": {"mean": null, "sd": null},
+      "N": {"mean": null, "sd": null}
+    }
+  }
+}

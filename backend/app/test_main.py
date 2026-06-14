@@ -159,3 +159,44 @@ class TestPsychometricMathEngine(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_bigfive_public_norm(monkeypatch):
+    from backend.app.config import settings as _settings
+    monkeypatch.setattr(_settings, "NORM_MODE", "public")
+    monkeypatch.setattr(_settings, "NORM_SOURCE", "open_psychometrics_2018")
+
+    with TestClient(app) as client:
+        email = f"public-norm-{uuid4().hex}@example.com"
+        reg = client.post("/auth/register", json={
+            "email": email, "password": "123456", "full_name": "Norma Publica"
+        })
+        assert reg.status_code == 200
+        headers = {"Authorization": f"Bearer {reg.json()['access_token']}"}
+
+        blocks = client.get("/questionnaire/items?test_type=BIGFIVE", headers=headers).json()
+        answers = []
+        likert = [1, 2, 3, 4, 5]
+        for idx, block in enumerate(blocks):
+            for item in block["items"]:
+                value = likert[idx % len(likert)]
+                if item["dimension"] == "attention_check":
+                    text = item["item_text"]
+                    value = 1 if "Muito imprecisa" in text else (5 if "Muito precisa" in text else 3)
+                answers.append({
+                    "item_id": item["id"],
+                    "block_number": block["block_number"],
+                    "value": value
+                })
+
+        submit = client.post("/questionnaire/submit", json={
+            "test_type": "BIGFIVE", "phase": "natural", "answers": answers,
+            "ttfc_avg": 1200, "irt_avg": 2500, "rvi_count": 1, "raw_telemetry": []
+        }, headers=headers)
+        assert submit.status_code == 200
+
+        data = client.get("/results/me", headers=headers).json()
+        assert "norm_info" in data["bigfive"], "norm_info ausente na resposta"
+        assert data["bigfive"]["norm_info"]["mode"] == "public"
+        for factor in data["bigfive"]["factors"].values():
+            assert 0.0 <= factor["percentile"] <= 100.0

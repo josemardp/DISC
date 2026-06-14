@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, EmailStr
 import hashlib
+import json
+import os
 import secrets
 import traceback as _traceback
 from jose import JWTError, jwt
@@ -20,7 +22,8 @@ from backend.app.math_engine import (
     detect_frictions
 )
 from backend.app.science_engine import (
-    score_big_five, percentil_intraindividual, derive_jung_from_big_five,
+    score_big_five, percentil_intraindividual, percentil_por_norma,
+    derive_jung_from_big_five,
     derive_disc_from_big_five, derive_spranger_from_big_five,
     mcdonald_omega, standard_error_of_measurement, confidence_interval,
     response_quality_index
@@ -347,6 +350,19 @@ def submit_responses(submission: TestSubmission, current_user: User = Depends(ge
 # MOTOR DE PROCESSAMENTO DE PERFIL
 # ==============================================================================
 
+def load_norm_source(source_name: str) -> dict:
+    json_path = os.path.join(os.path.dirname(__file__), "norms_ipip_neo.json")
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    sources = data.get("sources", {})
+    if source_name not in sources:
+        raise ValueError(
+            f"Fonte de normas '{source_name}' não encontrada em norms_ipip_neo.json. "
+            f"Fontes disponíveis: {list(sources.keys())}"
+        )
+    return sources[source_name]
+
+
 def _attention_expected_by_item_id(db: Session) -> Dict[int, int]:
     attention_items = db.query(QuestionnaireItem).filter(
         QuestionnaireItem.test_type == "BIGFIVE",
@@ -376,19 +392,27 @@ def _bigfive_raw_history(user_id: int, db: Session) -> Dict[str, List[float]]:
 def _bigfive_norm_label() -> str:
     if settings.NORM_MODE == "intra":
         return "régua interna (não é percentil populacional)"
-    return "norma pública indisponível: configure NORM_MODE=intra até versionar uma fonte pública"
+    if settings.NORM_MODE == "public":
+        return f"norma pública: {settings.NORM_SOURCE}"
+    return "modo de norma desconhecido"
 
 
 def _bigfive_scaled_scores(raw_scores: Dict[str, float], history: Dict[str, List[float]]) -> Dict[str, float]:
-    if settings.NORM_MODE != "intra":
-        raise HTTPException(
-            status_code=500,
-            detail="NORM_MODE=public requer arquivo de normas públicas versionado. Use NORM_MODE=intra por enquanto."
-        )
-    return {
-        factor: percentil_intraindividual(raw_scores[factor], history.get(factor, []))["posicao_relativa"]
-        for factor in ["O", "C", "E", "A", "N"]
-    }
+    if settings.NORM_MODE == "intra":
+        return {
+            factor: percentil_intraindividual(raw_scores[factor], history.get(factor, []))["posicao_relativa"]
+            for factor in ["O", "C", "E", "A", "N"]
+        }
+    if settings.NORM_MODE == "public":
+        norm = load_norm_source(settings.NORM_SOURCE)
+        return {
+            factor: percentil_por_norma(raw_scores[factor], norm[factor]["mean"], norm[factor]["sd"])
+            for factor in ["O", "C", "E", "A", "N"]
+        }
+    raise HTTPException(
+        status_code=500,
+        detail=f"NORM_MODE='{settings.NORM_MODE}' inválido. Use 'intra' ou 'public'."
+    )
 
 
 def _process_bigfive_results(user_id: int, db: Session):
@@ -649,14 +673,23 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
                 "ci_high": ci_high
             }
 
+        bigfive_dict = {
+            "factors": fatores,
+            "norm_mode": settings.NORM_MODE,
+            "norm_label": _bigfive_norm_label()
+        }
+        if settings.NORM_MODE == "public":
+            norm_src = load_norm_source(settings.NORM_SOURCE)
+            bigfive_dict["norm_info"] = {
+                "mode": "public",
+                "source": settings.NORM_SOURCE,
+                "n": norm_src["n"]
+            }
+
         return {
             "candidate": current_user.full_name,
             "date": result.created_at,
-            "bigfive": {
-                "factors": fatores,
-                "norm_mode": settings.NORM_MODE,
-                "norm_label": _bigfive_norm_label()
-            },
+            "bigfive": bigfive_dict,
             "jung_continuo": result.jung_continuo,
             "disc": {
                 "natural": {"D": result.natural_percentile_d, "I": result.natural_percentile_i, "S": result.natural_percentile_s, "C": result.natural_percentile_c},
