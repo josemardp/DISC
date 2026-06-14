@@ -1,6 +1,6 @@
 # STATUS — Fotografia do estado atual
 
-> Última atualização: 2026-06-13 (F3 concluída).
+> Última atualização: 2026-06-13 (F6 concluída; F1–F7 fechadas; 25/25 verdes).
 > Para o roadmap e próximas fases, ver [ROADMAP.md](ROADMAP.md).
 
 ---
@@ -22,11 +22,12 @@
 
 | Item | Estado | Detalhe |
 |---|---|---|
-| Total de testes | ✅ **22/22 passando** | commit 05c74fa — F2 concluída |
-| Tempo de execução | ✅ 5.29s | `pytest backend/app/ -v` |
+| Total de testes | ✅ **25/25 passando** | commit f6d98d9 — F5+F7 concluídas |
+| Tempo de execução | ✅ ~2.7s | `pytest backend/app/ -v` |
 | test_bigfive_submit_to_results_e2e | ✅ Passando | usa `with TestClient(app) as client:` |
 | conftest.py | ✅ Fixture autouse | cria tabelas + seed antes de qualquer teste |
-| Warnings | ⚠️ 117 (não-bloqueantes) | deprecações SQLAlchemy 2.0, FastAPI on_event, google.generativeai (F7 resolve) |
+| Warnings próprios | ✅ Zero | F7 eliminou: google.generativeai, on_event, utcnow |
+| Warnings de terceiros | ⚠️ 3 (não-bloqueantes) | starlette/httpx, SQLAlchemy 2.0, google.genai types — externos, fora do escopo |
 
 ---
 
@@ -41,7 +42,10 @@
 | Percentil régua interna | `science_engine.py` | `percentil_intraindividual()` — NORM_MODE=intra |
 | Jung contínuo derivado | `science_engine.py` | `derive_jung_from_big_five()` — 4 eixos + borderline |
 | DISC derivado (provisório) | `science_engine.py` | `derive_disc_from_big_five()` — heurístico |
-| Spranger derivado (provisório) | `science_engine.py` | `derive_spranger_from_big_five()` — heurístico |
+| Spranger derivado (ilustrativo) | `science_engine.py` | `derive_spranger_from_big_five()` — heurístico; campo `"aviso"` na resposta da API (F6) |
+| NORM_MODE=public com normas reais | `main.py`, `norms_ipip_neo.json` | fonte `open_psychometrics_2018` (N≈603k); `NORM_SOURCE` configurável por env (F4) |
+| Exportação CSV Big Five | `main.py` | `GET /admin/export/bigfive` — 13 colunas, role admin (F5) |
+| Infraestrutura de validação | `validacao.py` | `test_retest_reliability()` e `omega_por_fator()` — usa `mcdonald_omega` do science_engine (F5) |
 | Ômega de McDonald | `science_engine.py` | `mcdonald_omega()` — via PCA unifatorial aproximado |
 | SEM e IC95% | `science_engine.py` | `standard_error_of_measurement()` + `confidence_interval()` |
 | Qualidade de resposta | `science_engine.py` | `response_quality_index()` — atenção, straight-lining, velocidade |
@@ -97,7 +101,7 @@ npm run dev
 ```powershell
 # Na raiz do projeto 1-disc-app:
 pytest backend/app/ -v
-# Resultado esperado: 22 passed, 0 failed
+# Resultado esperado: 25 passed, 0 failed
 ```
 
 **Nota:** a fixture autouse em `backend/app/conftest.py` garante criação de tabelas e seed antes de qualquer teste. O banco de teste usa SQLite local (`psicometrico.db` ou o DATABASE_URL do `.env`).
@@ -111,7 +115,8 @@ pytest backend/app/ -v
 | `DATABASE_URL` | `sqlite:///./psicometrico.db` | pooler Transaction Supabase, port 6543, sslmode=require | Motor do banco |
 | `GEMINI_API_KEY` | opcional (usa fallback) | obrigatória | Geração de laudos |
 | `SECRET_KEY` | qualquer string | string aleatória longa | Assina tokens JWT |
-| `NORM_MODE` | `intra` | `intra` | Modo de normatização; `public` bloqueado no código |
+| `NORM_MODE` | `intra` | `intra` | Modo de normatização; `public` disponível desde F4 |
+| `NORM_SOURCE` | `open_psychometrics_2018` | `open_psychometrics_2018` | Fonte de normas para `NORM_MODE=public` |
 
 ---
 
@@ -148,5 +153,8 @@ pytest backend/app/ -v
 
 ## Próxima fase
 
-**F4** — Normas públicas reais (`NORM_MODE=public` com fonte versionada).
-Prompt pronto em `_docs-motor/PLANO_EVOLUCAO_DISC_v2.md` § 4.
+**F8** — TIRT (opcional). Avaliar viabilidade do modelo Thurstoniano para blocos ipsativos DISC antes de abrir. Prompt em `PLANO_EVOLUCAO_DISC_v2.md` § 4.
+
+**F9** — Camada de Autoconhecimento (próximo passo real). Depende de: (a) dados reais acumulados via F5 para validação empírica; (b) decisão de trazer pasta `2-perguntas`.
+
+**Pendência F5 empírica:** infraestrutura pronta; teste-reteste real (Josemar + Esdra, intervalo 2–4 semanas) ainda não executado. Quando tiver os dois snapshots, rodar `test_retest_reliability()` conforme `PROTOCOLO_VALIDACAO.md`.

@@ -1,7 +1,7 @@
 # ROADMAP — Fases do projeto DISC
 
 > Fonte única da verdade: este arquivo. Siga de cima para baixo.
-> Última atualização: 2026-06-13 (F3 — documentação viva concluída).
+> Última atualização: 2026-06-13 (F6 — Spranger ilustrativo concluída; F1–F7 fechadas).
 
 ---
 
@@ -12,10 +12,10 @@
 | **F1** | Persistência do banco (Supabase Postgres) | ✅ CONCLUÍDA | — |
 | **F2** | Suíte 100% verde + higiene de imports | ✅ CONCLUÍDA | — |
 | **F3** | Documentação viva (auto-documentar a evolução) | ✅ CONCLUÍDA | — |
-| **F4** | Normas públicas reais (sair do `intra`) | 🔲 Pendente | 🟡 Média |
-| **F5** | Validação com dados reais (teste-reteste humano, AFC) | 🔲 Pendente | 🟡 Média |
-| **F6** | Decisão sobre Spranger (medir vs. manter ilustrativo) | 🔲 Pendente | 🟢 Baixa |
-| **F7** | Higiene técnica (deprecações: genai, on_event, utcnow) | 🔲 Pendente | 🟢 Baixa |
+| **F4** | Normas públicas reais (sair do `intra`) | ✅ CONCLUÍDA | — |
+| **F5** | Validação com dados reais (infraestrutura; teste-reteste empírico pendente) | ✅ CONCLUÍDA | — |
+| **F6** | Decisão sobre Spranger (mantido como ilustrativo — opção b) | ✅ CONCLUÍDA | — |
+| **F7** | Higiene técnica (deprecações: genai, on_event, utcnow) | ✅ CONCLUÍDA | — |
 | **F8** | TIRT (escolha-forçada do DISC com escores válidos) | 🔲 Opcional | ⚪ |
 | **F9** | Camada de Autoconhecimento (2-perguntas + IA) | 🔲 Visão futura | 🔵 |
 
@@ -64,46 +64,59 @@
 
 ---
 
-## F4 — Normas públicas reais
+## F4 — Normas públicas reais ✅ CONCLUÍDA
 
-**Critério de pronto:** `NORM_MODE=public` usa normas reais citadas e versionadas em `backend/app/norms_ipip_neo.json`.
+**Commit:** f850200
 
-**Dependência:** fonte pública real (ex: dataset IPIP-NEO aberto) — não fabricar normas.
-
-**Prompt pronto em:** `_docs-motor/PLANO_EVOLUCAO_DISC_v2.md` § 4 (PROMPT F4).
-
----
-
-## F5 — Validação com dados reais
-
-**Critério de pronto:** exportação CSV funciona; `validacao.py` testado; `_docs-motor/PROTOCOLO_VALIDACAO.md` documentado.
-
-**Dependência:** N de respondentes reais suficiente (CFA exige amostra grande).
-
-**Prompt pronto em:** `_docs-motor/PLANO_EVOLUCAO_DISC_v2.md` § 4 (PROMPT F5).
+**O que foi feito:**
+- `config.py`: `NORM_SOURCE` (env; default `open_psychometrics_2018`)
+- `main.py`: `load_norm_source()`, `_bigfive_scaled_scores()` usa `percentil_por_norma` do science_engine; `norm_info` no `/results/me` quando `NORM_MODE=public`
+- `backend/app/norms_ipip_neo.json`: fonte `open_psychometrics_2018` (N≈603k, 2016–2018, online sample) com `mean` e `sd` por fator (escala 10–50)
+- `test_main.py`: `test_bigfive_public_norm` — monkeypatch, e2e, percentis 0–100
+- Resultado: **25/25 passed**
 
 ---
 
-## F6 — Decisão sobre Spranger
+## F5 — Validação com dados reais ✅ CONCLUÍDA (infraestrutura)
 
-**Critério de pronto:** decisão documentada em `_docs-motor/DECISOES.md` (ADR-05 atualizado) e implementada.
+**Commit:** f6d98d9 (absorveu F7 — ver nota)
 
-Opções: (a) medir com itens próprios validados; (b) manter ilustrativo com rótulo claro na UI e no laudo.
+**O que foi feito:**
+- `main.py`: `GET /admin/export/bigfive` — CSV 13 colunas, `Content-Type: text/csv`, role admin
+- `backend/app/validacao.py`: `test_retest_reliability()` (Pearson por fator) e `omega_por_fator()` (chama `mcdonald_omega` do science_engine)
+- `test_main.py`: `test_test_retest_perfeito` (r=1.0 quando A==B) e `test_omega_por_fator_coerente` (omega>0.7 com dados sintéticos)
+- `_docs-motor/PROTOCOLO_VALIDACAO.md`: protocolo Josemar + Esdra, intervalo 2–4 semanas, r≥0,80 (Kline 2000), CFA N≥200 (Hu & Bentler 1999), aviso de dados sensíveis
+- Resultado: **25/25 passed**
 
-**Prompt pronto em:** `_docs-motor/PLANO_EVOLUCAO_DISC_v2.md` § 4 (PROMPT F6).
+**⚠️ Pendência empírica:** a infraestrutura está pronta, mas o teste-reteste real (Josemar + Esdra com 2–4 semanas de intervalo) ainda não foi executado. Ver `PROTOCOLO_VALIDACAO.md`.
 
 ---
 
-## F7 — Higiene técnica
+## F6 — Decisão sobre Spranger ✅ CONCLUÍDA
 
-**Critério de pronto:** sem avisos de depreciação críticos; suíte 22/22 verde após cada migração.
+**Commit:** df02877
 
-Itens pendentes (confirmados nos warnings da suíte):
-- `google.generativeai` → `google.genai`
-- `@app.on_event("startup")` → lifespan handlers (FastAPI)
-- `datetime.utcnow()` → timezone-aware (`datetime.now(datetime.UTC)`)
+**Decisão tomada:** opção (b) — manter Spranger como estimativa ilustrativa derivada do Big Five. Opção (a) descartada: exigiria ~30 itens próprios e N ≥ 200 para validação.
 
-**Prompt pronto em:** `_docs-motor/PLANO_EVOLUCAO_DISC_v2.md` § 4 (PROMPT F7).
+**O que foi feito:**
+- `science_engine.py`: campo `"aviso"` no retorno de `derive_spranger_from_big_five()`
+- `main.py`: `"aviso"` repassado nas 2 ocorrências do dict `"spranger"` em `/results/me`
+- `gemini_service.py`: instrução de rótulo adicionada ao prompt (seção Spranger)
+- `DECISOES.md`: ADR-05 atualizado com decisão F6 (2026-06-13)
+- Resultado: **25/25 passed**
+
+---
+
+## F7 — Higiene técnica ✅ CONCLUÍDA
+
+**Commit:** f6d98d9 (absorvido junto com F5 — todos os arquivos commitados de uma vez)
+
+**O que foi feito:**
+- `requirements.txt`: `google-genai>=0.8` adicionado
+- `gemini_service.py`: `import google.generativeai as genai` → `from google import genai`; chamada API atualizada para `genai.Client` + `client.models.generate_content`
+- `main.py`: `@app.on_event("startup")` → `@asynccontextmanager async def lifespan`; `datetime.utcnow()` → `datetime.now(timezone.utc)`
+- `models.py`: 7× `default=datetime.utcnow` → `default=lambda: datetime.now(timezone.utc)`
+- Resultado: **25/25 passed**, zero warnings de depreciação próprios
 
 ---
 
@@ -138,6 +151,6 @@ Itens pendentes (confirmados nos warnings da suíte):
 
 ## Ordem recomendada
 
-**F4/F5** (conforme a família for usando os dados) → **F6/F7** (quando fizer sentido técnico) → **F8** (opcional) → **F9** (quando DISC estiver redondo e `2-perguntas` for integrada).
+**F1–F7** concluídas → **F8** (opcional — avaliar viabilidade TIRT antes de abrir) → **F9** (próximo passo real — depende de dados reais acumulados via F5 e de trazer `2-perguntas`).
 
 **Regra de ouro:** um prompt por vez, testes verdes antes de avançar, **pare antes de mexer no schema/banco**.

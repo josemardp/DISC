@@ -4,6 +4,53 @@ Formato: [Versão Semântica](https://semver.org/) — `[MAJOR.MINOR.PATCH] — 
 
 ---
 
+## [1.5.0] — 2026-06-13 — F6: Spranger rotulado como ilustrativo
+
+### Alterado
+- `science_engine.py`: campo `"aviso"` adicionado ao retorno de `derive_spranger_from_big_five()` com texto padronizado
+- `main.py`: campo `"aviso"` repassado nas 2 ocorrências do dict `"spranger"` em `/results/me`
+- `gemini_service.py`: instrução explícita de rótulo adicionada ao prompt na seção Spranger
+- `DECISOES.md`: ADR-05 atualizado com decisão F6 (2026-06-13) — opção (b) escolhida
+
+### Resultado
+- Suíte: **25/25 passed** (commit df02877)
+
+---
+
+## [1.4.0] — 2026-06-13 — F5+F7: infraestrutura de validação + higiene técnica
+
+### Adicionado
+- `backend/app/validacao.py`: `test_retest_reliability()` (Pearson por fator) e `omega_por_fator()` (usa `mcdonald_omega` do science_engine)
+- `GET /admin/export/bigfive`: CSV 13 colunas (`respondent_id`, `applied_at`, `O/C/E/A/N_raw`, `O/C/E/A/N_pct`, `quality_label`), role admin
+- `_docs-motor/PROTOCOLO_VALIDACAO.md`: protocolo teste-reteste Josemar + Esdra, r≥0,80 (Kline 2000), CFA N≥200 (Hu & Bentler 1999)
+- `requirements.txt`: `google-genai>=0.8`
+- `test_main.py`: `test_test_retest_perfeito`, `test_omega_por_fator_coerente`, `test_bigfive_public_norm`
+
+### Alterado
+- `gemini_service.py`: `import google.generativeai as genai` → `from google import genai`; chamada API → `genai.Client` + `client.models.generate_content`
+- `main.py`: `@app.on_event("startup")` → `@asynccontextmanager async def lifespan`; `datetime.utcnow()` → `datetime.now(timezone.utc)`
+- `models.py`: 7× `default=datetime.utcnow` → `default=lambda: datetime.now(timezone.utc)`
+
+### Resultado
+- Suíte: **25/25 passed**, zero warnings de depreciação próprios (commit f6d98d9)
+
+---
+
+## [1.3.0] — 2026-06-13 — F4: NORM_MODE=public com normas reais versionadas
+
+### Adicionado
+- `config.py`: `NORM_SOURCE` (env; default `open_psychometrics_2018`)
+- `main.py`: `load_norm_source()`, `_bigfive_scaled_scores()` com suporte a `NORM_MODE=public`; campo `norm_info` em `/results/me`
+- `test_main.py`: `test_bigfive_public_norm` — monkeypatch, e2e, percentis 0–100
+
+### Alterado
+- `norms_ipip_neo.json`: fonte `open_psychometrics_2018` (N≈603k) com `mean` e `sd` por fator
+
+### Resultado
+- Suíte: **25/25 passed**; modo `intra` inalterado (commit f850200)
+
+---
+
 ## [1.2.0] — 2026-06-13 — F2: Suíte 100% verde + higiene de imports
 
 ### Adicionado
