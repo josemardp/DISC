@@ -6,6 +6,8 @@ Formato: [Versão Semântica](https://semver.org/) — `[MAJOR.MINOR.PATCH] — 
 
 ## [1.7.0] — 2026-06-17 — Baseline intra, normas públicas, segurança e devolutiva ética
 
+Status: estável após o commit `7bc0094` (`fix(psychometrics): corrige normas e resultados derivados`).
+
 ### Corrigido
 - `NORM_MODE=intra`: primeira aplicação agora cria linha de base interna e não exibe 50 como percentil interpretável.
 - `NORM_MODE=public`: percentis calculados pela fonte `open_psychometrics_2018` em escala bruta 10-50.
@@ -24,7 +26,7 @@ Formato: [Versão Semântica](https://semver.org/) — `[MAJOR.MINOR.PATCH] — 
 ### Documentação e testes
 - README, `.env.template` e `backend/RELATORIO_QA.md` atualizados.
 - Suíte final: **30/30 passed**, **0 warnings**.
-- Build frontend: passou; chunk grande residual isolado em `recharts`.
+- Build frontend: passou; pendência conhecida: chunk `charts`/Recharts >500 kB, isolado no Dashboard.
 
 ---
 

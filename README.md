@@ -77,6 +77,8 @@ npm run build
 # Resultado atual: build OK; chunk grande restante isolado em Recharts/Dashboard.
 ```
 
+> Estado estável da sprint técnica: commit `7bc0094` (`fix(psychometrics): corrige normas e resultados derivados`). Backend com 30 testes passando; frontend com build OK. Pendência conhecida: chunk `charts`/Recharts >500 kB, isolado no Dashboard.
+
 ---
 
 ## Limites éticos e psicométricos
