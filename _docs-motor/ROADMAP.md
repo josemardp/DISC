@@ -1,156 +1,156 @@
-# ROADMAP — Fases do projeto DISC
+# ROADMAP - Fases do projeto DISC
 
-> Fonte única da verdade: este arquivo. Siga de cima para baixo.
-> Última atualização: 2026-06-13 (F6 — Spranger ilustrativo concluída; F1–F7 fechadas).
-
----
-
-## Visão geral de status
-
-| Fase | Tema | Status | Prioridade |
-|---|---|---|---|
-| **F1** | Persistência do banco (Supabase Postgres) | ✅ CONCLUÍDA | — |
-| **F2** | Suíte 100% verde + higiene de imports | ✅ CONCLUÍDA | — |
-| **F3** | Documentação viva (auto-documentar a evolução) | ✅ CONCLUÍDA | — |
-| **F4** | Normas públicas reais (sair do `intra`) | ✅ CONCLUÍDA | — |
-| **F5** | Validação com dados reais (infraestrutura; teste-reteste empírico pendente) | ✅ CONCLUÍDA | — |
-| **F6** | Decisão sobre Spranger (mantido como ilustrativo — opção b) | ✅ CONCLUÍDA | — |
-| **F7** | Higiene técnica (deprecações: genai, on_event, utcnow) | ✅ CONCLUÍDA | — |
-| **F8** | TIRT (escolha-forçada do DISC com escores válidos) | 🔲 Opcional | ⚪ |
-| **F9** | Camada de Autoconhecimento (2-perguntas + IA) | 🔲 Visão futura | 🔵 |
+> Fonte de orientacao do ciclo atual. Ultima atualizacao: 2026-06-17, pos-commit `7bc0094`.
+> Direcao atual: sair da correcao tecnica do motor e entrar na fase de experiencia pessoal.
 
 ---
 
-## F1 — Persistência (Supabase Postgres) ✅ CONCLUÍDA
+## Estado atual oficial
 
-**Critério de pronto:** app sobe contra Postgres; tabelas criadas; dados persistem entre reinícios; seed não duplica; auth funcionando.
+| Area | Estado |
+|---|---|
+| Backend | 30 testes passando, 0 warnings no pytest |
+| Frontend | build OK |
+| Pendencia tecnica menor | chunk `charts`/Recharts > 500 kB, isolado no Dashboard |
+| Escopo | aplicativo pessoal de autoconhecimento |
+| Uso vedado | diagnostico, laudo psicologico, avaliacao psicologica profissional, selecao profissional |
 
-**O que foi feito:**
-- `database.py`: engine Postgres com `pool_pre_ping`, `pool_recycle=300`, `connect_timeout=5`; normalização `postgres://` → `postgresql+psycopg2://`; fallback SQLite `/tmp` apenas quando DATABASE_URL já é sqlite
-- `api/index.py`: proxy ASGI com lazy import, lifespan próprio e error handling JSON
-- `main.py`: `@app.exception_handler(Exception)` — erros viram JSON (não plain text)
-- Supabase: tabelas criadas via `create_all`; seed DISC (24 blocos) e Big Five (50 itens IPIP) carregados
-- Vercel: `DATABASE_URL` setada (Transaction pooler, port 6543, sslmode=require)
-- Segredos: salvos em `Drive/segredos/disc-env.txt` (ver REGRA_MESTRE_SYNC.md)
-- Endpoints temporários de debug removidos: `/api/db-info`, `/api/ping`, `/api/simple`
-
----
-
-## F2 — Suíte 100% verde + higiene ✅ CONCLUÍDA
-
-**Critério de pronto:** `pytest backend/app/` retorna 22/22 verdes; `httpx>=0.27` no requirements; import órfão removido de `main.py`.
-
-**O que foi feito (commit 05c74fa):**
-- `backend/app/conftest.py`: fixture `session`-scoped `autouse` que cria tabelas + roda seed antes dos testes — testes independentes do ciclo de startup
-- `backend/app/test_main.py`: `test_bigfive_submit_to_results_e2e` usa `with TestClient(app) as client:` — startup dispara, tabelas existem
-- `backend/requirements.txt`: `httpx>=0.27` adicionado (dependência do TestClient do FastAPI)
-- `backend/app/main.py`: import órfão `calculate_cronbach_alpha` removido (função permanece em `math_engine.py`, usada em `test_main.py:50`)
-- Resultado confirmado: **22/22 passed** em 5.29s
+Nucleo psicometrico estabilizado para uso pessoal:
+- Big Five/IPIP-50 medido diretamente.
+- `NORM_MODE=intra` cria baseline na primeira aplicacao e nao mostra percentil 50 enganoso.
+- `NORM_MODE=public` funcional com norma publica exploratoria `open_psychometrics_2018`.
+- Jung e derivado exploratorio e pode retornar `indefinido` em zona borderline.
+- DISC e Spranger sao derivados heuristicos/ilustrativos.
 
 ---
 
-## F3 — Documentação viva ✅ CONCLUÍDA
+## Fases concluidas
 
-**Critério de pronto:** 7 arquivos criados/atualizados, coerentes entre si, refletindo o código real, com referências cruzadas.
+| Fase | Tema | Status |
+|---|---|---|
+| F1 | Persistencia Postgres/Supabase e deploy Vercel | Concluida |
+| F2 | Suite verde e higiene inicial | Concluida historicamente |
+| F3 | Documentacao viva inicial | Concluida historicamente |
+| F4 | Norma publica versionada | Concluida e revisada em `7bc0094` |
+| F5 | Infraestrutura de validacao/exportacao | Concluida; T1/T2 real pendente |
+| F6 | Spranger como camada ilustrativa | Concluida |
+| F7 | Higiene tecnica de deprecacoes | Concluida e revisada em `7bc0094` |
+| Sprint tecnica 2026-06-17 | Baseline intra, Jung indefinido, API hardening, seguranca e layout | Concluida em `7bc0094` |
 
-**O que foi feito:**
-- `_docs-motor/ROADMAP.md` (este arquivo) — fases F1–F9 com status e critério de pronto
-- `_docs-motor/STATUS.md` — fotografia do estado atual
-- `_docs-motor/DECISOES.md` — 10 ADRs completos
-- `CHANGELOG.md` — v1.0.0 → v1.2.0
-- `backend/MANUAL_TECNICO.md` — instrumento psicométrico atualizado para v0.3
-- `README.md` — visão geral, stack, rodar local, configurar Supabase/Vercel
-- `_docs-motor/contexto-disc-proximo-chat.md` — resumo para retomada
-
----
-
-## F4 — Normas públicas reais ✅ CONCLUÍDA
-
-**Commit:** f850200
-
-**O que foi feito:**
-- `config.py`: `NORM_SOURCE` (env; default `open_psychometrics_2018`)
-- `main.py`: `load_norm_source()`, `_bigfive_scaled_scores()` usa `percentil_por_norma` do science_engine; `norm_info` no `/results/me` quando `NORM_MODE=public`
-- `backend/app/norms_ipip_neo.json`: fonte `open_psychometrics_2018` (N≈603k, 2016–2018, online sample) com `mean` e `sd` por fator (escala 10–50)
-- `test_main.py`: `test_bigfive_public_norm` — monkeypatch, e2e, percentis 0–100
-- Resultado: **25/25 passed**
+Historicos como 22/22, 25/25 ou 26/26 pertencem a fases antigas. O estado atual e 30/30 testes passando.
 
 ---
 
-## F5 — Validação com dados reais ✅ CONCLUÍDA (infraestrutura)
+## Proxima fase oficial
 
-**Commit:** f6d98d9 (absorveu F7 — ver nota)
+## Sprint 9 - Sincronizacao documental, QA manual e preparacao da experiencia pessoal
 
-**O que foi feito:**
-- `main.py`: `GET /admin/export/bigfive` — CSV 13 colunas, `Content-Type: text/csv`, role admin
-- `backend/app/validacao.py`: `test_retest_reliability()` (Pearson por fator) e `omega_por_fator()` (chama `mcdonald_omega` do science_engine)
-- `test_main.py`: `test_test_retest_perfeito` (r=1.0 quando A==B) e `test_omega_por_fator_coerente` (omega>0.7 com dados sintéticos)
-- `_docs-motor/PROTOCOLO_VALIDACAO.md`: protocolo Josemar + Esdra, intervalo 2–4 semanas, r≥0,80 (Kline 2000), CFA N≥200 (Hu & Bentler 1999), aviso de dados sensíveis
-- Resultado: **25/25 passed**
+### 9.1 - Sincronizacao documental pos-commit 7bc0094
 
-**⚠️ Pendência empírica:** a infraestrutura está pronta, mas o teste-reteste real (Josemar + Esdra com 2–4 semanas de intervalo) ainda não foi executado. Ver `PROTOCOLO_VALIDACAO.md`.
+Objetivo: manter README, CHANGELOG, STATUS, ROADMAP, QA e contexto de retomada coerentes com o estado real.
+
+### 9.2 - QA manual completo da interface
+
+Checklist:
+1. Criar usuario novo.
+2. Fazer primeira aplicacao.
+3. Confirmar que aparece "linha de base interna" no modo intra.
+4. Confirmar que nao aparece percentil 50 enganoso na primeira aplicacao.
+5. Refazer teste.
+6. Confirmar comparacao intraindividual na segunda aplicacao.
+7. Verificar Jung borderline como indefinido.
+8. Verificar aviso de DISC derivado.
+9. Verificar aviso de Spranger derivado.
+10. Testar responsividade no celular.
+11. Verificar relatorio textual.
+12. Confirmar que a devolutiva nao parece laudo psicologico.
+13. Confirmar que erros nao aparecem de forma feia para o usuario.
+
+### 9.3 - Melhorar devolutiva textual/humana
+
+Estrutura desejada:
+1. Visao geral do perfil.
+2. Tracos mais marcantes.
+3. Pontos fortes provaveis.
+4. Pontos de atencao.
+5. Sugestoes praticas.
+6. Como usar o resultado no dia a dia.
+7. Limites da avaliacao.
+
+### 9.4 - Historico visual entre aplicacoes
+
+Evolucao natural do `NORM_MODE=intra`:
+1. Lista de aplicacoes anteriores.
+2. Data de cada aplicacao.
+3. Comparacao entre T1, T2, T3.
+4. Variacao dos fatores Big Five.
+5. Aviso de que pequenas mudancas podem refletir contexto, humor, cansaco ou forma de responder.
+
+### 9.5 - Exportacao de relatorio em PDF
+
+Conteudo esperado:
+1. Capa.
+2. Data da aplicacao.
+3. Aviso de nao diagnostico.
+4. Big Five.
+5. DISC derivado.
+6. Jung exploratorio.
+7. Spranger derivado.
+8. Pontos fortes.
+9. Pontos de atencao.
+10. Historico, se houver.
+
+### 9.6 - Validacao empirica pessoal T1/T2
+
+Procedimento:
+1. Josemar responde T1.
+2. Esdra responde T1.
+3. Esperar 2-4 semanas.
+4. Josemar responde T2.
+5. Esdra responde T2.
+6. Exportar CSV.
+7. Rodar analise test-retest.
+8. Interpretar estabilidade com cuidado.
+
+Isso nao torna o sistema um teste psicologico validado. E apenas uma checagem de estabilidade para uso pessoal.
+
+### 9.7 - F9: camada de autoconhecimento com perguntas/reflexoes
+
+Regras:
+1. Perguntas abertas/reflexivas nao entram no motor de pontuacao.
+2. Perguntas abertas podem alimentar apenas a devolutiva textual/reflexiva.
+3. Nao misturar resposta biografica com escore psicometrico.
+4. Nao transformar IA em psicologa, diagnostico ou laudo.
 
 ---
 
-## F6 — Decisão sobre Spranger ✅ CONCLUÍDA
+## Pendencias reais
 
-**Commit:** df02877
+Tecnicas:
+- Chunk `charts`/Recharts > 500 kB.
+- Alembic/migrations formais se o app virar produto ou se o schema evoluir muito.
 
-**Decisão tomada:** opção (b) — manter Spranger como estimativa ilustrativa derivada do Big Five. Opção (a) descartada: exigiria ~30 itens próprios e N ≥ 200 para validação.
+Escopo/produto:
+- LGPD completa fora do escopo atual; reavaliar se virar produto comercial/corporativo/RH.
+- RH corporativo e dashboard de equipe fora de prioridade.
 
-**O que foi feito:**
-- `science_engine.py`: campo `"aviso"` no retorno de `derive_spranger_from_big_five()`
-- `main.py`: `"aviso"` repassado nas 2 ocorrências do dict `"spranger"` em `/results/me`
-- `gemini_service.py`: instrução de rótulo adicionada ao prompt (seção Spranger)
-- `DECISOES.md`: ADR-05 atualizado com decisão F6 (2026-06-13)
-- Resultado: **25/25 passed**
-
----
-
-## F7 — Higiene técnica ✅ CONCLUÍDA
-
-**Commit:** f6d98d9 (absorvido junto com F5 — todos os arquivos commitados de uma vez)
-
-**O que foi feito:**
-- `requirements.txt`: `google-genai>=0.8` adicionado
-- `gemini_service.py`: `import google.generativeai as genai` → `from google import genai`; chamada API atualizada para `genai.Client` + `client.models.generate_content`
-- `main.py`: `@app.on_event("startup")` → `@asynccontextmanager async def lifespan`; `datetime.utcnow()` → `datetime.now(timezone.utc)`
-- `models.py`: 7× `default=datetime.utcnow` → `default=lambda: datetime.now(timezone.utc)`
-- Resultado: **25/25 passed**, zero warnings de depreciação próprios
+Metodologicas:
+- T1/T2 pessoal ainda nao executado.
+- Norma publica e exploratoria, nao populacao brasileira validada.
 
 ---
 
-## F8 — TIRT (opcional)
+## O que nao priorizar agora
 
-**Critério de pronto:** decisão fundamentada sobre viabilidade do modelo Thurstoniano para blocos ipsativos DISC.
+1. TIRT/F8.
+2. RH corporativo.
+3. Dashboard de equipe.
+4. Ranking de pessoas.
+5. Selecao profissional.
+6. LGPD completa.
+7. Produto comercial.
+8. Alteracao profunda do motor psicometrico.
+9. Promessa de validacao CFP/SATEPSI.
+10. Laudo psicologico ou diagnostico.
 
-**Observação:** DISC hoje é camada derivada do Big Five. TIRT só vale se houver decisão de reativar escolha-forçada com escores válidos e amostra suficiente.
-
-**Prompt pronto em:** `_docs-motor/PLANO_EVOLUCAO_DISC_v2.md` § 4 (PROMPT F8).
-
----
-
-## F9 — Camada de Autoconhecimento (visão futura)
-
-**Pré-requisitos:** F1 concluída (✅) + extensão `pgvector` ativa no Supabase.
-
-**Material disponível:** pasta `2-perguntas` no Google Drive — 1.242 perguntas, 11 blocos, dois níveis:
-- **Narrativo** (Blocos 01–10, ~1.030 perguntas) → embeddings no pgvector (RAG); respostas em texto livre; não pré-codificar
-- **Rastreio psicométrico** (Bloco 11, 212 itens) → pontuação quantitativa contra pontos de corte do `schema-bloco-11.json`; derivado de instrumentos clínicos validados
-
-**Arquitetura (três camadas):**
-- Base: Supabase Postgres + pgvector
-- Fontes: perfil pontuado (DISC) + respostas biográficas (Perguntas Mestres)
-- Topo: IA de aconselhamento — lê as duas fontes, condicionada ao perfil
-
-**Regra que não muda:** as perguntas **nunca** entram no motor de pontuação DISC. A integração acontece apenas na camada de saída (aconselhamento).
-
-**Sincronização:** `2-perguntas` fica fora do repo git (`1-disc-app`) — pasta irmã no Google Drive (ver `REGRA_MESTRE_SYNC.md`).
-
----
-
-## Ordem recomendada
-
-**F1–F7** concluídas → **F8** (opcional — avaliar viabilidade TIRT antes de abrir) → **F9** (próximo passo real — depende de dados reais acumulados via F5 e de trazer `2-perguntas`).
-
-**Regra de ouro:** um prompt por vez, testes verdes antes de avançar, **pare antes de mexer no schema/banco**.
+Regra de ouro: nao mexer profundamente no motor agora. O foco e experiencia, QA manual, historico, relatorio e clareza documental.

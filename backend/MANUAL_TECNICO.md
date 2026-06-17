@@ -4,9 +4,9 @@
 
 ## 1. Versão e data
 
-- Versão: v0.3
-- Data: 2026-06-13
-- Branch de trabalho: main (F1 + F2 + F3 concluídas — 22/22 testes passando)
+- Versão: v0.4
+- Data: 2026-06-17
+- Branch de trabalho: main, pós-commit `7bc0094` (30/30 testes passando, 0 warnings no pytest)
 
 ---
 
@@ -98,13 +98,13 @@ Ver [ADR-01](../&#95;docs-motor/DECISOES.md#adr-01), [ADR-02](../&#95;docs-motor
 - Retorna por fator: `{"raw": soma, "mean": média, "n_itens": k}`.
 - Calcula também `ES` (Estabilidade Emocional) como `raw = 60.0 − raw_N`, `mean = 6.0 − mean_N`.
 
-### Percentis — `percentil_intraindividual()` em `science_engine.py`
+### Percentis e normas
 
-Modo atual: `NORM_MODE=intra`. A régua interna compara cada fator do respondente com seus próprios históricos anteriores. Retorna posição relativa no próprio histórico.
+Modo padrão: `NORM_MODE=intra`. A régua interna compara cada fator do respondente com seus próprios históricos anteriores.
 
-O rótulo retornado pela API é: `"régua interna (não é percentil populacional)"`.
+Na primeira aplicação, o sistema cria uma linha de base interna e não retorna percentil interpretável. Isso evita apresentar 50 como se fosse resultado populacional real. A partir da segunda aplicação, o histórico intraindividual passa a sustentar a comparação.
 
-Modo `public` está bloqueado no código até existir fonte pública versionada (F4).
+Modo `public`: funcional com `backend/app/norms_ipip_neo.json`, fonte `open_psychometrics_2018`, escala bruta 10-50 por fator. É norma pública exploratória, não representativa da população brasileira.
 
 ### Jung contínuo — `derive_jung_from_big_five()` em `science_engine.py`
 
@@ -120,7 +120,7 @@ Mapeamento (McCrae & Costa, 1989):
 
 *Não é eixo Junguiano — reportado como "eixo extra".
 
-Eixos marcados como `borderline` quando percentil está entre 45 e 55. `tipo_resumo` de 4 letras é resumo dos escores contínuos, não tipo fixo.
+Eixos marcados como `borderline` quando percentil está entre 45 e 55. Quando a maioria dos eixos está borderline, `tipo_resumo` retorna `indefinido`. Quando há tipo de 4 letras, ele é apenas resumo exploratório dos escores contínuos, não tipo fixo.
 
 ### DISC derivado — `derive_disc_from_big_five()` em `science_engine.py`
 
@@ -200,11 +200,11 @@ Retorna também `attention_passed`, `straight_lining` e `too_fast`.
 | Modo | Função | Estado |
 |---|---|---|
 | `intra` (padrão) | `percentil_intraindividual()` | Ativo — régua interna honesta |
-| `public` | `percentil_por_norma()` | Bloqueado no código até F4 |
+| `public` | `raw_to_percentile()` via norma pública versionada | Ativo — `open_psychometrics_2018`, exploratório |
 
 Lido de `.env` por `backend/app/config.py`: `NORM_MODE=intra`.
 
-Mensagem quando `public`: `"NORM_MODE=public requer arquivo de normas públicas versionado. Use NORM_MODE=intra por enquanto."`
+`NORM_MODE=public` usa `NORM_SOURCE=open_psychometrics_2018` por padrão. Não interpretar como norma brasileira validada.
 
 ---
 
@@ -257,12 +257,13 @@ Mensagem quando `public`: `"NORM_MODE=public requer arquivo de normas públicas 
 - Não usar como diagnóstico clínico.
 - Não interpretar resultados como traços fixos.
 
-**Amostra atual:** uso familiar / desenvolvimento. Validação empírica com amostra própria: a realizar na F5.
+**Amostra atual:** uso pessoal / desenvolvimento. Checagem empírica pessoal T1/T2 ainda pendente; isso não equivale a validação científica formal.
 
 ---
 
 ## 10. Changelog interno
 
+- v0.4 — 2026-06-17 — Pós-commit `7bc0094`: baseline intra corrigido, `NORM_MODE=public` funcional, Jung borderline indefinido, DISC/Spranger derivados explicitados, suite 30/30 e 0 warnings.
 - v0.3 — 2026-06-13 — F3: documentação viva concluída. Referências cruzadas adicionadas. Seções de Alpha e laudo narrativo expandidas. Tabelas de DISC/Spranger/Jung com fórmulas reais do código.
 - v0.2 — 2026-06-10 — F1 + F2 concluídas: Supabase Postgres em produção; 22/22 testes passando; conftest.py com fixture autouse; import órfão `calculate_cronbach_alpha` removido de `main.py`.
 - v0.1 — 2026-06-05 — versão inicial: Big Five IPIP-50, itens de atenção, camadas derivadas, régua interna, confiabilidade, IC95%, qualidade de resposta, laudo anti-Barnum.

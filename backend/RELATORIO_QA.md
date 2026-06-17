@@ -1,7 +1,9 @@
 # Relatorio de QA - Evolucao Cientifica
 
-Data: 2026-06-05
+Data inicial: 2026-06-05
 Branch: evolucao-cientifica
+
+> Nota de sincronização: as seções antigas abaixo ficam como histórico. O estado atual oficial, pós-commit `7bc0094`, é: backend 30 testes passando, 0 warnings no pytest, frontend build OK, `NORM_MODE=public` funcional e pendência menor no chunk `charts`/Recharts.
 
 ## Atualizacao QA - 2026-06-17
 
@@ -138,11 +140,11 @@ Resultado real:
 ## Pontos que ainda precisam de atencao humana
 
 - Validacao empirica com pessoas reais: teste-reteste real, estabilidade temporal e revisao qualitativa de devolutivas.
-- Norma publica: `NORM_MODE=public` permanece bloqueado ate existir fonte publica versionada e documentada.
+- Resolvido em `7bc0094`: `NORM_MODE=public` está funcional com a fonte pública exploratória `open_psychometrics_2018` em `backend/app/norms_ipip_neo.json`.
 - Amostra atual: uso familiar / desenvolvimento; ainda nao ha calibracao populacional propria.
 - Confiabilidade operacional: o SEM usa confiabilidade provisoria `0.84`; revisar quando houver dados reais suficientes.
 - Revisao psicometrica do mapeamento derivado DISC/Spranger: o codigo declara esses pesos como provisórios e ilustrativos.
-- Prompt 8 / TIRT: avaliar somente se houver decisao de manter escolha forcada DISC e amostra suficiente para estimacao.
+- TIRT/F8: não priorizar agora. Só reavaliar se houver decisão futura de reativar escolha forçada DISC e amostra suficiente.
 - Warnings tecnicos da suite: migrar `declarative_base()` para API SQLAlchemy 2, substituir `on_event` por lifespan no FastAPI e planejar migracao do pacote Gemini depreciado.
 
 ## Conclusao

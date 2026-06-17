@@ -1,67 +1,153 @@
-# Contexto DISC — retomada (2026-06-13)
+# Contexto DISC - proximo chat
 
-> Resumo para retomar o trabalho em outra sessão.
-> Fontes de verdade: [ROADMAP.md](ROADMAP.md) | [STATUS.md](STATUS.md) | [DECISOES.md](DECISOES.md)
-
----
-
-## O que está pronto (F1–F7 concluídas)
-
-| Fase | O que foi feito | Evidência |
-|---|---|---|
-| **F1** | Supabase Postgres em produção; auth e questionário funcionando end-to-end | `database.py`, `api/index.py`, Vercel deploy |
-| **F2** | Suíte 100% verde: 22/22 passed; `httpx>=0.27`; import órfão removido de `main.py` | commit 05c74fa |
-| **F3** | Documentação viva: 7 arquivos criados/atualizados, coerentes entre si | commit a353857 |
-| **F4** | `NORM_MODE=public` com `norms_ipip_neo.json` (open_psychometrics_2018, N≈603k); `NORM_SOURCE` env; `norm_info` no `/results/me` | commit f850200 |
-| **F5** | `GET /admin/export/bigfive` (CSV 13 colunas); `validacao.py` (test_retest_reliability + omega_por_fator); `PROTOCOLO_VALIDACAO.md` | commit f6d98d9 |
-| **F6** | Spranger com campo `"aviso"` na API; instrução no prompt Gemini; ADR-05 atualizado | commit df02877 |
-| **F7** | `google.genai`; lifespan handler; `datetime.now(timezone.utc)` — zero warnings próprios | commit f6d98d9 (absorvido com F5) |
-
-**Suíte atual:** 25/25 passed, ~2.7s, zero warnings de depreciação próprios.
-
-**Núcleo científico implementado:**
-- Big Five IPIP-50 (50 itens + 3 atenção, `reverse_keyed`, escala 1–5)
-- Ômega de McDonald, SEM, IC95%
-- Jung contínuo derivado (4 eixos + `borderline` + Estabilidade Emocional)
-- DISC e Spranger derivados (heurísticos — camadas de apresentação; Spranger marcado como ilustrativo desde F6)
-- NORM_MODE=intra (padrão) e NORM_MODE=public (open_psychometrics_2018)
-- Laudo anti-Barnum via Gemini 1.5 Flash + fallback local (7 seções obrigatórias)
-- Qualidade de resposta (atenção, straight-lining, velocidade, RVI)
-
-**Deploy:** Vercel, branch `main`, auto-deploy ativo. DATABASE_URL + GEMINI_API_KEY setados no Vercel e salvos em `Drive/segredos/disc-env.txt`.
+> Retomada oficial pos-commit `7bc0094` (`fix(psychometrics): corrige normas e resultados derivados`) e `e35d172` (`docs: registra sprint tecnica estavel`).
+> Projeto atual: aplicativo pessoal de autoconhecimento. Nao e produto comercial, nao e RH em producao, nao e diagnostico, nao e laudo psicologico e nao e avaliacao psicologica profissional.
 
 ---
 
-## Pendência F5 — validação empírica
+## Estado atual
 
-A infraestrutura está pronta, mas o teste-reteste real ainda não foi executado.
+Backend:
+- `python -m pytest backend/app/ -v`: 30 testes passando.
+- Warnings documentados no pytest: 0.
 
-**O que falta:**
-1. Josemar e Esdra respondem o Big Five no sistema em produção (T1).
-2. Aguardar 2–4 semanas.
-3. Ambos respondem novamente (T2).
-4. Exportar os dois CSVs via `GET /admin/export/bigfive`.
-5. Rodar `test_retest_reliability()` conforme `_docs-motor/PROTOCOLO_VALIDACAO.md`.
-6. Critério: r ≥ 0,80 por fator (Kline, 2000).
+Frontend:
+- `npm run build`: OK.
+- Pendencia menor: chunk `charts`/Recharts > 500 kB, isolado no Dashboard.
 
-CFA exige N ≥ 200 — meta futura, fora do escopo familiar.
+Psicometria:
+- Big Five/IPIP-50 e o nucleo medido diretamente.
+- `NORM_MODE=intra`: primeira aplicacao cria linha de base interna; nao exibe percentil 50 enganoso.
+- `NORM_MODE=public`: funcional com norma publica exploratoria `open_psychometrics_2018` em escala bruta 10-50.
+- Jung e derivado exploratorio do Big Five e retorna `indefinido` quando a maioria dos eixos esta borderline.
+- DISC e Spranger sao derivados heuristicos/ilustrativos do Big Five.
 
----
-
-## Próxima fase
-
-**F8** (opcional) — TIRT: modelo Thurstoniano para blocos ipsativos DISC. Avaliar viabilidade antes de abrir — DISC hoje é camada derivada do Big Five; TIRT só vale se houver decisão de reativar escolha-forçada com escores válidos e amostra suficiente.
-
-**F9** (próximo passo real) — Camada de Autoconhecimento. Depende de:
-- (a) Dados reais acumulados via F5 para validação empírica.
-- (b) Decisão de trazer pasta `2-perguntas` (1.242 perguntas, 11 blocos, Google Drive).
+Escopo:
+- App pessoal de autoconhecimento.
+- LGPD completa fora do escopo atual; volta apenas se virar produto comercial/corporativo/RH.
+- RH corporativo, ranking de pessoas e selecao profissional nao sao prioridade.
 
 ---
 
-## Regras que não mudam
+## O que ja foi corrigido
 
-1. Testes verdes antes de avançar: `pytest backend/app/ -v` deve retornar 25/25.
-2. Não mexer no schema/banco sem pause e confirmação.
-3. `2-perguntas` fica fora do repo e nunca entra no motor de pontuação (somente F9, via RAG/pgvector, na saída).
-4. Segredos em `Drive/segredos/disc-env.txt` — nunca no código.
-5. Um prompt por vez.
+1. Primeira aplicacao em `NORM_MODE=intra` deixou de ser interpretada como percentil 50.
+2. Baseline intraindividual passou a retornar metadados claros.
+3. `NORM_MODE=public` usa `norms_ipip_neo.json` e a fonte `open_psychometrics_2018`.
+4. Jung borderline majoritario retorna `indefinido`, sem tipo fechado.
+5. DISC e Spranger foram rotulados como derivados/heuristicos.
+6. Layout Big Five separa nome, bruto/media e barra.
+7. `/questionnaire/submit` valida payload com rigor.
+8. Producao exige `SECRET_KEY` segura e `ALLOWED_ORIGINS`.
+9. CORS wildcard, seed demo e schema automatico ficam bloqueados em producao.
+10. Cadastro com empresa nao autoeleva usuario para RH.
+11. Historico Big Five permanece append-only.
+12. SQLAlchemy usa `DeclarativeBase`.
+13. `Dashboards` e `TestRoom` usam `React.lazy()`.
+
+Nao refazer essas correcoes sem um bug novo confirmado.
+
+---
+
+## Proxima sprint recomendada
+
+**Sprint 9 - Sincronizacao documental, QA manual e preparacao da experiencia pessoal**
+
+Ordem recomendada:
+
+1. **9.1 - Sincronizacao documental pos-commit 7bc0094**
+2. **9.2 - QA manual completo da interface**
+3. **9.3 - Melhorar devolutiva textual/humana**
+4. **9.4 - Historico visual entre aplicacoes**
+5. **9.5 - Exportacao de relatorio em PDF**
+6. **9.6 - Validacao empirica pessoal T1/T2**
+7. **9.7 - F9: camada de autoconhecimento com perguntas/reflexoes**
+
+Recomendacao central: nao mexer profundamente no motor psicometrico agora. O foco e experiencia, QA manual, historico, relatorio e clareza documental.
+
+---
+
+## Checklist de QA manual
+
+1. Criar usuario novo.
+2. Fazer primeira aplicacao.
+3. Confirmar que aparece "linha de base interna" no modo intra.
+4. Confirmar que nao aparece percentil 50 enganoso na primeira aplicacao.
+5. Refazer teste.
+6. Confirmar comparacao intraindividual na segunda aplicacao.
+7. Verificar Jung borderline como indefinido.
+8. Verificar aviso de DISC derivado.
+9. Verificar aviso de Spranger derivado.
+10. Testar responsividade no celular.
+11. Verificar relatorio textual.
+12. Confirmar que a devolutiva nao parece laudo psicologico.
+13. Confirmar que erros nao aparecem de forma feia para o usuario.
+
+---
+
+## Pendencias reais
+
+Melhorar devolutiva textual:
+- Visao geral do perfil.
+- Tracos mais marcantes.
+- Pontos fortes provaveis.
+- Pontos de atencao.
+- Sugestoes praticas.
+- Como usar o resultado no dia a dia.
+- Limites da avaliacao.
+
+Historico visual entre aplicacoes:
+- Lista de aplicacoes anteriores.
+- Data de cada aplicacao.
+- Comparacao entre T1, T2, T3.
+- Variacao dos fatores Big Five.
+- Aviso de que pequenas mudancas podem refletir contexto, humor, cansaco ou forma de responder.
+
+Relatorio PDF:
+- Capa, data, aviso de nao diagnostico, Big Five, DISC derivado, Jung exploratorio, Spranger derivado, pontos fortes, pontos de atencao e historico quando houver.
+
+Validacao empirica pessoal T1/T2:
+- Josemar e Esdra respondem T1.
+- Aguardar 2-4 semanas.
+- Josemar e Esdra respondem T2.
+- Exportar CSV.
+- Rodar analise test-retest.
+- Interpretar estabilidade com cuidado.
+- Isso nao torna o sistema um teste psicologico validado; e apenas uma checagem de estabilidade para uso pessoal.
+
+F9 - camada de autoconhecimento:
+- Perguntas abertas/reflexivas nao entram no motor de pontuacao.
+- Perguntas abertas podem alimentar apenas devolutiva textual/reflexiva.
+- Nao misturar resposta biografica com escore psicometrico.
+- Nao transformar IA em psicologa, diagnostico ou laudo.
+
+Pendencias tecnicas menores:
+- Chunk `charts`/Recharts > 500 kB.
+- Alembic/migrations formais se o schema evoluir muito ou se virar produto.
+- LGPD completa apenas se virar produto comercial/corporativo/RH.
+
+---
+
+## O que nao priorizar agora
+
+1. TIRT/F8.
+2. RH corporativo.
+3. Dashboard de equipe.
+4. Ranking de pessoas.
+5. Selecao profissional.
+6. LGPD completa.
+7. Produto comercial.
+8. Alteracao profunda do motor psicometrico.
+9. Promessa de validacao CFP/SATEPSI.
+10. Laudo psicologico ou diagnostico.
+
+---
+
+## Riscos e cuidados
+
+- Nao alterar `.env` real, segredos, banco local, caches ou build gerado.
+- Nao fazer deploy sem pedido explicito.
+- Nao reintroduzir linguagem determinista como "voce e assim".
+- Nao apresentar DISC/Jung/Spranger como testes independentes.
+- Nao tratar norma publica como populacao brasileira validada.
+- Nao usar o sistema para decisao de selecao profissional.

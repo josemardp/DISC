@@ -1,6 +1,8 @@
 # 🧭 Guia Mestre de Implantação — DISC no Padrão Big Five
 ### Documento único. Siga de cima para baixo. Marque as caixinhas conforme avança.
 
+> Nota 2026-06-17: este guia contém prompts históricos. O estado atual oficial está em `ROADMAP.md`, `STATUS.md` e `contexto-disc-proximo-chat.md`. F8/TIRT não é prioridade agora; a próxima fase é a Sprint 9 (QA manual e experiência pessoal).
+
 > **Estratégia em um parágrafo:** o Big Five (5 fatores, com Neuroticismo) é o núcleo medido com itens validados do IPIP. Jung — que você gosta — é mantido, mas medido de forma **contínua** e derivado do Big Five, com o tipo de 4 letras como resumo. DISC e Spranger ficam como camadas de apresentação. Assim você herda décadas de validação científica em vez de tentar recriá-la.
 
 ---

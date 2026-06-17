@@ -1,6 +1,8 @@
 # 🧭 Plano de Evolução DISC — v2 (atualizado pós-integração)
 ### Fonte única da verdade. Substitui o guia anterior. Siga de cima para baixo.
 
+> Atualização 2026-06-17: após o commit `7bc0094`, o estado técnico está estável para uso pessoal (backend 30/30, frontend build OK). A próxima fase oficial não é F8/TIRT; é a **Sprint 9 — sincronização documental, QA manual e preparação da experiência pessoal**. Ver `ROADMAP.md` e `contexto-disc-proximo-chat.md`.
+
 > **Onde chegamos:** o núcleo científico Big Five está integrado e funcionando. Jung é medido de forma contínua e derivado do Big Five (com Estabilidade Emocional). Os Prompts 0–7 do roteiro original estão concluídos. Este v2 registra o estado real e delineia o caminho futuro.
 
 ---
@@ -207,7 +209,7 @@ Emita ✅ a cada arquivo. Não faça merge — deixe para revisão.
 
 ## 7. ORDEM RECOMENDADA E REGRA DE OURO
 
-**Ordem:** Supabase + pgvector (fora do Codex) → **F1** → **F2** → **F3 (doc-mestre)** → depois F4/F5 conforme a família for usando → F6/F7/F8 quando fizer sentido → **F9** (camada de autoconhecimento) quando o DISC estiver redondo e você trouxer a pasta `2-perguntas`.
+**Ordem atual (pós-7bc0094):** **Sprint 9** → QA manual → devolutiva textual → histórico visual → PDF → T1/T2 pessoal → F9 com perguntas abertas como apoio reflexivo. F8/TIRT fica apenas como opção futura distante, não como próximo passo.
 
 **Regra de ouro:** um prompt por vez, testes verdes antes de avançar, **pare antes de mexer no schema/banco**, e nada de merge até revisão. Se um prompt pedir algo que o código não confirma, o agente **para e pergunta** — não inventa.
 ```

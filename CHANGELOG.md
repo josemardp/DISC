@@ -4,6 +4,20 @@ Formato: [Versão Semântica](https://semver.org/) — `[MAJOR.MINOR.PATCH] — 
 
 ---
 
+## [1.7.1] — 2026-06-17 — Sincronização documental e preparação da Sprint 9
+
+### Alterado
+- Documentação sincronizada com o estado pós-commit `7bc0094`.
+- Próxima fase registrada como **Sprint 9 — Sincronização documental, QA manual e preparação da experiência pessoal**.
+- F8/TIRT, RH corporativo, seleção profissional, LGPD completa e produto comercial marcados como fora de prioridade atual.
+- Contexto de retomada atualizado em `_docs-motor/contexto-disc-proximo-chat.md`.
+
+### Resultado esperado
+- Backend permanece documentado como **30/30 passed**, 0 warnings.
+- Frontend permanece documentado como build OK, com pendência menor no chunk `charts`/Recharts >500 kB.
+
+---
+
 ## [1.7.0] — 2026-06-17 — Baseline intra, normas públicas, segurança e devolutiva ética
 
 Status: estável após o commit `7bc0094` (`fix(psychometrics): corrige normas e resultados derivados`).

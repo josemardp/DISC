@@ -154,7 +154,7 @@ O deploy é automático via push na branch `main`.
 | [`_docs-motor/PLANO_EVOLUCAO_DISC_v2.md`](_docs-motor/PLANO_EVOLUCAO_DISC_v2.md) | Plano completo com prompts prontos para cada fase |
 | [`backend/MANUAL_TECNICO.md`](backend/MANUAL_TECNICO.md) | Instrumento: construtos, itens, pontuação, confiabilidade, limites |
 | [`backend/RELATORIO_QA.md`](backend/RELATORIO_QA.md) | Resultados de QA: teste-reteste, convergência, e2e HTTP |
-| [`CHANGELOG.md`](CHANGELOG.md) | Histórico de versões (v1.0.0 → v1.2.0) |
+| [`CHANGELOG.md`](CHANGELOG.md) | Histórico de versões (v1.0.0 → v1.7.x) |
 
 ---
 

@@ -1,14 +1,14 @@
 # Protocolo de Validação — Big Five IPIP-50
 
-> Documento criado na F5. Ver [ROADMAP.md](ROADMAP.md) | [DECISOES.md](DECISOES.md)
+> Documento criado na F5 e atualizado na Sprint 9. Ver [ROADMAP.md](ROADMAP.md) | [DECISOES.md](DECISOES.md)
 
 ---
 
 ## 1. Objetivo
 
-Estimar a confiabilidade teste-reteste do instrumento Big Five IPIP-50 com dados reais, usando os dois respondentes disponíveis na fase familiar: **Josemar** e **Esdra**.
+Estimar, de forma exploratória e pessoal, a estabilidade teste-reteste do Big Five IPIP-50 com os dois respondentes disponíveis: **Josemar** e **Esdra**.
 
-A confiabilidade teste-reteste mede a estabilidade dos escores ao longo do tempo. Um instrumento confiável deve produzir escores semelhantes em duas aplicações separadas, quando não há mudança real no construto medido.
+A confiabilidade teste-reteste mede a estabilidade dos escores ao longo do tempo. Nesta fase, isso **não** constitui validação científica formal nem transforma o sistema em teste psicológico validado; serve apenas como checagem de estabilidade para uso pessoal.
 
 ---
 
@@ -56,7 +56,7 @@ O CSV contém: `respondent_id`, `applied_at`, `O_raw`, `C_raw`, `E_raw`, `A_raw`
 
 ### 4.3 Aplicação 2 (T2) — após 2–4 semanas
 
-Repita o procedimento da Aplicação 1. O sistema substituirá o resultado existente (o endpoint `/questionnaire/submit` apaga respostas anteriores do mesmo teste/fase antes de inserir as novas).
+Repita o procedimento da Aplicação 1. O endpoint `/questionnaire/submit` substitui as respostas atuais do mesmo teste/fase, mas o resultado Big Five processado é preservado em histórico append-only para permitir comparação entre aplicações.
 
 ### 4.4 Exportação dos dados de T2
 
@@ -123,7 +123,7 @@ A Análise Fatorial Confirmatória (CFA) é o método padrão para verificar se 
 - **Tamanho de amostra mínimo recomendado:** N ≥ 200 (Hu & Bentler, 1999).
 - **Com N = 2:** inviável. O modelo não converge e os índices de ajuste não são interpretáveis.
 
-A CFA fica registrada como **meta futura**, a ser executada quando houver dados de pelo menos 200 respondentes.
+A CFA fica registrada como **meta futura distante**, apenas se o projeto deixar de ser app pessoal e houver dados de pelo menos 200 respondentes.
 
 > **Referência:** Hu, L., & Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance structure analysis. *Structural Equation Modeling*, 6(1), 1–55.
 

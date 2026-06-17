@@ -1,6 +1,6 @@
 # STATUS — Fotografia do estado atual
 
-> Última atualização: 2026-06-17 (baseline intra, norma pública, segurança e validação API; 30/30 verdes).
+> Última atualização: 2026-06-17 (pós-commit `7bc0094`; sprint técnica estável; 30/30 verdes).
 > Para o roadmap e próximas fases, ver [ROADMAP.md](ROADMAP.md).
 
 ---
@@ -56,6 +56,24 @@
 | Motor de resultados | `main.py` | `/results/me` retorna bigfive + jung_continuo + disc + spranger + qualidade |
 | Admin stats | `main.py` | `/admin/stats` — omega_bigfive por fator |
 | Proxy ASGI Vercel | `api/index.py` | lazy import + lifespan próprio + error JSON |
+
+---
+
+## Escopo atual
+
+Este projeto está no estágio de **aplicativo pessoal de autoconhecimento**.
+
+Não é, nesta fase:
+
+- produto comercial;
+- sistema RH/corporativo em produção;
+- teste psicológico validado pelo CFP/SATEPSI;
+- diagnóstico;
+- laudo psicológico;
+- avaliação psicológica profissional;
+- ferramenta de seleção profissional.
+
+LGPD completa não é requisito obrigatório nesta fase. Mantêm-se apenas cuidados mínimos: aviso de não diagnóstico, não versionar segredos, não vazar traceback em produção, `SECRET_KEY` segura, CORS restrito em produção, sem seed demo em produção e logs sem dados sensíveis.
 
 ---
 
@@ -155,8 +173,18 @@ pytest backend/app/ -v
 
 ## Próxima fase
 
-**F8** — TIRT (opcional). Avaliar viabilidade do modelo Thurstoniano para blocos ipsativos DISC antes de abrir. Prompt em `PLANO_EVOLUCAO_DISC_v2.md` § 4.
+**Sprint 9 — Sincronização documental, QA manual e preparação da experiência pessoal.**
 
-**F9** — Camada de Autoconhecimento (próximo passo real). Depende de: (a) dados reais acumulados via F5 para validação empírica; (b) decisão de trazer pasta `2-perguntas`.
+Ordem recomendada:
 
-**Pendência F5 empírica:** infraestrutura pronta; teste-reteste real (Josemar + Esdra, intervalo 2–4 semanas) ainda não executado. A rodada 2 agora é feita pelo botão "Refazer teste" na aba "Meu Perfil" — não depende mais de intervenção manual no backend. Quando tiver os dois snapshots, rodar `test_retest_reliability()` conforme `PROTOCOLO_VALIDACAO.md`.
+1. Sincronização documental pós-commit `7bc0094`.
+2. QA manual completo da interface.
+3. Melhorar devolutiva textual/humana.
+4. Histórico visual entre aplicações.
+5. Exportação de relatório em PDF.
+6. Validação empírica pessoal T1/T2.
+7. F9: camada de autoconhecimento com perguntas/reflexões.
+
+**Não priorizar agora:** TIRT/F8, RH corporativo, dashboard de equipe, ranking de pessoas, seleção profissional, LGPD completa, produto comercial, alteração profunda do motor, promessa CFP/SATEPSI, laudo psicológico ou diagnóstico.
+
+**Pendência F5 empírica:** infraestrutura pronta; teste-reteste real (Josemar + Esdra, intervalo 2–4 semanas) ainda não executado. A rodada 2 agora é feita pelo botão "Refazer teste" na aba "Meu Perfil". Quando tiver os dois snapshots, rodar `test_retest_reliability()` conforme `PROTOCOLO_VALIDACAO.md`.

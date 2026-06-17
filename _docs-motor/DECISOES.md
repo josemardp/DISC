@@ -1,7 +1,7 @@
 # DECISOES — Registro de Decisões de Arquitetura (ADR)
 
 > Cada decisão: contexto / decisão / consequências.
-> Última atualização: 2026-06-13 (F3 — documentação viva).
+> Última atualização: 2026-06-17 (pós-commit `7bc0094`; escopo pessoal e Sprint 9).
 > Ver também: [ROADMAP.md](ROADMAP.md) | [STATUS.md](STATUS.md)
 
 ---
@@ -67,11 +67,11 @@ Decisão F6 (2026-06-13): opção (b) escolhida — manter ilustrativo. Opção 
 
 ## ADR-06 — NORM_MODE=intra como padrão honesto
 
-**Contexto:** usar percentis populacionais exige normas publicadas e versionadas para a população-alvo. O sistema ainda não tem base de dados própria suficiente nem fonte pública versionada integrada.
+**Contexto:** usar percentis populacionais exige normas publicadas e versionadas para a população-alvo. O sistema não tem base própria suficiente nem norma brasileira validada, mas possui uma fonte pública exploratória versionada.
 
-**Decisão:** padrão é `NORM_MODE=intra` — régua interna do próprio respondente (`percentil_intraindividual()` em `science_engine.py`). O modo `public` está bloqueado no código com mensagem: `"NORM_MODE=public requer arquivo de normas públicas versionado. Use NORM_MODE=intra por enquanto."` A F4 desbloqueará o modo `public`.
+**Decisão:** padrão é `NORM_MODE=intra` — régua interna do próprio respondente. A primeira aplicação cria baseline interna e não retorna percentil interpretável. O modo `public` está funcional com `backend/app/norms_ipip_neo.json`, fonte `open_psychometrics_2018`, em escala bruta 10-50.
 
-**Consequências:** resultados são honestos sobre o que medem. O rótulo retornado pela API é `"régua interna (não é percentil populacional)"`. Não é possível afirmar "você está no percentil 80 da população". Documentar nos laudos.
+**Consequências:** resultados são honestos sobre o que medem. No modo intra, a primeira aplicação não deve ser lida como percentil populacional. No modo public, os percentis são exploratórios e não representam norma brasileira validada. Documentar nos laudos e na UI.
 
 ---
 
@@ -124,3 +124,13 @@ Decisão F6 (2026-06-13): opção (b) escolhida — manter ilustrativo. Opção 
 **Motivo:** sustentar o teste-reteste da F5 (Josemar + Esdra, dois snapshots com 2–4 semanas de intervalo) e o `_bigfive_raw_history()` que alimenta o `NORM_MODE=intra`. Remover o landmine antes que o fluxo seja alterado.
 
 **Consequências:** o histórico de `PsychometricResult` Big Five é imutável por código de aplicação. O delete consolidado continua funcionando para seu propósito original (substituir resultado consolidado antes de criar novo). Um teste unitário (`test_delete_consolidado_preserva_bigfive`) prova o invariante diretamente no filtro.
+
+---
+
+## ADR-12 — Escopo pessoal e Sprint 9 (2026-06-17)
+
+**Contexto:** após a sprint técnica `7bc0094`, o núcleo psicométrico está suficientemente estável para uso pessoal: Big Five medido, baseline intra corrigido, norma pública exploratória funcional, Jung borderline indefinido, DISC/Spranger derivados com avisos, backend 30/30 e frontend build OK.
+
+**Decisão:** o projeto, por enquanto, é aplicativo pessoal de autoconhecimento. A próxima fase oficial é a Sprint 9: sincronização documental, QA manual, melhoria da devolutiva, histórico visual, relatório PDF, validação pessoal T1/T2 e F9 com perguntas abertas apenas como apoio reflexivo.
+
+**Consequências:** não priorizar TIRT/F8, RH corporativo, dashboard de equipe, ranking, seleção profissional, LGPD completa, produto comercial, alteração profunda do motor, promessa CFP/SATEPSI, laudo psicológico ou diagnóstico. LGPD completa volta ao roadmap apenas se o app virar produto comercial/corporativo/RH.
