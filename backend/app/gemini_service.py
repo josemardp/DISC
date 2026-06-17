@@ -1,10 +1,3 @@
-import os
-try:
-    from google import genai
-    GENAI_AVAILABLE = True
-except ImportError:
-    genai = None
-    GENAI_AVAILABLE = False
 from typing import Dict, Any, List
 from backend.app.config import settings
 
@@ -125,7 +118,7 @@ DIRETRIZES DE FORMATO E TOM:
 """
 
     # 4. Execução da Chamada da API
-    if not settings.GEMINI_API_KEY or not GENAI_AVAILABLE:
+    if not settings.GEMINI_API_KEY:
         print("GEMINI_API_KEY não configurada ou API indisponível (ex: DLL bloqueada). Gerando relatório simulado de fallback...")
         return generate_mock_report(
             candidate_name, disc_natural, disc_adapted, burnout_risk,
@@ -134,6 +127,7 @@ DIRETRIZES DE FORMATO E TOM:
         )
 
     try:
+        from google import genai
         client = genai.Client(api_key=settings.GEMINI_API_KEY)
         response = client.models.generate_content(
             model="gemini-1.5-flash",

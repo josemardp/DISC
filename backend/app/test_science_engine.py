@@ -101,6 +101,14 @@ def test_jung_marca_borderline():
     assert jung["eixos"]["T_F"]["borderline"] is False  # 80 não é borderline
 
 
+def test_jung_borderline_majoritario_retorna_indefinido():
+    bf = {"E": 50, "O": 50, "A": 50, "C": 50, "N": 50}
+    jung = se.derive_jung_from_big_five(bf)
+    assert jung["tipo_resumo"] == "indefinido"
+    assert jung["tipo_fechado"] is False
+    assert jung["borderline_count"] == 4
+
+
 def test_jung_eixos_contínuos_somam_100():
     bf = {"E": 73, "O": 41, "A": 60, "C": 55, "N": 50}
     jung = se.derive_jung_from_big_five(bf)

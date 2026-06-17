@@ -1,5 +1,6 @@
 import unittest
 import math
+import importlib
 from uuid import uuid4
 from fastapi.testclient import TestClient
 from backend.app.main import app
@@ -114,8 +115,12 @@ class TestPsychometricMathEngine(unittest.TestCase):
             data = results.json()
             self.assertEqual(set(data["bigfive"]["factors"].keys()), {"O", "C", "E", "A", "N"})
             self.assertEqual(data["bigfive"]["norm_mode"], "intra")
-            self.assertEqual(data["bigfive"]["norm_label"], "régua interna (não é percentil populacional)")
+            self.assertEqual(data["bigfive"]["norm_label"], "primeira aplicação — linha de base interna criada")
+            self.assertTrue(data["bigfive"]["is_first_assessment"])
+            self.assertEqual(data["metadata"]["interpretation_confidence"], "baseline")
             for factor in data["bigfive"]["factors"].values():
+                self.assertIsNone(factor["percentile"])
+                self.assertIn("mean", factor)
                 self.assertIn("ci_low", factor)
                 self.assertIn("ci_high", factor)
             self.assertIn("tipo_resumo", data["jung_continuo"])
@@ -229,8 +234,95 @@ def test_bigfive_public_norm(monkeypatch):
         data = client.get("/results/me", headers=headers).json()
         assert "norm_info" in data["bigfive"], "norm_info ausente na resposta"
         assert data["bigfive"]["norm_info"]["mode"] == "public"
+        assert data["bigfive"]["norm_label"] == "norma pública: open_psychometrics_2018"
         for factor in data["bigfive"]["factors"].values():
             assert 0.0 <= factor["percentile"] <= 100.0
+
+
+def _auth_headers(client):
+    email = f"api-hardening-{uuid4().hex}@example.com"
+    reg = client.post("/auth/register", json={
+        "email": email,
+        "password": "123456",
+        "full_name": "API Hardening"
+    })
+    assert reg.status_code == 200
+    return {"Authorization": f"Bearer {reg.json()['access_token']}"}
+
+
+def _valid_bigfive_answers(client, headers):
+    blocks = client.get("/questionnaire/items?test_type=BIGFIVE", headers=headers).json()
+    answers = []
+    for block in blocks:
+        for item in block["items"]:
+            value = 3
+            if item["dimension"] == "attention_check":
+                text = item["item_text"]
+                value = 1 if "Muito imprecisa" in text else (5 if "Muito precisa" in text else 3)
+            answers.append({"item_id": item["id"], "block_number": block["block_number"], "value": value})
+    return answers
+
+
+def _submit_payload(answers):
+    return {
+        "test_type": "BIGFIVE",
+        "phase": "natural",
+        "answers": answers,
+        "ttfc_avg": 1200,
+        "irt_avg": 2500,
+        "rvi_count": 1,
+        "raw_telemetry": []
+    }
+
+
+def test_questionnaire_submit_rejects_missing_duplicate_unknown_and_bad_value():
+    with TestClient(app) as client:
+        headers = _auth_headers(client)
+        answers = _valid_bigfive_answers(client, headers)
+
+        assert client.post("/questionnaire/submit", json=_submit_payload(answers[:-1]), headers=headers).status_code == 422
+
+        duplicate = answers.copy()
+        duplicate[-1] = duplicate[0]
+        assert client.post("/questionnaire/submit", json=_submit_payload(duplicate), headers=headers).status_code == 422
+
+        unknown = [dict(a) for a in answers]
+        unknown[0]["item_id"] = 999999
+        assert client.post("/questionnaire/submit", json=_submit_payload(unknown), headers=headers).status_code == 422
+
+        bad_value = [dict(a) for a in answers]
+        bad_value[0]["value"] = 9
+        assert client.post("/questionnaire/submit", json=_submit_payload(bad_value), headers=headers).status_code == 422
+
+
+def test_register_with_company_does_not_auto_promote_to_hr():
+    with TestClient(app) as client:
+        email = f"company-{uuid4().hex}@example.com"
+        reg = client.post("/auth/register", json={
+            "email": email,
+            "password": "123456",
+            "full_name": "Pessoa Empresa",
+            "company_name": "Empresa Sem Convite"
+        })
+        assert reg.status_code == 200
+        assert reg.json()["user"]["role"] == "respondent"
+
+
+def test_secret_key_required_in_production(monkeypatch):
+    monkeypatch.setenv("ENV", "production")
+    monkeypatch.setenv("SECRET_KEY", "")
+    monkeypatch.setenv("ALLOWED_ORIGINS", "https://frontend.example")
+    import backend.app.config as config_module
+    try:
+        importlib.reload(config_module)
+        assert False, "Settings deveria falhar sem SECRET_KEY segura em produção"
+    except RuntimeError as exc:
+        assert "SECRET_KEY" in str(exc)
+    finally:
+        monkeypatch.setenv("ENV", "test")
+        monkeypatch.setenv("DATABASE_URL", "sqlite:///:memory:")
+        monkeypatch.setenv("ENABLE_DEMO_SEED", "true")
+        importlib.reload(config_module)
 
 
 def test_delete_consolidado_preserva_bigfive():

@@ -3,6 +3,44 @@
 Data: 2026-06-05
 Branch: evolucao-cientifica
 
+## Atualizacao QA - 2026-06-17
+
+### Estado inicial medido nesta rodada
+
+- Repositorio real: `C:\projetos\autoconhecimento\1-disc-app` (o diretorio pai nao e repo Git).
+- Build frontend inicial: passou, mas com aviso de bundle `assets/index-*.js` maior que 500 kB.
+- Pytest inicial: 26 testes coletados, 0 passando, 26 erros de setup, 2 warnings. Causa: banco SQLite local antigo sem a coluna `questionnaire_items.reverse_keyed`.
+- `NORM_MODE` atual: `intra`.
+- Arquivo normativo existente: `backend/app/norms_ipip_neo.json`, com `_meta` e fonte `open_psychometrics_2018`, escala bruta 10-50 por fator.
+- Big Five calculado em `backend/app/science_engine.py::score_big_five()` e escalado em `backend/app/main.py::_bigfive_scaled_scores()`.
+- Big Five renderizado em `frontend/src/components/Dashboards.tsx`.
+- Jung/DISC/Spranger derivados em `backend/app/science_engine.py`.
+- Relatorio narrativo gerado em `backend/app/gemini_service.py::generate_psychometric_report()`.
+
+### Correcoes implementadas
+
+- Testes agora usam SQLite em memoria (`sqlite:///:memory:`), isolado do banco local antigo.
+- SQLAlchemy migrou de `declarative_base()` para `DeclarativeBase`.
+- Google GenAI passou a ser importado sob demanda, evitando warning de SDK durante testes sem chave.
+- Primeira aplicacao em `NORM_MODE=intra` retorna baseline interna, sem percentil interpretavel (`percentile: null`) e com metadados `is_first_assessment`, `has_intraindividual_history`, `interpretation_confidence`, `warnings` e `norm_label`.
+- `NORM_MODE=public` usa `backend/app/norms_ipip_neo.json`, fonte `open_psychometrics_2018`, com `raw_to_percentile()` na escala bruta 10-50.
+- Jung borderline majoritario retorna `tipo_resumo="indefinido"` e `tipo_fechado=false`.
+- DISC e Spranger aparecem como derivados heurísticos, nao instrumentos independentes.
+- Endpoint `/questionnaire/submit` valida `test_type`, `phase`, escala de `value`, `item_id`, duplicidade, itens ausentes, bloco incompatível e campos extras.
+- Cadastro com empresa nao promove usuario para `hr`; fica como `respondent`.
+- Producao exige `SECRET_KEY` segura e `ALLOWED_ORIGINS`; wildcard CORS, seed demo e criacao automatica de schema ficam restritos fora de producao.
+- Layout Big Five separa nome/score, barra e metadados em linhas proprias.
+- Code splitting com `React.lazy()` para `Dashboards` e `TestRoom`; chunk grande restante fica isolado em `recharts`.
+
+### Historico append-only
+
+O delete em `process_psychometric_results()` continua restrito a `PsychometricResult.bigfive_percentis.is_(None)`. Ele remove apenas registros consolidados/legados sem Big Five, e preserva historico Big Five valido. O teste `test_delete_consolidado_preserva_bigfive` protege esse comportamento.
+
+### Estado final medido
+
+- Backend: `python -m pytest backend/app/ -v` -> 30 passed, 0 failed, 0 warnings.
+- Frontend: `npm run build` -> build OK. Aviso residual: chunk `charts-*.js` maior que 500 kB, isolado em carregamento de Dashboard/Recharts.
+
 ## O que foi testado
 
 1. Teste-reteste simulado usando `score_big_five()`.

@@ -178,6 +178,28 @@ def _borderline(p: float) -> bool:
     return 45.0 <= p <= 55.0
 
 
+def classify_jung_axis(value: float, left_letter: str, right_letter: str) -> Dict[str, str]:
+    if _borderline(value):
+        return {
+            "letter": "X",
+            "strength": "borderline",
+            "label": "Eixo em zona borderline/indefinida",
+        }
+    distance = abs(value - 50.0)
+    side = left_letter if value > 55.0 else right_letter
+    strength = "forte" if distance >= 25.0 else "moderado"
+    return {
+        "letter": side,
+        "strength": strength,
+        "label": f"Tendência {strength} para {side}",
+    }
+
+
+def _score_or_default(scores: Dict[str, float], key: str, default: float = 50.0) -> float:
+    value = scores.get(key)
+    return default if value is None else float(value)
+
+
 def derive_jung_from_big_five(bf_percentis: Dict[str, float]) -> Dict:
     """
     bf_percentis: percentis 0-100 dos fatores Big Five {O, C, E, A, N}.
@@ -185,11 +207,11 @@ def derive_jung_from_big_five(bf_percentis: Dict[str, float]) -> Dict:
     e o eixo extra de Estabilidade Emocional.
     A pilha de funções cognitivas NÃO é calculada (sem suporte empírico) — fica para a narrativa.
     """
-    extr = bf_percentis.get("E", 50.0)
-    aber = bf_percentis.get("O", 50.0)
-    amab = bf_percentis.get("A", 50.0)
-    consc = bf_percentis.get("C", 50.0)
-    neuro = bf_percentis.get("N", 50.0)
+    extr = _score_or_default(bf_percentis, "E")
+    aber = _score_or_default(bf_percentis, "O")
+    amab = _score_or_default(bf_percentis, "A")
+    consc = _score_or_default(bf_percentis, "C")
+    neuro = _score_or_default(bf_percentis, "N")
 
     eixos = {
         "E_I": {"E": round(extr, 2), "I": round(100 - extr, 2), "borderline": _borderline(extr)},
@@ -198,17 +220,30 @@ def derive_jung_from_big_five(bf_percentis: Dict[str, float]) -> Dict:
         "J_P": {"J": round(consc, 2), "P": round(100 - consc, 2), "borderline": _borderline(consc)},
     }
 
-    tipo = ""
-    tipo += "E" if extr >= 50 else "I"
-    tipo += "N" if aber >= 50 else "S"
-    tipo += "F" if amab >= 50 else "T"
-    tipo += "J" if consc >= 50 else "P"
+    axis_classes = {
+        "E_I": classify_jung_axis(extr, "E", "I"),
+        "S_N": classify_jung_axis(aber, "N", "S"),
+        "T_F": classify_jung_axis(amab, "F", "T"),
+        "J_P": classify_jung_axis(consc, "J", "P"),
+    }
+    borderline_count = sum(1 for axis in axis_classes.values() if axis["strength"] == "borderline")
+    tipo_indefinido = borderline_count >= 2
+    tipo = "indefinido" if tipo_indefinido else "".join(
+        axis_classes[key]["letter"] for key in ["E_I", "S_N", "T_F", "J_P"]
+    )
 
     return {
         "tipo_resumo": tipo,
+        "tipo_fechado": borderline_count == 0,
         "eixos": eixos,
+        "classificacao_eixos": axis_classes,
+        "borderline_count": borderline_count,
         "estabilidade_emocional": round(100 - neuro, 2),  # eixo extra (não junguiano)
-        "aviso": "Tipo é um RESUMO de escores contínuos; eixos 'borderline' (45-55%) podem alternar a letra.",
+        "aviso": (
+            "Tipo Jung indefinido: os eixos ficaram próximos do centro. Não interpretar como tipo fechado."
+            if tipo_indefinido
+            else "Tipo é uma leitura derivada e exploratória do Big Five; não é medida independente nem tipo fechado."
+        ),
     }
 
 
@@ -226,17 +261,17 @@ def derive_disc_from_big_five(bf_percentis: Dict[str, float]) -> Dict[str, float
       S (Estabilidade) ~ alta Amabilidade + baixa Neuroticismo (alta ES)
       C (Conformidade) ~ alta Conscienciosidade
     """
-    extr = bf_percentis.get("E", 50.0)
-    amab = bf_percentis.get("A", 50.0)
-    consc = bf_percentis.get("C", 50.0)
-    neuro = bf_percentis.get("N", 50.0)
+    extr = _score_or_default(bf_percentis, "E")
+    amab = _score_or_default(bf_percentis, "A")
+    consc = _score_or_default(bf_percentis, "C")
+    neuro = _score_or_default(bf_percentis, "N")
     es = 100 - neuro
     return {
         "D": round((extr + (100 - amab)) / 2, 2),   # [provisório]
         "I": round((extr + amab) / 2, 2),            # [provisório]
         "S": round((amab + es) / 2, 2),              # [provisório]
         "C": round(consc, 2),                        # [provisório]
-        "_aviso": "DISC derivado do Big Five — pesos provisórios, camada de apresentação.",
+        "_aviso": "DISC derivado — leitura ilustrativa baseada nos fatores Big Five. Não substitui um instrumento DISC validado.",
     }
 
 
@@ -245,10 +280,10 @@ def derive_spranger_from_big_five(bf_percentis: Dict[str, float]) -> Dict[str, f
     Spranger (valores) NÃO mapeia limpo no Big Five. Mapeamento HEURÍSTICO e PROVISÓRIO.
     Recomendação: ou medir Spranger com itens próprios validados, ou tratar como ilustrativo.
     """
-    aber = bf_percentis.get("O", 50.0)
-    amab = bf_percentis.get("A", 50.0)
-    consc = bf_percentis.get("C", 50.0)
-    extr = bf_percentis.get("E", 50.0)
+    aber = _score_or_default(bf_percentis, "O")
+    amab = _score_or_default(bf_percentis, "A")
+    consc = _score_or_default(bf_percentis, "C")
+    extr = _score_or_default(bf_percentis, "E")
     return {
         "teorico": round(aber, 2),                       # [provisório] curiosidade intelectual ~ Abertura
         "estetico": round(aber, 2),                      # [provisório]
@@ -256,7 +291,7 @@ def derive_spranger_from_big_five(bf_percentis: Dict[str, float]) -> Dict[str, f
         "regulador": round(consc, 2),                    # [provisório] ordem ~ Conscienciosidade
         "individualista": round(extr, 2),                # [provisório] status/liderança ~ Extroversão
         "economico": round((consc + (100 - aber)) / 2, 2),  # [provisório]
-        "aviso": "Estimativa ilustrativa derivada do Big Five — não é instrumento independente validado.",
+        "aviso": "Spranger derivado — leitura ilustrativa baseada nos fatores Big Five. Não substitui um instrumento motivacional validado.",
     }
 
 

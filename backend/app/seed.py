@@ -3,12 +3,14 @@ from sqlalchemy.orm import Session
 import hashlib
 import secrets
 from backend.app.database import engine, Base
+from backend.app.config import settings
 from backend.app.models import Tenant, User, QuestionnaireItem
 from backend.app.seed_big_five_ipip import construir_itens_bigfive
 
 def seed_db(db: Session):
     # 1. Cria tabelas se não existirem
-    Base.metadata.create_all(bind=engine)
+    if settings.ENV != "production" and settings.AUTO_CREATE_SCHEMA:
+        Base.metadata.create_all(bind=engine)
     
     # 2. Cria Tenant de teste se não houver
     tenant = db.query(Tenant).filter(Tenant.name == "Empresa Demonstração LTDA").first()
@@ -26,22 +28,23 @@ def seed_db(db: Session):
         {"email": "super@sistema.com", "name": "Super Admin Global", "role": "admin", "tenant_id": None}
     ]
     
-    for u_data in users_data:
-        user = db.query(User).filter(User.email == u_data["email"]).first()
-        if not user:
-            salt = secrets.token_hex(16)
-            dk = hashlib.pbkdf2_hmac("sha256", "123456".encode("utf-8"), salt.encode("utf-8"), 100000)
-            hashed_pwd = f"pbkdf2_sha256$100000${salt}${dk.hex()}"
-            user = User(
-                email=u_data["email"],
-                hashed_password=hashed_pwd,
-                full_name=u_data["name"],
-                role=u_data["role"],
-                tenant_id=u_data["tenant_id"]
-            )
-            db.add(user)
-            db.commit()
-            print(f"Usuário {u_data['email']} criado com senha '123456'.")
+    if settings.ENV != "production" and (settings.ENABLE_DEMO_SEED or settings.ENV in {"development", "test"}):
+        for u_data in users_data:
+            user = db.query(User).filter(User.email == u_data["email"]).first()
+            if not user:
+                salt = secrets.token_hex(16)
+                dk = hashlib.pbkdf2_hmac("sha256", "123456".encode("utf-8"), salt.encode("utf-8"), 100000)
+                hashed_pwd = f"pbkdf2_sha256$100000${salt}${dk.hex()}"
+                user = User(
+                    email=u_data["email"],
+                    hashed_password=hashed_pwd,
+                    full_name=u_data["name"],
+                    role=u_data["role"],
+                    tenant_id=u_data["tenant_id"]
+                )
+                db.add(user)
+                db.commit()
+                print(f"Usuário demo {u_data['email']} criado apenas em ambiente não produtivo.")
 
     # 4. Verifica se já existem itens cadastrados
     count_items = db.query(QuestionnaireItem).count()

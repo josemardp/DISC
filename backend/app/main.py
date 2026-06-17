@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 import csv
 import hashlib
 import io
@@ -25,7 +25,7 @@ from backend.app.math_engine import (
     detect_frictions
 )
 from backend.app.science_engine import (
-    score_big_five, percentil_intraindividual, percentil_por_norma,
+    score_big_five, percentil_intraindividual,
     derive_jung_from_big_five,
     derive_disc_from_big_five, derive_spranger_from_big_five,
     mcdonald_omega, standard_error_of_measurement, confidence_interval,
@@ -34,15 +34,48 @@ from backend.app.science_engine import (
 from backend.app.seed_big_five_ipip import ITENS_ATENCAO
 from backend.app.gemini_service import generate_psychometric_report
 
+ALLOWED_TEST_TYPES = {"BIGFIVE", "DISC", "SPRANGER", "JUNG"}
+ALLOWED_PHASES_BY_TEST = {
+    "BIGFIVE": {"natural"},
+    "DISC": {"natural", "adaptado"},
+    "SPRANGER": {"natural"},
+    "JUNG": {"natural"},
+}
+VALUE_RANGES_BY_TEST = {
+    "BIGFIVE": (1, 5),
+    "DISC": (-1, 1),
+    "SPRANGER": (1, 6),
+    "JUNG": (1, 6),
+}
+NON_DIAGNOSTIC_NOTICE = (
+    "Este resultado é uma ferramenta de autoconhecimento e não constitui diagnóstico "
+    "psicológico, laudo psicológico ou avaliação psicológica profissional."
+)
+
+
+def _is_production() -> bool:
+    return settings.ENV == "production"
+
+
+def _cors_origins() -> List[str]:
+    if _is_production():
+        return [origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()]
+    configured = [origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()]
+    return configured or ["*"]
+
 
 @asynccontextmanager
 async def lifespan(app):
     try:
-        Base.metadata.create_all(bind=engine)
-        from backend.app.seed import seed_db
-        db = next(get_db())
-        seed_db(db)
-        db.close()
+        if not _is_production() and settings.AUTO_CREATE_SCHEMA:
+            Base.metadata.create_all(bind=engine)
+            if settings.ENABLE_DEMO_SEED or settings.ENV in {"development", "test"}:
+                from backend.app.seed import seed_db
+                db = next(get_db())
+                try:
+                    seed_db(db)
+                finally:
+                    db.close()
     except Exception as e:
         import traceback
         print(f"[startup] erro não-fatal: {e}", flush=True)
@@ -58,6 +91,11 @@ async def generic_exception_handler(request: Request, exc: Exception):
     tb = _traceback.format_exc()
     print(f"[error] {type(exc).__name__}: {exc}", flush=True)
     print(tb, flush=True)
+    if _is_production():
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Erro interno. A equipe técnica foi notificada."}
+        )
     return JSONResponse(
         status_code=500,
         content={"detail": f"{type(exc).__name__}: {str(exc)[:300]}"}
@@ -87,8 +125,8 @@ async def strip_api_prefix(request, call_next):
 # Configuração de CORS para permitir requisições do frontend React
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Em produção, restringir ao endereço do frontend
-    allow_credentials=True,
+    allow_origins=_cors_origins(),
+    allow_credentials="*" not in _cors_origins(),
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -144,6 +182,8 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 # Pydantic Schemas
 class UserRegister(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     email: EmailStr
     password: str
     full_name: str
@@ -155,11 +195,15 @@ class Token(BaseModel):
     user: Dict[str, Any]
 
 class AnswerItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     item_id: int
     block_number: int
     value: int  # DISC: +1 (Mais), -1 (Menos). Likert: 1-6.
 
 class TestSubmission(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     test_type: str  # DISC, SPRANGER, JUNG
     phase: str  # natural, adaptado
     answers: List[AnswerItem]
@@ -170,6 +214,8 @@ class TestSubmission(BaseModel):
     raw_telemetry: Optional[List[Dict[str, Any]]] = None
 
 class JobCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     title: str
     description: Optional[str] = ""
     target_d: float
@@ -204,7 +250,7 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
         email=user_in.email,
         hashed_password=hashed_pwd,
         full_name=user_in.full_name,
-        role="hr" if user_in.company_name else "respondent",
+        role="respondent",
         tenant_id=tenant_id
     )
     db.add(new_user)
@@ -220,7 +266,8 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
             "email": new_user.email,
             "full_name": new_user.full_name,
             "role": new_user.role,
-            "company_name": user_in.company_name
+            "company_name": user_in.company_name,
+            "hr_request_status": "requires_admin_approval" if user_in.company_name else None
         }
     }
 
@@ -279,8 +326,53 @@ def get_items(test_type: str, db: Session = Depends(get_db)):
         
     return [{"block_number": k, "items": v} for k, v in sorted(blocks.items())]
 
+
+def _validate_submission_payload(submission: TestSubmission, db: Session) -> List[QuestionnaireItem]:
+    test_type = submission.test_type.upper()
+    phase = submission.phase.lower()
+    if test_type not in ALLOWED_TEST_TYPES:
+        raise HTTPException(status_code=422, detail="test_type inválido.")
+    if phase not in ALLOWED_PHASES_BY_TEST[test_type]:
+        raise HTTPException(status_code=422, detail="phase inválida para o test_type informado.")
+    if not submission.answers:
+        raise HTTPException(status_code=422, detail="answers não pode estar vazio.")
+
+    submitted_ids = [answer.item_id for answer in submission.answers]
+    if len(submitted_ids) != len(set(submitted_ids)):
+        raise HTTPException(status_code=422, detail="Payload contém item duplicado.")
+
+    expected_items = db.query(QuestionnaireItem).filter(
+        QuestionnaireItem.test_type == test_type
+    ).all()
+    expected_by_id = {item.id: item for item in expected_items}
+    submitted_set = set(submitted_ids)
+    expected_set = set(expected_by_id.keys())
+
+    unknown = sorted(submitted_set - expected_set)
+    if unknown:
+        raise HTTPException(status_code=422, detail=f"Payload contém item_id desconhecido: {unknown[:5]}.")
+
+    missing = sorted(expected_set - submitted_set)
+    if missing:
+        raise HTTPException(status_code=422, detail=f"Payload incompleto: {len(missing)} item(ns) ausente(s).")
+
+    min_value, max_value = VALUE_RANGES_BY_TEST[test_type]
+    for answer in submission.answers:
+        item = expected_by_id[answer.item_id]
+        if answer.block_number != item.block_number:
+            raise HTTPException(status_code=422, detail=f"block_number incompatível para item_id {answer.item_id}.")
+        if not (min_value <= answer.value <= max_value):
+            raise HTTPException(status_code=422, detail=f"value fora da escala permitida para {test_type}.")
+        if test_type == "DISC" and answer.value not in {-1, 0, 1}:
+            raise HTTPException(status_code=422, detail="value inválido para DISC.")
+
+    return [expected_by_id[item_id] for item_id in submitted_ids]
+
 @app.post("/questionnaire/submit")
 def submit_responses(submission: TestSubmission, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    submission.test_type = submission.test_type.upper()
+    submission.phase = submission.phase.lower()
+    _validate_submission_payload(submission, db)
     # 1. Apaga respostas anteriores do mesmo teste/fase para evitar duplicados
     db.query(Response).filter(
         Response.respondent_id == current_user.id,
@@ -397,7 +489,7 @@ def _bigfive_raw_history(user_id: int, db: Session) -> Dict[str, List[float]]:
 
 def _bigfive_norm_label() -> str:
     if settings.NORM_MODE == "intra":
-        return "régua interna (não é percentil populacional)"
+        return "régua interna — não é percentil populacional"
     if settings.NORM_MODE == "public":
         return f"norma pública: {settings.NORM_SOURCE}"
     return "modo de norma desconhecido"
@@ -405,14 +497,19 @@ def _bigfive_norm_label() -> str:
 
 def _bigfive_scaled_scores(raw_scores: Dict[str, float], history: Dict[str, List[float]]) -> Dict[str, float]:
     if settings.NORM_MODE == "intra":
+        if not any(history.get(factor) for factor in ["O", "C", "E", "A", "N"]):
+            return {factor: None for factor in ["O", "C", "E", "A", "N"]}
         return {
             factor: percentil_intraindividual(raw_scores[factor], history.get(factor, []))["posicao_relativa"]
             for factor in ["O", "C", "E", "A", "N"]
         }
     if settings.NORM_MODE == "public":
-        norm = load_norm_source(settings.NORM_SOURCE)
+        try:
+            norm = load_norm_source(settings.NORM_SOURCE)
+        except (FileNotFoundError, ValueError) as exc:
+            raise HTTPException(status_code=500, detail=f"Norma pública indisponível: {exc}") from exc
         return {
-            factor: percentil_por_norma(raw_scores[factor], norm[factor]["mean"], norm[factor]["sd"])
+            factor: raw_to_percentile(raw_scores[factor], norm[factor]["mean"], norm[factor]["sd"])
             for factor in ["O", "C", "E", "A", "N"]
         }
     raise HTTPException(
@@ -677,11 +774,28 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
             "A": result.bigfive_A,
             "N": result.bigfive_N
         }
+        result_count = db.query(PsychometricResult).filter(
+            PsychometricResult.respondent_id == current_user.id,
+            PsychometricResult.bigfive_percentis.isnot(None)
+        ).count()
+        is_first_assessment = settings.NORM_MODE == "intra" and result_count <= 1
+        warnings = [NON_DIAGNOSTIC_NOTICE]
+        if is_first_assessment:
+            warnings.append("Primeira aplicação — linha de base interna criada. Ainda não há histórico suficiente para comparação intraindividual.")
+        if settings.NORM_MODE == "public":
+            warnings.append(
+                "Percentis calculados com base em norma pública exploratória disponível no projeto. "
+                "Este resultado não constitui diagnóstico psicológico, laudo psicológico ou teste psicológico validado para uso profissional no Brasil."
+            )
         for factor, percentile in result.bigfive_percentis.items():
-            ci_low, ci_high = confidence_interval(percentile, sem, bounds=(0, 100))
+            ci_low, ci_high = (None, None)
+            if percentile is not None:
+                ci_low, ci_high = confidence_interval(percentile, sem, bounds=(0, 100))
             fatores[factor] = {
                 "label": nomes.get(factor, factor),
                 "raw": raw_scores.get(factor, 0.0),
+                "mean": round((raw_scores.get(factor, 0.0) or 0.0) / 10.0, 2),
+                "max_raw": 50,
                 "percentile": percentile,
                 "ci_low": ci_low,
                 "ci_high": ci_high
@@ -690,7 +804,14 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
         bigfive_dict = {
             "factors": fatores,
             "norm_mode": settings.NORM_MODE,
-            "norm_label": _bigfive_norm_label()
+            "norm_label": "primeira aplicação — linha de base interna criada" if is_first_assessment else _bigfive_norm_label(),
+            "is_first_assessment": is_first_assessment,
+            "has_population_norm": settings.NORM_MODE == "public",
+            "has_intraindividual_history": result_count > 1,
+            "interpretation_confidence": "baseline" if is_first_assessment else "exploratory",
+            "warnings": warnings,
+            "measured": ["Big Five"],
+            "derived": ["Jung contínuo", "DISC derivado", "Spranger derivado"]
         }
         if settings.NORM_MODE == "public":
             norm_src = load_norm_source(settings.NORM_SOURCE)
@@ -707,7 +828,8 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
             "jung_continuo": result.jung_continuo,
             "disc": {
                 "natural": {"D": result.natural_percentile_d, "I": result.natural_percentile_i, "S": result.natural_percentile_s, "C": result.natural_percentile_c},
-                "derived_from": "BIGFIVE"
+                "derived_from": "BIGFIVE",
+                "aviso": "DISC derivado — leitura ilustrativa baseada nos fatores Big Five. Não substitui um instrumento DISC validado."
             },
             "spranger": {
                 "teorico": result.spranger_percentile_teorico,
@@ -717,10 +839,20 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
                 "individualista": result.spranger_percentile_individualista,
                 "regulador": result.spranger_percentile_regulador,
                 "derived_from": "BIGFIVE",
-                "aviso": "Estimativa ilustrativa derivada do Big Five — não é instrumento independente validado."
+                "aviso": "Spranger derivado — leitura ilustrativa baseada nos fatores Big Five. Não substitui um instrumento motivacional validado."
             },
             "quality_label": result.quality_label,
-            "frictions": result.frictions
+            "frictions": result.frictions,
+            "metadata": {
+                "norm_mode": settings.NORM_MODE,
+                "is_first_assessment": is_first_assessment,
+                "has_population_norm": settings.NORM_MODE == "public",
+                "has_intraindividual_history": result_count > 1,
+                "interpretation_confidence": "baseline" if is_first_assessment else "exploratory",
+                "warnings": warnings,
+                "norm_label": bigfive_dict["norm_label"],
+            },
+            "notice": NON_DIAGNOSTIC_NOTICE
         }
         
     return {
@@ -792,9 +924,12 @@ def get_narrative_report(current_user: User = Depends(get_current_user), db: Ses
         }
         bigfive_factors = {}
         for factor, score in result.bigfive_percentis.items():
-            ci_low, ci_high = confidence_interval(score, sem, bounds=(0, 100))
+            ci_low, ci_high = (None, None)
+            if score is not None:
+                ci_low, ci_high = confidence_interval(score, sem, bounds=(0, 100))
             bigfive_factors[factor] = {
                 "raw": raw_scores.get(factor, 0.0),
+                "mean": round((raw_scores.get(factor, 0.0) or 0.0) / 10.0, 2),
                 "percentile": score,
                 "ci_low": ci_low,
                 "ci_high": ci_high

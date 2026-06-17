@@ -1,6 +1,12 @@
 import sys
+import os
 import pytest
 from pathlib import Path
+
+os.environ["ENV"] = "test"
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+os.environ["ENABLE_DEMO_SEED"] = "true"
+os.environ["AUTO_CREATE_SCHEMA"] = "true"
 
 APP_DIR = Path(__file__).resolve().parent
 if str(APP_DIR) not in sys.path:

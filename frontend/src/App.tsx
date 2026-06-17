@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
-import TestRoom from "./components/TestRoom";
-import Dashboards from "./components/Dashboards";
+import React, { Suspense, lazy, useState, useEffect } from "react";
 import { Brain, LogOut, ArrowRight, UserPlus, LogIn, Sparkles } from "lucide-react";
+
+const TestRoom = lazy(() => import("./components/TestRoom"));
+const Dashboards = lazy(() => import("./components/Dashboards"));
 
 export default function App() {
   const apiBaseUrl = import.meta.env.PROD ? "/api" : "http://127.0.0.1:8000";
@@ -322,27 +323,29 @@ export default function App() {
             <p className="text-gray-400 text-sm">Verificando status de avaliações...</p>
           </div>
         ) : hasFinishedTest && !forceRetake ? (
-          /* Se já respondeu o teste ou se for do RH, exibe os Dashboards */
-          <Dashboards
-            token={token}
-            apiBaseUrl={apiBaseUrl}
-            userRole={user.role}
-            onRetake={() => setForceRetake(true)}
-          />
-        ) : (
-          /* Se for candidato e não concluiu os testes (ou forceRetake), entra na sala de testes */
-          <div className="py-6">
-            <TestRoom
-              userId={user.id}
+          <Suspense fallback={<div className="py-16 text-center text-sm text-gray-400">Carregando resultados...</div>}>
+            <Dashboards
               token={token}
               apiBaseUrl={apiBaseUrl}
-              onTestComplete={() => {
-                setHasFinishedTest(true);
-                setForceRetake(false);
-                checkUserTestStatus();
-              }}
+              userRole={user.role}
+              onRetake={() => setForceRetake(true)}
             />
-          </div>
+          </Suspense>
+        ) : (
+          <Suspense fallback={<div className="py-16 text-center text-sm text-gray-400">Carregando teste...</div>}>
+            <div className="py-6">
+              <TestRoom
+                userId={user.id}
+                token={token}
+                apiBaseUrl={apiBaseUrl}
+                onTestComplete={() => {
+                  setHasFinishedTest(true);
+                  setForceRetake(false);
+                  checkUserTestStatus();
+                }}
+              />
+            </div>
+          </Suspense>
         )}
       </main>
     </div>

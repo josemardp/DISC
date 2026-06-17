@@ -393,25 +393,43 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                   </div>
                 </div>
 
+                <div className="mb-5 rounded-2xl border border-amber-400/20 bg-amber-400/10 p-3 text-xs leading-relaxed text-amber-100">
+                  {selfData.notice || "Este resultado é uma ferramenta de autoconhecimento e não constitui diagnóstico psicológico, laudo psicológico ou avaliação psicológica profissional."}
+                </div>
+
                 <div className="space-y-5">
                   {getBigFiveFactors().map((factor: any) => (
-                    <div key={factor.key} className="grid grid-cols-12 gap-3 items-center">
-                      <div className="col-span-12 sm:col-span-3">
-                        <div className="text-sm font-semibold text-white">{factor.label}</div>
-                        <div className="text-[11px] text-gray-500">{factor.key} bruto {factor.raw}</div>
-                      </div>
-                      <div className="col-span-12 sm:col-span-7">
-                        <div className="relative h-4 rounded-full bg-white/5 overflow-hidden">
-                          <div className="absolute top-0 h-full bg-white/10" style={{ left: `${factor.ci_low}%`, width: `${Math.max(1, factor.ci_high - factor.ci_low)}%` }} />
-                          <div className="h-full rounded-full bg-gradient-to-r from-brand-500 to-sky-400" style={{ width: `${factor.percentile}%` }} />
+                    <div key={factor.key} className="space-y-2 rounded-2xl border border-white/5 bg-white/[0.03] p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-white">{factor.label}</p>
+                          <p className="text-[11px] text-gray-500">média {Number(factor.mean ?? 0).toFixed(1)}/5</p>
                         </div>
-                        <div className="mt-1 flex justify-between text-[10px] text-gray-500">
-                          <span>IC {factor.ci_low}</span>
-                          <span>{factor.ci_high}</span>
+                        <div className="shrink-0 text-right">
+                          <p className="text-lg font-black text-brand-300">{Math.round(factor.raw)}/{factor.max_raw || 50}</p>
+                          <p className="text-[11px] text-gray-500">bruto</p>
                         </div>
                       </div>
-                      <div className="col-span-12 sm:col-span-2 text-left sm:text-right text-xl font-black text-brand-300">
-                        {Math.round(factor.percentile)}
+
+                      <div className="w-full">
+                        {factor.percentile == null ? (
+                          <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-300">
+                            Linha de base interna criada; percentil intraindividual ainda não interpretável.
+                          </div>
+                        ) : (
+                          <>
+                            <div className="relative h-4 rounded-full bg-white/5 overflow-hidden">
+                              {factor.ci_low != null && factor.ci_high != null && (
+                                <div className="absolute top-0 h-full bg-white/10" style={{ left: `${factor.ci_low}%`, width: `${Math.max(1, factor.ci_high - factor.ci_low)}%` }} />
+                              )}
+                              <div className="h-full rounded-full bg-gradient-to-r from-brand-500 to-sky-400" style={{ width: `${factor.percentile}%` }} />
+                            </div>
+                            <div className="mt-1 flex justify-between text-[10px] text-gray-500">
+                              <span>IC {factor.ci_low}</span>
+                              <span>{factor.ci_high}</span>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -424,10 +442,16 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                     <h3 className="text-base font-bold text-white">Jung Contínuo</h3>
                     <p className="text-[11px] text-gray-400">Resumo derivado dos fatores Big Five.</p>
                   </div>
-                  <div className="bg-brand-500/20 text-brand-300 font-bold border border-brand-500/30 text-2xl px-4 py-2 rounded-2xl">
-                    {selfData.jung_continuo?.tipo_resumo}
+                  <div className="bg-brand-500/20 text-brand-300 font-bold border border-brand-500/30 text-xl px-4 py-2 rounded-2xl text-center">
+                    {selfData.jung_continuo?.tipo_resumo || "indefinido"}
                   </div>
                 </div>
+
+                {selfData.jung_continuo?.aviso && (
+                  <div className="mb-4 rounded-2xl border border-amber-400/20 bg-amber-400/10 p-3 text-xs leading-relaxed text-amber-100">
+                    {selfData.jung_continuo.aviso}
+                  </div>
+                )}
 
                 <div className="space-y-4">
                   {getJungAxes().map((axis: any) => (
@@ -460,7 +484,10 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
               </div>
 
               <div className="col-span-12 lg:col-span-4 glass p-5 sm:p-6 rounded-3xl">
-                <h3 className="text-base font-bold text-white mb-4">DISC Derivado</h3>
+                <h3 className="text-base font-bold text-white mb-2">DISC Derivado</h3>
+                <p className="mb-4 text-[11px] leading-relaxed text-gray-400">
+                  {selfData.disc?.aviso || "DISC derivado — leitura ilustrativa baseada nos fatores Big Five. Não substitui um instrumento DISC validado."}
+                </p>
                 <div className="grid grid-cols-2 gap-3">
                   {Object.entries(selfData.disc.natural).map(([key, value]: any) => (
                     <div key={key} className="bg-white/5 rounded-2xl p-4 border border-white/5">
@@ -468,6 +495,23 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                       <div className="text-2xl font-black text-white">{Math.round(value)}</div>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              <div className="col-span-12 glass p-5 sm:p-6 rounded-3xl">
+                <h3 className="text-base font-bold text-white mb-2">Spranger Derivado</h3>
+                <p className="mb-4 text-[11px] leading-relaxed text-gray-400">
+                  {selfData.spranger?.aviso || "Spranger derivado — leitura ilustrativa baseada nos fatores Big Five. Não substitui um instrumento motivacional validado."}
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                  {Object.entries(selfData.spranger)
+                    .filter(([key]) => !["derived_from", "aviso"].includes(key))
+                    .map(([key, value]: any) => (
+                      <div key={key} className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                        <div className="text-xs text-gray-400 capitalize">{key}</div>
+                        <div className="text-2xl font-black text-white">{Math.round(value)}</div>
+                      </div>
+                    ))}
                 </div>
               </div>
             </div>

@@ -1,6 +1,6 @@
 # STATUS — Fotografia do estado atual
 
-> Última atualização: 2026-06-14 (Refazer teste + invariante Big Five; F1–F7 fechadas; 26/26 verdes).
+> Última atualização: 2026-06-17 (baseline intra, norma pública, segurança e validação API; 30/30 verdes).
 > Para o roadmap e próximas fases, ver [ROADMAP.md](ROADMAP.md).
 
 ---
@@ -22,13 +22,12 @@
 
 | Item | Estado | Detalhe |
 |---|---|---|
-| Total de testes | ✅ **26/26 passando** | commit 16c656c — invariante Big Five |
+| Total de testes | ✅ **30/30 passando** | baseline intra, public norm, API hardening e segurança |
 | Tempo de execução | ✅ ~2.7s | `pytest backend/app/ -v` |
 | test_bigfive_submit_to_results_e2e | ✅ Passando | usa `with TestClient(app) as client:` |
 | test_delete_consolidado_preserva_bigfive | ✅ Passando | prova a invariante de preservação Big Five (DELETE IS NULL não remove histórico) |
 | conftest.py | ✅ Fixture autouse | cria tabelas + seed antes de qualquer teste |
-| Warnings próprios | ✅ Zero | F7 eliminou: google.generativeai, on_event, utcnow |
-| Warnings de terceiros | ⚠️ 3 (não-bloqueantes) | starlette/httpx, SQLAlchemy 2.0, google.genai types — externos, fora do escopo |
+| Warnings | ✅ Zero | Pytest final sem warnings |
 
 ---
 
@@ -104,7 +103,7 @@ npm run dev
 ```powershell
 # Na raiz do projeto 1-disc-app:
 pytest backend/app/ -v
-# Resultado esperado: 25 passed, 0 failed
+# Resultado esperado: 30 passed, 0 failed, 0 warnings
 ```
 
 **Nota:** a fixture autouse em `backend/app/conftest.py` garante criação de tabelas e seed antes de qualquer teste. O banco de teste usa SQLite local (`psicometrico.db` ou o DATABASE_URL do `.env`).
