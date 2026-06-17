@@ -66,8 +66,56 @@ npm run dev
 
 ```powershell
 pytest backend/app/ -v
-# Resultado: 22 passed, 0 failed
+# Resultado atual: 30 passed, 0 failed, 0 warnings
 ```
+
+Build frontend:
+
+```powershell
+cd frontend
+npm run build
+# Resultado atual: build OK; chunk grande restante isolado em Recharts/Dashboard.
+```
+
+---
+
+## Limites éticos e psicométricos
+
+Este sistema é uma ferramenta de autoconhecimento e devolutiva comportamental exploratória. Ele não constitui diagnóstico psicológico, laudo psicológico, avaliação psicológica profissional, teste psicológico validado pelo CFP/SATEPSI, avaliação clínica ou instrumento definitivo de personalidade.
+
+- Big Five/IPIP-50 é o núcleo medido diretamente.
+- Jung contínuo, DISC e Spranger são leituras derivadas e heurísticas a partir do Big Five.
+- A primeira aplicação em `NORM_MODE=intra` cria uma linha de base interna; não exibe percentis interpretáveis.
+- `NORM_MODE=public` usa a fonte pública exploratória `open_psychometrics_2018` em `backend/app/norms_ipip_neo.json`, na escala bruta 10-50 por fator. Essa norma não é representativa da população brasileira.
+
+Diferenças importantes:
+
+- Escore bruto: soma dos 10 itens do fator, de 10 a 50.
+- Média por item: escore bruto dividido por 10, de 1 a 5.
+- Percentil intraindividual: comparação contra histórico do próprio respondente, não populacional.
+- Percentil público exploratório: cálculo contra norma pública versionada, com limitações de amostra.
+
+## Produção e cuidados mínimos
+
+Em produção:
+
+- `SECRET_KEY` deve vir de variável de ambiente, ser longa e segura.
+- `ALLOWED_ORIGINS` é obrigatório; CORS wildcard só é permitido fora de produção.
+- `ENABLE_DEMO_SEED` não deve ficar ativo.
+- `AUTO_CREATE_SCHEMA` não deve substituir migrações em produção.
+- Cadastro com empresa não promove usuário para RH automaticamente; RH exige aprovação/flag administrativa futura.
+
+Cuidados mínimos mantidos nesta sprint:
+
+- Aviso claro de que o resultado não é diagnóstico, laudo ou avaliação psicológica profissional.
+- Não expor dados sensíveis em logs.
+- Não vazar traceback ou erros internos para o usuário em produção.
+- Não versionar segredos, chaves ou `.env` real.
+- Manter `SECRET_KEY` segura em produção.
+- Manter CORS restrito em produção.
+- Não criar seed demo ou usuário de teste em produção.
+
+LGPD completa fica como pendência futura caso o aplicativo pessoal evolua para produto comercial, corporativo ou de RH.
 
 ---
 
