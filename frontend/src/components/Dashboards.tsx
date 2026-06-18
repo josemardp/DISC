@@ -502,7 +502,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                   {selfData.notice || "Este resultado é uma ferramenta de autoconhecimento e não constitui diagnóstico psicológico, laudo psicológico ou avaliação psicológica profissional."}
                 </div>
 
-                <div className="mb-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="mb-6 grid grid-cols-1 lg:grid-cols-4 gap-4">
                   <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
                     <h4 className="text-sm font-bold text-white mb-2">O que apareceu nesta aplicação</h4>
                     <p className="text-xs leading-relaxed text-gray-300">
@@ -519,6 +519,12 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                     <h4 className="text-sm font-bold text-white mb-2">Como usar agora</h4>
                     <p className="text-xs leading-relaxed text-gray-300">
                       Use este resultado como ponto de reflexão: observe em quais situações essas tendências ajudam, atrapalham ou mudam de intensidade.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-amber-400/15 bg-amber-400/5 p-4">
+                    <h4 className="text-sm font-bold text-white mb-2">Limites da avaliação</h4>
+                    <p className="text-xs leading-relaxed text-gray-300">
+                      Não é diagnóstico, laudo psicológico ou avaliação profissional. Ele organiza tendências desta aplicação para reflexão pessoal.
                     </p>
                   </div>
                 </div>
