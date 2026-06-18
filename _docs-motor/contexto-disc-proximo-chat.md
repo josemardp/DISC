@@ -1,6 +1,6 @@
 # Contexto DISC - proximo chat
 
-> Retomada oficial pos-commits `7bc0094` (`fix(psychometrics): corrige normas e resultados derivados`), `76373d4` (`ux(copy): ajusta linguagem para app pessoal`) e Sprint 10 de devolutiva pessoal.
+> Retomada oficial pos-commits `7bc0094` (`fix(psychometrics): corrige normas e resultados derivados`), `76373d4` (`ux(copy): ajusta linguagem para app pessoal`), Sprint 10 de devolutiva pessoal e Sprint 11 de historico visual.
 > Projeto atual: aplicativo pessoal de autoconhecimento. Nao e produto comercial, nao e RH em producao, nao e diagnostico, nao e laudo psicologico e nao e avaliacao psicologica profissional.
 
 ---
@@ -15,6 +15,7 @@ Frontend:
 - `npm run build`: OK.
 - Pendencia menor: chunk `charts`/Recharts > 500 kB, isolado no Dashboard.
 - Devolutiva pessoal estruturada em resumo, tracos marcantes, pontos fortes, pontos de atencao, sugestoes praticas, uso no dia a dia e limites.
+- Historico visual entre aplicacoes Big Five disponivel na tela de resultados.
 
 Psicometria:
 - Big Five/IPIP-50 e o nucleo medido diretamente.
@@ -47,6 +48,7 @@ Escopo:
 13. `Dashboards` e `TestRoom` usam `React.lazy()`.
 14. Linguagem visual foi ajustada para app pessoal, sem posicionamento RH/corporativo.
 15. Sprint 10 melhorou a devolutiva textual/humana sem alterar o motor psicometrico.
+16. Sprint 11 adicionou historico visual entre aplicacoes, com lista cronologica e comparacao contra a aplicacao anterior.
 
 Nao refazer essas correcoes sem um bug novo confirmado.
 
@@ -54,17 +56,17 @@ Nao refazer essas correcoes sem um bug novo confirmado.
 
 ## Proxima sprint recomendada
 
-**Sprint 11 - Historico visual, reteste e relatorio exportavel**
+**Sprint 12 - Relatorio pessoal em PDF e refinamento do historico**
 
 Ordem recomendada:
 
-1. **11.1 - QA manual da nova devolutiva pessoal**
-2. **11.2 - Historico visual entre aplicacoes**
-3. **11.3 - Exportacao de relatorio pessoal em PDF**
-4. **11.4 - Validacao empirica pessoal T1/T2**
-5. **11.5 - F9: camada de autoconhecimento com perguntas/reflexoes**
+1. **12.1 - Exportacao de relatorio pessoal em PDF**
+2. **12.2 - Historico visual ampliado T1/T2/T3**
+3. **12.3 - QA manual do PDF em mobile/desktop**
+4. **12.4 - Validacao empirica pessoal T1/T2**
+5. **12.5 - F9: camada de autoconhecimento com perguntas/reflexoes**
 
-Recomendacao central: nao mexer profundamente no motor psicometrico agora. O foco e experiencia, historico, exportacao, QA manual e clareza da devolutiva.
+Recomendacao central: nao mexer profundamente no motor psicometrico agora. O foco e experiencia, exportacao, QA manual e clareza da devolutiva.
 
 ---
 
@@ -93,11 +95,8 @@ Devolutiva textual:
 - Pendente: QA manual completo da nova tela e ajuste fino de copy apos uso real.
 
 Historico visual entre aplicacoes:
-- Lista de aplicacoes anteriores.
-- Data de cada aplicacao.
-- Comparacao entre T1, T2, T3.
-- Variacao dos fatores Big Five.
-- Aviso de que pequenas mudancas podem refletir contexto, humor, cansaco ou forma de responder.
+- Concluido na Sprint 11: lista de aplicacoes, data, linha de base interna e comparacao com a aplicacao anterior.
+- Pendente futuro: visualizacao ampliada T1/T2/T3 quando houver mais uso real.
 
 Relatorio PDF:
 - Capa, data, aviso de nao diagnostico, Big Five, DISC derivado, Jung exploratorio, Spranger derivado, pontos fortes, pontos de atencao e historico quando houver.

@@ -118,6 +118,10 @@ class TestPsychometricMathEngine(unittest.TestCase):
             self.assertEqual(data["bigfive"]["norm_label"], "primeira aplicação — linha de base interna criada")
             self.assertTrue(data["bigfive"]["is_first_assessment"])
             self.assertEqual(data["metadata"]["interpretation_confidence"], "baseline")
+            self.assertEqual(len(data["history"]), 1)
+            self.assertEqual(data["history"][0]["sequence"], 1)
+            self.assertEqual(data["history"][0]["bigfive_raw"]["O"], data["bigfive"]["factors"]["O"]["raw"])
+            self.assertIsNone(data["history"][0]["bigfive_percentiles"]["O"])
             for factor in data["bigfive"]["factors"].values():
                 self.assertIsNone(factor["percentile"])
                 self.assertIn("mean", factor)
@@ -159,6 +163,11 @@ class TestPsychometricMathEngine(unittest.TestCase):
             second_results = client.get("/results/me", headers=headers)
             self.assertEqual(second_results.status_code, 200)
             second_data = second_results.json()
+            self.assertEqual(len(second_data["history"]), 2)
+            self.assertEqual([item["sequence"] for item in second_data["history"]], [1, 2])
+            self.assertLessEqual(second_data["history"][0]["created_at"], second_data["history"][1]["created_at"])
+            self.assertEqual(second_data["history"][-1]["bigfive_raw"]["O"], second_data["bigfive"]["factors"]["O"]["raw"])
+            self.assertTrue(second_data["bigfive"]["has_intraindividual_history"])
             for factor in second_data["bigfive"]["factors"].values():
                 self.assertEqual(factor["percentile"], 100.0)
 

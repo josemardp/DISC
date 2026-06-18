@@ -78,6 +78,7 @@ npm run build
 ```
 
 > Estado estável da sprint técnica: commit `7bc0094` (`fix(psychometrics): corrige normas e resultados derivados`). Backend com 30 testes passando; frontend com build OK. Pendência conhecida: chunk `charts`/Recharts >500 kB, isolado no Dashboard.
+> Sprint 11 estável: histórico visual entre aplicações Big Five implementado sem alteração no motor psicométrico.
 
 ---
 
@@ -110,6 +111,14 @@ A tela de resultados prioriza linguagem de autoconhecimento:
 - limites da avaliação.
 
 O Big Five permanece como núcleo medido. Jung, DISC e Spranger aparecem apenas como leituras derivadas/exploratórias. A primeira aplicação em `NORM_MODE=intra` cria uma linha de base interna; a comparação intraindividual fica mais útil a partir do reteste.
+
+O histórico visual entre aplicações mostra:
+
+- aplicações Big Five salvas em ordem cronológica;
+- data de cada aplicação;
+- linha de base interna na primeira aplicação;
+- comparação simples com a aplicação anterior usando resultados brutos;
+- aviso de que pequenas mudanças podem refletir contexto, cansaço, humor ou forma de responder.
 
 ## Produção e cuidados mínimos
 

@@ -4,6 +4,20 @@ Formato: [Versão Semântica](https://semver.org/) — `[MAJOR.MINOR.PATCH] — 
 
 ---
 
+## [1.7.4] — 2026-06-18 — Histórico visual entre aplicações
+
+### Adicionado
+- `/results/me` passou a retornar `history` com as aplicações Big Five salvas em ordem cronológica, preservando a linha de base interna da primeira aplicação.
+- Tela de resultados ganhou os cards "Histórico de aplicações" e "Comparação com a aplicação anterior".
+- Comparação visual mostra variações simples dos cinco fatores Big Five entre as duas aplicações mais recentes.
+
+### Mantido
+- Motor psicométrico, normas, pontuação, autenticação, segurança e rotas principais sem alteração de cálculo.
+- DISC, Jung e Spranger continuam derivados/exploratórios, com Big Five como núcleo medido.
+- Backend validado com **30 testes passando** e frontend com **build OK**. Pendência conhecida: chunk `charts`/Recharts >500 kB.
+
+---
+
 ## [1.7.3] — 2026-06-18 — Devolutiva pessoal dos resultados
 
 ### Alterado

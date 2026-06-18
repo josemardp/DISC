@@ -495,6 +495,36 @@ def _bigfive_norm_label() -> str:
     return "modo de norma desconhecido"
 
 
+def _bigfive_history_entries(user_id: int, db: Session) -> List[Dict[str, Any]]:
+    results = db.query(PsychometricResult).filter(
+        PsychometricResult.respondent_id == user_id,
+        PsychometricResult.bigfive_percentis.isnot(None)
+    ).order_by(PsychometricResult.created_at.asc()).all()
+
+    entries = []
+    for idx, row in enumerate(results):
+        percentiles = row.bigfive_percentis or {}
+        is_baseline = settings.NORM_MODE == "intra" and all(
+            percentiles.get(factor) is None for factor in ["O", "C", "E", "A", "N"]
+        )
+        entries.append({
+            "id": row.id,
+            "created_at": row.created_at,
+            "sequence": idx + 1,
+            "bigfive_raw": {
+                "O": row.bigfive_O,
+                "C": row.bigfive_C,
+                "E": row.bigfive_E,
+                "A": row.bigfive_A,
+                "N": row.bigfive_N
+            },
+            "bigfive_percentiles": percentiles,
+            "quality_label": row.quality_label,
+            "norm_label": "linha de base interna" if is_baseline else _bigfive_norm_label()
+        })
+    return entries
+
+
 def _bigfive_scaled_scores(raw_scores: Dict[str, float], history: Dict[str, List[float]]) -> Dict[str, float]:
     if settings.NORM_MODE == "intra":
         if not any(history.get(factor) for factor in ["O", "C", "E", "A", "N"]):
@@ -778,6 +808,7 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
             PsychometricResult.respondent_id == current_user.id,
             PsychometricResult.bigfive_percentis.isnot(None)
         ).count()
+        history_entries = _bigfive_history_entries(current_user.id, db)
         is_first_assessment = settings.NORM_MODE == "intra" and result_count <= 1
         warnings = [NON_DIAGNOSTIC_NOTICE]
         if is_first_assessment:
@@ -852,6 +883,7 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
                 "warnings": warnings,
                 "norm_label": bigfive_dict["norm_label"],
             },
+            "history": history_entries,
             "notice": NON_DIAGNOSTIC_NOTICE
         }
         

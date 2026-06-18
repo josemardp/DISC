@@ -5,6 +5,14 @@ Branch: evolucao-cientifica
 
 > Nota de sincronização: as seções antigas abaixo ficam como histórico. O estado atual oficial, pós-commit `7bc0094`, é: backend 30 testes passando, 0 warnings no pytest, frontend build OK, `NORM_MODE=public` funcional e pendência menor no chunk `charts`/Recharts.
 
+## Atualizacao QA - Sprint 11 - 2026-06-18
+
+- `/results/me` agora expõe `history` com aplicações Big Five em ordem cronológica.
+- A primeira aplicação permanece como linha de base interna quando `NORM_MODE=intra`, sem percentil interpretável.
+- A tela de resultados exibe histórico de aplicações e comparação simples com a aplicação anterior.
+- A comparação usa resultados brutos Big Five e avisa que pequenas mudanças podem refletir contexto, humor, cansaço ou forma de responder.
+- Motor psicométrico, cálculos, normas, autenticação e segurança não foram alterados nesta sprint.
+
 ## Atualizacao QA - Sprint 10 - 2026-06-18
 
 - Devolutiva de resultados reorganizada para uso pessoal: resumo geral, tracos marcantes, pontos fortes provaveis, pontos de atencao, sugestoes praticas, uso no dia a dia e limites.

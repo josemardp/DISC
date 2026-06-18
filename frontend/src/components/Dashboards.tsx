@@ -386,6 +386,61 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
     return "Use esse resumo apenas como uma narrativa exploratória derivada do Big Five, não como uma tipagem fixa.";
   };
 
+  const getHistoryEntries = () => {
+    return Array.isArray(selfData?.history) ? selfData.history : [];
+  };
+
+  const formatHistoryDate = (value: string) => {
+    if (!value) return "data não disponível";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "data não disponível";
+    return date.toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  };
+
+  const getHistoryComparison = () => {
+    const history = getHistoryEntries();
+    if (history.length < 2) return [];
+    const current = history[history.length - 1]?.bigfive_raw || {};
+    const previous = history[history.length - 2]?.bigfive_raw || {};
+    return ["O", "C", "E", "A", "N"].map((key) => {
+      const currentValue = Number(current[key] ?? 0);
+      const previousValue = Number(previous[key] ?? 0);
+      const delta = currentValue - previousValue;
+      const status = Math.abs(delta) <= 1 ? "estável" : delta > 1 ? "aumentou" : "reduziu";
+      return {
+        key,
+        label: selfData?.bigfive?.factors?.[key]?.label || key,
+        currentValue,
+        previousValue,
+        delta,
+        status
+      };
+    });
+  };
+
+  const getDeltaClass = (status: string) => {
+    if (status === "aumentou") return "border-emerald-400/20 bg-emerald-400/10 text-emerald-100";
+    if (status === "reduziu") return "border-sky-400/20 bg-sky-400/10 text-sky-100";
+    return "border-white/10 bg-white/5 text-gray-200";
+  };
+
+  const formatDelta = (delta: number) => {
+    if (Math.abs(delta) <= 1) return "estável";
+    return `${delta > 0 ? "+" : ""}${delta.toFixed(0)} pontos`;
+  };
+
+  const getVariationText = (status: string) => {
+    if (status === "aumentou") return "respostas mais altas que na aplicação anterior";
+    if (status === "reduziu") return "respostas mais baixas que na aplicação anterior";
+    return "respostas próximas da aplicação anterior";
+  };
+
   const getQualityColor = (label: string) => {
     if (label === "baixa") return "bg-red-500/20 text-red-300 border-red-500/30";
     if (label === "media") return "bg-amber-500/20 text-amber-300 border-amber-500/30";
@@ -526,6 +581,59 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                     <p className="text-xs leading-relaxed text-gray-300">
                       Não é diagnóstico, laudo psicológico ou avaliação profissional. Ele organiza tendências desta aplicação para reflexão pessoal.
                     </p>
+                  </div>
+                </div>
+
+                <div className="mb-6 grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
+                    <h4 className="text-sm font-bold text-white mb-2">Histórico de aplicações</h4>
+                    <p className="text-xs leading-relaxed text-gray-300">
+                      {getHistoryEntries().length <= 1
+                        ? "Esta é a primeira aplicação salva. Ela funciona como linha de base interna para comparações futuras."
+                        : `Você já tem ${getHistoryEntries().length} aplicações salvas para observar mudanças ao longo do tempo.`}
+                    </p>
+                    <div className="mt-3 space-y-2">
+                      {getHistoryEntries().map((entry: any) => (
+                        <div key={entry.id} className="flex flex-col gap-1 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="text-xs font-semibold text-white">Aplicação {entry.sequence}</p>
+                            <p className="text-[11px] text-gray-500">{formatHistoryDate(entry.created_at)}</p>
+                          </div>
+                          <span className="w-fit rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold text-gray-300">
+                            {entry.norm_label || "histórico interno"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
+                    <h4 className="text-sm font-bold text-white mb-2">Comparação com a aplicação anterior</h4>
+                    {getHistoryComparison().length === 0 ? (
+                      <p className="text-xs leading-relaxed text-gray-300">
+                        A comparação aparece a partir do reteste. Por enquanto, esta aplicação serve como referência inicial.
+                      </p>
+                    ) : (
+                      <>
+                        <p className="text-xs leading-relaxed text-gray-300">
+                          Variação simples entre as duas aplicações mais recentes, usando os resultados brutos do Big Five.
+                        </p>
+                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {getHistoryComparison().map((item: any) => (
+                            <div key={item.key} className={`rounded-xl border px-3 py-2 ${getDeltaClass(item.status)}`}>
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="text-xs font-semibold">{item.label}</span>
+                                <span className="shrink-0 text-[11px] font-bold">{formatDelta(item.delta)}</span>
+                              </div>
+                              <p className="mt-1 text-[11px] leading-relaxed opacity-85">{getVariationText(item.status)}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    <div className="mt-3 rounded-xl border border-amber-400/20 bg-amber-400/10 p-3 text-[11px] leading-relaxed text-amber-100">
+                      Mudanças pequenas podem refletir contexto, cansaço, humor ou forma de responder. Use como pista de reflexão, não como conclusão definitiva.
+                    </div>
                   </div>
                 </div>
 

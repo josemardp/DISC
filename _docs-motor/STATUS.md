@@ -1,6 +1,6 @@
 # STATUS — Fotografia do estado atual
 
-> Última atualização: 2026-06-18 (Sprint 10: devolutiva pessoal dos resultados; sprint técnica estável; 30/30 verdes).
+> Última atualização: 2026-06-18 (Sprint 11: histórico visual entre aplicações; sprint técnica estável; 30/30 verdes).
 > Para o roadmap e próximas fases, ver [ROADMAP.md](ROADMAP.md).
 
 ---
@@ -47,6 +47,7 @@
 | Exportação CSV Big Five | `main.py` | `GET /admin/export/bigfive` — 13 colunas, role admin (F5) |
 | Infraestrutura de validação | `validacao.py` | `test_retest_reliability()` e `omega_por_fator()` — usa `mcdonald_omega` do science_engine (F5) |
 | Refazer teste (nova rodada) | `App.tsx`, `Dashboards.tsx` | botão na aba "Meu Perfil"; sessão-only; reabre TestRoom no Big Five; histórico preservado no DB |
+| Histórico visual entre aplicações | `main.py`, `Dashboards.tsx` | `/results/me` retorna `history`; UI lista aplicações e compara a mais recente com a anterior |
 | Invariante de preservação Big Five | `main.py` | DELETE consolidado restrito a `bigfive_percentis IS NULL`; ADR-11; teste dedicado |
 | Ômega de McDonald | `science_engine.py` | `mcdonald_omega()` — via PCA unifatorial aproximado |
 | SEM e IC95% | `science_engine.py` | `standard_error_of_measurement()` + `confidence_interval()` |
