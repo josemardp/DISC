@@ -5,6 +5,14 @@ Branch: evolucao-cientifica
 
 > Nota de sincronização: as seções antigas abaixo ficam como histórico. O estado atual oficial, pós-commit `7bc0094`, é: backend 30 testes passando, 0 warnings no pytest, frontend build OK, `NORM_MODE=public` funcional e pendência menor no chunk `charts`/Recharts.
 
+## Atualizacao QA - Sprint 12 - 2026-06-18
+
+- Tela de resultados passou a oferecer relatório pessoal imprimível/salvável em PDF pelo navegador.
+- O relatório usa os dados já disponíveis em `/results/me`: Big Five medido, devolutiva pessoal, leituras derivadas, histórico e comparação quando houver reteste.
+- Aviso de não diagnóstico, não laudo e não avaliação psicológica profissional permanece destacado.
+- Não houve alteração no motor psicométrico, cálculos, normas, banco, autenticação ou segurança.
+- Não foi adicionada dependência frontend para PDF.
+
 ## Atualizacao QA - Sprint 11 - 2026-06-18
 
 - `/results/me` agora expõe `history` com aplicações Big Five em ordem cronológica.

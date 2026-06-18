@@ -79,6 +79,7 @@ npm run build
 
 > Estado estável da sprint técnica: commit `7bc0094` (`fix(psychometrics): corrige normas e resultados derivados`). Backend com 30 testes passando; frontend com build OK. Pendência conhecida: chunk `charts`/Recharts >500 kB, isolado no Dashboard.
 > Sprint 11 estável: histórico visual entre aplicações Big Five implementado sem alteração no motor psicométrico.
+> Sprint 12 estável: relatório pessoal imprimível/salvável em PDF pelo navegador, sem dependências novas e sem alteração no motor psicométrico.
 
 ---
 
@@ -119,6 +120,8 @@ O histórico visual entre aplicações mostra:
 - linha de base interna na primeira aplicação;
 - comparação simples com a aplicação anterior usando resultados brutos;
 - aviso de que pequenas mudanças podem refletir contexto, cansaço, humor ou forma de responder.
+
+A tela também permite baixar/salvar um relatório pessoal em PDF pelo navegador. O relatório inclui capa, data, aviso de não diagnóstico/laudo, Big Five medido, pontos fortes prováveis, pontos de atenção, sugestões práticas, leituras derivadas e histórico/comparação quando houver reteste.
 
 ## Produção e cuidados mínimos
 

@@ -62,3 +62,216 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(139, 92, 246, 0.6);
 }
+
+.print-report {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+    size: A4;
+  }
+
+  html,
+  body,
+  #root {
+    background: #ffffff !important;
+    color: #172033 !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-report,
+  .print-report * {
+    visibility: visible;
+  }
+
+  .print-report {
+    display: block;
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    background: #ffffff;
+    color: #172033;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.45;
+  }
+
+  .print-cover,
+  .print-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 8mm;
+  }
+
+  .print-cover {
+    min-height: 120mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-bottom: 1px solid #d9dee8;
+    padding-bottom: 12mm;
+  }
+
+  .print-kicker {
+    margin: 0 0 6mm;
+    color: #5b48d6;
+    font-size: 10pt;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .print-cover h1 {
+    margin: 0;
+    max-width: 150mm;
+    color: #111827;
+    font-size: 31pt;
+    line-height: 1.05;
+  }
+
+  .print-subtitle {
+    max-width: 160mm;
+    margin: 7mm 0 0;
+    color: #4b5563;
+    font-size: 12pt;
+  }
+
+  .print-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4mm;
+    margin-top: 11mm;
+  }
+
+  .print-meta-grid div,
+  .print-factor-card,
+  .print-derived-grid div,
+  .print-history-list div,
+  .print-warning,
+  .print-note {
+    border: 1px solid #d9dee8;
+    background: #f8fafc;
+  }
+
+  .print-meta-grid div {
+    padding: 4mm;
+  }
+
+  .print-meta-grid span,
+  .print-factor-card dt {
+    display: block;
+    margin-bottom: 1mm;
+    color: #6b7280;
+    font-size: 8.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .print-meta-grid strong,
+  .print-factor-card dd {
+    color: #111827;
+    font-weight: 800;
+  }
+
+  .print-warning {
+    margin-top: 8mm;
+    padding: 4mm;
+    border-color: #f2c94c;
+    background: #fff8df;
+    color: #5c4410;
+    font-weight: 700;
+  }
+
+  .print-section h2 {
+    margin: 0 0 3mm;
+    color: #111827;
+    font-size: 15pt;
+    line-height: 1.2;
+  }
+
+  .print-section h3 {
+    margin: 0 0 2mm;
+    color: #1f2937;
+    font-size: 11pt;
+  }
+
+  .print-section p {
+    margin: 0 0 3mm;
+  }
+
+  .print-section ul {
+    margin: 0;
+    padding-left: 5mm;
+  }
+
+  .print-section li {
+    margin-bottom: 2mm;
+  }
+
+  .print-two-columns,
+  .print-derived-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5mm;
+  }
+
+  .print-derived-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .print-factor-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4mm;
+  }
+
+  .print-factor-card {
+    display: grid;
+    grid-template-columns: 1.1fr 1.5fr;
+    gap: 5mm;
+    padding: 4mm;
+  }
+
+  .print-factor-card dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3mm;
+    margin: 0;
+  }
+
+  .print-factor-card dd {
+    margin: 0;
+  }
+
+  .print-derived-grid div,
+  .print-history-list div {
+    padding: 4mm;
+  }
+
+  .print-history-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3mm;
+    margin-bottom: 4mm;
+  }
+
+  .print-history-list span {
+    display: block;
+    color: #4b5563;
+    font-size: 9pt;
+  }
+
+  .print-note {
+    padding: 3mm;
+    color: #5c4410;
+    border-color: #f2c94c;
+    background: #fff8df;
+  }
+}

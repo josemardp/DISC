@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import {
   User, Users, Shield, Briefcase, Plus, TrendingUp, AlertTriangle,
-  FileText, Award, Layers, Zap, Info, HelpCircle, RotateCcw
+  FileText, Award, Layers, Zap, Info, HelpCircle, RotateCcw, Printer
 } from "lucide-react";
 
 interface DashboardsProps {
@@ -27,6 +27,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
   const [selfData, setSelfData] = useState<any>(null);
   const [narrativeReport, setNarrativeReport] = useState<string | null>(null);
   const [loadingReport, setLoadingReport] = useState(false);
+  const [printError, setPrintError] = useState<string | null>(null);
 
   // 2. Dados da area administrativa
   const [jobs, setJobs] = useState<any[]>([]);
@@ -424,6 +425,10 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
     });
   };
 
+  const getComparisonByFactor = (factorKey: string) => {
+    return getHistoryComparison().find((item: any) => item.key === factorKey);
+  };
+
   const getDeltaClass = (status: string) => {
     if (status === "aumentou") return "border-emerald-400/20 bg-emerald-400/10 text-emerald-100";
     if (status === "reduziu") return "border-sky-400/20 bg-sky-400/10 text-sky-100";
@@ -439,6 +444,46 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
     if (status === "aumentou") return "respostas mais altas que na aplicação anterior";
     if (status === "reduziu") return "respostas mais baixas que na aplicação anterior";
     return "respostas próximas da aplicação anterior";
+  };
+
+  const getReportDate = () => {
+    const latestHistory = getHistoryEntries()[getHistoryEntries().length - 1];
+    return formatHistoryDate(selfData?.date || latestHistory?.created_at);
+  };
+
+  const formatPercentile = (value: number | null | undefined) => {
+    if (value == null) return "linha de base interna";
+    return `${Math.round(Number(value))}`;
+  };
+
+  const formatScore = (value: number | null | undefined) => {
+    if (value == null || Number.isNaN(Number(value))) return "sem dado";
+    return Number(value).toFixed(1);
+  };
+
+  const getPrintStatusText = (status: string) => {
+    if (status === "aumentou") return "aumentou";
+    if (status === "reduziu") return "reduziu";
+    return "ficou estável";
+  };
+
+  const handlePrintReport = () => {
+    if (!selfData?.bigfive) {
+      setPrintError("Ainda não há dados suficientes para gerar o relatório.");
+      return;
+    }
+    if (typeof window === "undefined" || typeof window.print !== "function") {
+      setPrintError("Não foi possível abrir a janela de impressão neste navegador.");
+      return;
+    }
+    setPrintError(null);
+    window.setTimeout(() => {
+      try {
+        window.print();
+      } catch {
+        setPrintError("Não foi possível gerar o relatório agora. Tente novamente em instantes.");
+      }
+    }, 80);
   };
 
   const getQualityColor = (label: string) => {
@@ -536,6 +581,14 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                     <span className={`w-fit px-3 py-1 rounded-full text-xs font-bold border ${getQualityColor(selfData.quality_label)}`}>
                       Qualidade {selfData.quality_label || "sem dado"}
                     </span>
+                    <button
+                      onClick={handlePrintReport}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-200 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition"
+                      title="Abrir janela para salvar o relatório como PDF"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      Baixar relatório em PDF
+                    </button>
                     {onRetake && (
                       <button
                         onClick={() => {
@@ -552,6 +605,12 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                     )}
                   </div>
                 </div>
+
+                {printError && (
+                  <div className="mb-5 rounded-2xl border border-red-400/20 bg-red-400/10 p-3 text-xs leading-relaxed text-red-100">
+                    {printError}
+                  </div>
+                )}
 
                 <div className="mb-5 rounded-2xl border border-amber-400/20 bg-amber-400/10 p-3 text-xs leading-relaxed text-amber-100">
                   {selfData.notice || "Este resultado é uma ferramenta de autoconhecimento e não constitui diagnóstico psicológico, laudo psicológico ou avaliação psicológica profissional."}
@@ -1212,6 +1271,186 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
             </div>
           )}
         </>
+      )}
+
+      {selfData?.bigfive && (
+        <article className="print-report" aria-label="Relatório pessoal de autoconhecimento">
+          <section className="print-cover">
+            <p className="print-kicker">Antigravity Psico</p>
+            <h1>Relatório pessoal de autoconhecimento</h1>
+            <p className="print-subtitle">
+              Uma síntese exploratória das suas respostas nesta aplicação, com Big Five como núcleo medido e leituras derivadas apenas como apoio reflexivo.
+            </p>
+            <div className="print-meta-grid">
+              <div>
+                <span>Nome</span>
+                <strong>{selfData.candidate || "Pessoa avaliada"}</strong>
+              </div>
+              <div>
+                <span>Data da aplicação</span>
+                <strong>{getReportDate()}</strong>
+              </div>
+              <div>
+                <span>Modo de referência</span>
+                <strong>{selfData.bigfive.norm_label}</strong>
+              </div>
+              <div>
+                <span>Qualidade de resposta</span>
+                <strong>{selfData.quality_label || "sem dado"}</strong>
+              </div>
+            </div>
+            <div className="print-warning">
+              {selfData.notice || "Este relatório é uma ferramenta de autoconhecimento e não constitui diagnóstico psicológico, laudo psicológico ou avaliação psicológica profissional."}
+            </div>
+          </section>
+
+          <section className="print-section">
+            <h2>1. Resumo geral</h2>
+            <p>{getResultContextText()}</p>
+            <p>
+              Use este resultado como ponto de reflexão. Suas respostas sugerem tendências desta aplicação, que podem variar conforme contexto, energia, humor e forma de responder.
+            </p>
+          </section>
+
+          <section className="print-section">
+            <h2>2. Big Five medido</h2>
+            <p>
+              O Big Five é o núcleo medido diretamente. Na primeira aplicação em régua interna, o relatório não apresenta percentil interpretável; ele registra uma linha de base para comparações futuras.
+            </p>
+            <div className="print-factor-list">
+              {getBigFiveFactors().map((factor: any) => {
+                const comparison = getComparisonByFactor(factor.key);
+                return (
+                  <div key={factor.key} className="print-factor-card">
+                    <div>
+                      <h3>{factor.label}</h3>
+                      <p>{factorGuide[factor.key]?.description}</p>
+                    </div>
+                    <dl>
+                      <div>
+                        <dt>Escore bruto</dt>
+                        <dd>{Math.round(factor.raw)}/{factor.max_raw || 50}</dd>
+                      </div>
+                      <div>
+                        <dt>Média por item</dt>
+                        <dd>{formatScore(factor.mean)}/5</dd>
+                      </div>
+                      <div>
+                        <dt>Percentil</dt>
+                        <dd>{formatPercentile(factor.percentile)}</dd>
+                      </div>
+                      <div>
+                        <dt>Variação</dt>
+                        <dd>{comparison ? `${getPrintStatusText(comparison.status)} (${formatDelta(comparison.delta)})` : "sem reteste suficiente"}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="print-section print-two-columns">
+            <div>
+              <h2>3. Traços marcantes</h2>
+              <p>{getMostMarkedFactors().map((factor: any) => factor.label).join(", ") || "Ainda não há dados suficientes para destacar traços."}</p>
+            </div>
+            <div>
+              <h2>4. Pontos fortes prováveis</h2>
+              <ul>
+                {getStrengths().map((item, idx) => <li key={idx}>{item}</li>)}
+              </ul>
+            </div>
+          </section>
+
+          <section className="print-section print-two-columns">
+            <div>
+              <h2>5. Pontos de atenção</h2>
+              <ul>
+                {getAttentionPoints().map((item, idx) => <li key={idx}>{item}</li>)}
+              </ul>
+            </div>
+            <div>
+              <h2>6. Sugestões práticas</h2>
+              <ul>
+                {getMostMarkedFactors().map((factor: any) => (
+                  <li key={factor.key}>{factorGuide[factor.key]?.practice}</li>
+                ))}
+                <li>Releia este resultado em outro dia e observe quais frases ainda parecem úteis.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section className="print-section">
+            <h2>7. Leituras derivadas</h2>
+            <div className="print-derived-grid">
+              <div>
+                <h3>DISC derivado</h3>
+                <p>{selfData.disc?.aviso || "DISC derivado — leitura ilustrativa baseada nos fatores Big Five. Não substitui um instrumento DISC validado."}</p>
+                <p>
+                  {Object.entries(selfData.disc?.natural || {})
+                    .map(([key, value]: any) => `${key}: ${Math.round(value)}`)
+                    .join(" · ")}
+                </p>
+              </div>
+              <div>
+                <h3>Jung exploratório</h3>
+                <p>{getJungHelpText()}</p>
+                <p>Resumo atual: {selfData.jung_continuo?.tipo_resumo || "indefinido"}</p>
+              </div>
+              <div>
+                <h3>Spranger derivado</h3>
+                <p>{selfData.spranger?.aviso || "Spranger derivado — leitura motivacional ilustrativa baseada no Big Five."}</p>
+                <p>
+                  {Object.entries(selfData.spranger || {})
+                    .filter(([key]) => !["derived_from", "aviso"].includes(key))
+                    .map(([key, value]: any) => `${key}: ${Math.round(value)}`)
+                    .join(" · ")}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="print-section">
+            <h2>8. Histórico e comparação</h2>
+            {getHistoryEntries().length <= 1 ? (
+              <p>Ainda não há histórico suficiente para comparação. Esta aplicação criou sua linha de base interna.</p>
+            ) : (
+              <>
+                <div className="print-history-list">
+                  {getHistoryEntries().map((entry: any) => (
+                    <div key={entry.id}>
+                      <strong>Aplicação {entry.sequence}</strong>
+                      <span>{formatHistoryDate(entry.created_at)}</span>
+                      <span>{entry.norm_label || "histórico interno"}</span>
+                    </div>
+                  ))}
+                </div>
+                <h3>Comparação com a aplicação anterior</h3>
+                <ul>
+                  {getHistoryComparison().map((item: any) => (
+                    <li key={item.key}>
+                      {item.label}: {getPrintStatusText(item.status)} ({formatDelta(item.delta)}).
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            <p className="print-note">
+              Mudanças pequenas podem refletir contexto do dia, humor, cansaço, ambiente ou forma de responder.
+            </p>
+          </section>
+
+          <section className="print-section">
+            <h2>9. Limites da avaliação</h2>
+            <p>
+              Este material não é diagnóstico, laudo psicológico, avaliação psicológica profissional, ferramenta de seleção ou resultado definitivo sobre personalidade.
+            </p>
+            <p>
+              Jung, DISC e Spranger aparecem apenas como leituras derivadas/exploratórias. O objetivo é apoiar reflexão pessoal, não fechar identidade ou prever comportamento.
+            </p>
+          </section>
+        </article>
       )}
 
       {/* ==============================================================================

@@ -4,6 +4,20 @@ Formato: [Versão Semântica](https://semver.org/) — `[MAJOR.MINOR.PATCH] — 
 
 ---
 
+## [1.7.5] — 2026-06-18 — Relatório pessoal em PDF
+
+### Adicionado
+- Tela de resultados ganhou a ação "Baixar relatório em PDF".
+- Relatório imprimível/salvável pelo navegador com capa, data, aviso de não diagnóstico, Big Five medido, devolutiva pessoal, leituras derivadas e histórico entre aplicações.
+- Comparação com a aplicação anterior incluída no relatório quando houver reteste.
+
+### Mantido
+- Sem dependência nova e sem endpoint novo.
+- Motor psicométrico, normas, autenticação, segurança e histórico Big Five sem alteração de cálculo.
+- DISC, Jung e Spranger continuam descritos como leituras derivadas/exploratórias.
+
+---
+
 ## [1.7.4] — 2026-06-18 — Histórico visual entre aplicações
 
 ### Adicionado
