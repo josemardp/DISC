@@ -208,21 +208,21 @@ Lido de `.env` por `backend/app/config.py`: `NORM_MODE=intra`.
 
 ---
 
-## 8. Relatório narrativo — `gemini_service.py`
+## 8. Devolutiva pessoal narrativa — `gemini_service.py`
 
 **Modelo:** Gemini 1.5 Flash (`gemini-1.5-flash`), temperatura 0.3. Fallback local quando `GEMINI_API_KEY` ausente ou API indisponível.
 
 **Seções obrigatórias (7):**
-1. Resumo Executivo com Incerteza
-2. Big Five medido com intervalos de confiança
-3. Jung contínuo derivado
-4. Estabilidade emocional e qualidade da resposta
-5. Camadas derivadas DISC e Spranger
-6. Recomendações baseadas nos dados
+1. Resumo geral do perfil
+2. Traços mais marcantes
+3. Pontos fortes prováveis
+4. Pontos de atenção
+5. Sugestões práticas
+6. Como usar esse resultado no dia a dia
 7. Limites desta avaliação
 
 **Regras anti-Barnum no prompt:**
-- Linguagem de incerteza obrigatória: "tende a", "indica", "sugere".
+- Linguagem de incerteza obrigatória: "suas respostas sugerem", "nesta aplicação apareceu", "pode indicar", "é possível que".
 - Proibição de frases genéricas sem vínculo com dados numéricos.
 - Cada interpretação deve citar pelo menos um escore ou IC95%.
 - Jung é narrativa derivada — nunca tratado como medida independente.
@@ -264,6 +264,7 @@ Lido de `.env` por `backend/app/config.py`: `NORM_MODE=intra`.
 ## 10. Changelog interno
 
 - v0.4 — 2026-06-17 — Pós-commit `7bc0094`: baseline intra corrigido, `NORM_MODE=public` funcional, Jung borderline indefinido, DISC/Spranger derivados explicitados, suite 30/30 e 0 warnings.
+- v0.4 — 2026-06-18 — Sprint 10: devolutiva pessoal narrativa reorganizada em sete seções humanas, sem alterar o motor psicométrico.
 - v0.3 — 2026-06-13 — F3: documentação viva concluída. Referências cruzadas adicionadas. Seções de Alpha e relatório narrativo expandidas. Tabelas de DISC/Spranger/Jung com fórmulas reais do código.
 - v0.2 — 2026-06-10 — F1 + F2 concluídas: Supabase Postgres em produção; 22/22 testes passando; conftest.py com fixture autouse; import órfão `calculate_cronbach_alpha` removido de `main.py`.
 - v0.1 — 2026-06-05 — versão inicial: Big Five IPIP-50, itens de atenção, camadas derivadas, régua interna, confiabilidade, IC95%, qualidade de resposta, laudo anti-Barnum.

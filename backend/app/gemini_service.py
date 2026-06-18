@@ -18,7 +18,7 @@ def generate_psychometric_report(
     quality_label: str = None
 ) -> str:
     """
-    Chama a API do Gemini 1.5 Flash para gerar um relatório psicométrico narrativo e analítico estruturado.
+    Chama a API do Gemini 1.5 Flash para gerar uma devolutiva pessoal estruturada.
     Inclui um fallback completo de simulação local caso a GEMINI_API_KEY não esteja configurada.
     """
     
@@ -66,16 +66,16 @@ def generate_psychometric_report(
         "estabilidade_emocional": emotional_stability or "sem dados suficientes",
     }
 
-    # 3. Construção do Prompt Técnico
+    # 3. Construção do prompt de devolutiva pessoal
     prompt = f"""
-Você é um consultor psicométrico sênior. Gere um laudo técnico em Português do Brasil usando apenas os dados fornecidos; se faltar dado, diga "sem dados suficientes".
+Você é um redator cuidadoso criando uma devolutiva pessoal de autoconhecimento em Português do Brasil. Use apenas os dados fornecidos; se faltar dado, diga "sem dados suficientes".
 
 REGRAS OBRIGATÓRIAS ANTI-BARNUM:
-- Use linguagem de incerteza: "tende a", "indica", "sugere", "é compatível com". Nunca escreva "você é", "o avaliado é" ou afirmações identitárias absolutas.
+- Use linguagem de incerteza: "suas respostas sugerem", "nesta aplicação apareceu", "pode indicar", "é possível que", "use como ponto de reflexão". Nunca escreva "você é", "o avaliado é" ou afirmações identitárias absolutas.
 - Proíba frases genéricas que sirvam para qualquer pessoa, como "tem grande potencial", "busca equilíbrio", "às vezes é racional e às vezes emocional", "pode melhorar sob pressão" ou equivalentes sem vínculo direto com números.
 - Cada interpretação precisa citar pelo menos um dado fornecido, especialmente escores e intervalos de confiança dos 5 fatores.
 - Jung é apenas uma narrativa derivada do Big Five; nunca trate Jung como medida independente, diagnóstico ou tipo fixo.
-- Inclua exatamente a seção "### Limites desta avaliação" informando que não é diagnóstico, não é imutável e rastreios são triagem.
+- Inclua exatamente a seção "### Limites desta avaliação" com esta ideia explícita: "Este resultado é uma ferramenta de autoconhecimento e não constitui diagnóstico psicológico, laudo psicológico ou avaliação psicológica profissional."
 - Não invente dados, referências, causas clínicas, histórico pessoal, traços não medidos ou recomendações sem base nos dados abaixo.
 
 DADOS DO AVALIADO:
@@ -106,20 +106,22 @@ SINAIS TELEMÉTRICOS DE SESSÃO:
 
 DIRETRIZES DE FORMATO E TOM:
 - Use Markdown limpo para a estrutura.
-- O tom deve ser analítico, construtivo e livre de clichês motivacionais ou de autoajuda.
+- O tom deve ser humano, claro, útil e livre de clichês motivacionais ou linguagem de RH.
+- Explique os fatores Big Five em linguagem simples.
+- Se Jung vier indefinido, explique que isso não é erro: os eixos ficaram próximos do centro e não há segurança suficiente para tipo fechado.
 - Estruture o relatório exatamente nas seguintes seções:
-  1. ### Resumo Executivo com Incerteza
-  2. ### Big Five medido com intervalos de confiança
-  3. ### Jung contínuo derivado
-  4. ### Estabilidade emocional e qualidade da resposta
-  5. ### Camadas derivadas DISC e Spranger
-  6. ### Recomendações baseadas nos dados
+  1. ### Resumo geral do perfil
+  2. ### Traços mais marcantes
+  3. ### Pontos fortes prováveis
+  4. ### Pontos de atenção
+  5. ### Sugestões práticas
+  6. ### Como usar esse resultado no dia a dia
   7. ### Limites desta avaliação
 """
 
     # 4. Execução da Chamada da API
     if not settings.GEMINI_API_KEY:
-        print("GEMINI_API_KEY não configurada ou API indisponível (ex: DLL bloqueada). Gerando relatório simulado de fallback...")
+        print("GEMINI_API_KEY não configurada ou API indisponível (ex: DLL bloqueada). Gerando devolutiva local de fallback...")
         return generate_mock_report(
             candidate_name, disc_natural, disc_adapted, burnout_risk,
             spranger_scores, jung_type, frictions_str, bigfive_factors,
@@ -136,7 +138,7 @@ DIRETRIZES DE FORMATO E TOM:
         )
         return response.text
     except Exception as e:
-        print(f"Erro ao chamar a API do Gemini: {str(e)}. Retornando mock...")
+        print(f"Erro ao chamar a API do Gemini: {str(e)}. Retornando devolutiva local...")
         return generate_mock_report(
             candidate_name, disc_natural, disc_adapted, burnout_risk,
             spranger_scores, jung_type, frictions_str, bigfive_factors,
@@ -157,7 +159,7 @@ def generate_mock_report(
     quality_label: str = None
 ) -> str:
     """
-    Relatório de fallback realista gerado localmente na ausência de chave de API.
+    Devolutiva de fallback gerada localmente na ausência de chave de API.
     """
     
     bigfive_factors = bigfive_factors or {}
@@ -176,7 +178,7 @@ def generate_mock_report(
     for key in ["O", "C", "E", "A", "N"]:
         factor = bigfive_factors.get(key, {})
         factor_lines.append(
-            f"- **{factor_names[key]} ({key})**: escore {factor.get('percentile', 'sem dados suficientes')}, "
+            f"- **{factor_names[key]} ({key})**: comparação {factor.get('percentile', 'sem dados suficientes')}, "
             f"IC95% [{factor.get('ci_low', 'sem dados suficientes')}, {factor.get('ci_high', 'sem dados suficientes')}], "
             f"bruto {factor.get('raw', 'sem dados suficientes')}."
         )
@@ -185,28 +187,34 @@ def generate_mock_report(
     tipo_resumo = jung_continuo.get("tipo_resumo", jung_type or "sem dados suficientes")
     eixos = jung_continuo.get("eixos", {})
 
-    return f"""### Resumo Executivo com Incerteza
-Os dados de **{candidate_name}** indicam um perfil Big Five descrito por escores com incerteza explícita. A leitura tende a ser mais útil quando cada fator é interpretado junto do seu intervalo de confiança e da qualidade da resposta, registrada como **{quality_label}**. Quando algum dado estiver ausente, a conclusão correspondente deve ser tratada como sem dados suficientes.
+    jung_note = (
+        "Os eixos ficaram próximos do centro. Isso não é um erro; apenas indica que o sistema não tem segurança suficiente para atribuir um tipo fechado nesta aplicação."
+        if tipo_resumo == "indefinido"
+        else f"O resumo Jung **{tipo_resumo}** deve ser lido apenas como narrativa derivada do Big Five, não como medida independente nem tipo fixo."
+    )
 
-### Big Five medido com intervalos de confiança
+    return f"""### Resumo geral do perfil
+Nesta aplicação, os dados de **{candidate_name}** sugerem tendências do Big Five que podem apoiar reflexão pessoal. A qualidade da resposta foi registrada como **{quality_label}**, então a leitura deve ser usada com cautela proporcional a esse indicador.
+
+### Traços mais marcantes
 {factor_text}
 
-Esses números sugerem tendências relativas dentro da régua disponível, mas não autorizam afirmações fixas de identidade. Interpretações devem permanecer vinculadas aos escores e aos IC95% listados acima.
+Esses dados sugerem tendências relativas dentro da régua disponível, mas não autorizam afirmações fixas de identidade. Abertura se relaciona a curiosidade e flexibilidade; Conscienciosidade a organização e persistência; Extroversão a energia social; Amabilidade a cooperação; Neuroticismo a sensibilidade ao estresse.
 
-### Jung contínuo derivado
-O resumo Jung **{tipo_resumo}** deve ser lido apenas como narrativa derivada do Big Five, não como medida independente. Eixos contínuos disponíveis: {eixos if eixos else "sem dados suficientes"}.
+### Pontos fortes prováveis
+Suas respostas podem indicar recursos úteis quando os fatores mais salientes são usados com intenção. Observe especialmente os fatores com maior distância da faixa central e veja em quais situações eles ajudam no dia a dia.
 
-### Estabilidade emocional e qualidade da resposta
-A Estabilidade Emocional derivada indica **{emotional_stability}**. A qualidade da resposta foi classificada como **{quality_label}**, o que deve modular a confiança prática nas interpretações.
+### Pontos de atenção
+Fatores muito altos ou muito baixos podem pedir equilíbrio contextual. A Estabilidade Emocional derivada aparece como **{emotional_stability}**, que é o inverso do Neuroticismo; use essa leitura para observar sensibilidade ao estresse sem transformar isso em rótulo.
 
-### Camadas derivadas DISC e Spranger
-DISC derivado: D={disc_nat.get('D', 'sem dados suficientes')}, I={disc_nat.get('I', 'sem dados suficientes')}, S={disc_nat.get('S', 'sem dados suficientes')}, C={disc_nat.get('C', 'sem dados suficientes')}. Spranger derivado: {spranger if spranger else "sem dados suficientes"}. Essas camadas são apresentações derivadas, não medidas independentes.
+### Sugestões práticas
+- Releia os fatores mais marcantes e escolha uma situação concreta da semana para observar.
+- Compare o resultado com exemplos reais, não com uma imagem idealizada de si.
+- Se alguma leitura incomodar ou parecer distante, trate como pergunta de reflexão, não como verdade final.
 
-### Recomendações baseadas nos dados
-- Priorize conversas de devolutiva que citem os fatores com maior distância numérica e seus IC95%, evitando rótulos definitivos.
-- Use o resumo Jung apenas para organizar uma narrativa de preferência, sempre verificando se os eixos estão em zona borderline.
-- Se a qualidade da resposta for média ou baixa, trate o laudo como ponto inicial de conversa e considere reaplicação em contexto mais controlado.
+### Como usar esse resultado no dia a dia
+{jung_note} DISC derivado: D={disc_nat.get('D', 'sem dados suficientes')}, I={disc_nat.get('I', 'sem dados suficientes')}, S={disc_nat.get('S', 'sem dados suficientes')}, C={disc_nat.get('C', 'sem dados suficientes')}. Spranger derivado: {spranger if spranger else "sem dados suficientes"}. Essas camadas são leituras ilustrativas baseadas no Big Five.
 
 ### Limites desta avaliação
-Esta avaliação não é diagnóstico clínico, não descreve características imutáveis e não deve ser usada isoladamente para decisões de alto impacto. Os rastreios e camadas derivadas funcionam como triagem e organização narrativa; quando faltarem dados, a conclusão correta é sem dados suficientes.
+Este resultado é uma ferramenta de autoconhecimento e não constitui diagnóstico psicológico, laudo psicológico ou avaliação psicológica profissional. Ele não descreve características imutáveis e não deve ser usado isoladamente para decisões de alto impacto.
 """

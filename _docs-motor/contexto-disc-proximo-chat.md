@@ -1,6 +1,6 @@
 # Contexto DISC - proximo chat
 
-> Retomada oficial pos-commit `7bc0094` (`fix(psychometrics): corrige normas e resultados derivados`) e `e35d172` (`docs: registra sprint tecnica estavel`).
+> Retomada oficial pos-commits `7bc0094` (`fix(psychometrics): corrige normas e resultados derivados`), `76373d4` (`ux(copy): ajusta linguagem para app pessoal`) e Sprint 10 de devolutiva pessoal.
 > Projeto atual: aplicativo pessoal de autoconhecimento. Nao e produto comercial, nao e RH em producao, nao e diagnostico, nao e laudo psicologico e nao e avaliacao psicologica profissional.
 
 ---
@@ -14,6 +14,7 @@ Backend:
 Frontend:
 - `npm run build`: OK.
 - Pendencia menor: chunk `charts`/Recharts > 500 kB, isolado no Dashboard.
+- Devolutiva pessoal estruturada em resumo, tracos marcantes, pontos fortes, pontos de atencao, sugestoes praticas, uso no dia a dia e limites.
 
 Psicometria:
 - Big Five/IPIP-50 e o nucleo medido diretamente.
@@ -44,6 +45,8 @@ Escopo:
 11. Historico Big Five permanece append-only.
 12. SQLAlchemy usa `DeclarativeBase`.
 13. `Dashboards` e `TestRoom` usam `React.lazy()`.
+14. Linguagem visual foi ajustada para app pessoal, sem posicionamento RH/corporativo.
+15. Sprint 10 melhorou a devolutiva textual/humana sem alterar o motor psicometrico.
 
 Nao refazer essas correcoes sem um bug novo confirmado.
 
@@ -51,19 +54,17 @@ Nao refazer essas correcoes sem um bug novo confirmado.
 
 ## Proxima sprint recomendada
 
-**Sprint 9 - Sincronizacao documental, QA manual e preparacao da experiencia pessoal**
+**Sprint 11 - Historico visual, reteste e relatorio exportavel**
 
 Ordem recomendada:
 
-1. **9.1 - Sincronizacao documental pos-commit 7bc0094**
-2. **9.2 - QA manual completo da interface**
-3. **9.3 - Melhorar devolutiva textual/humana**
-4. **9.4 - Historico visual entre aplicacoes**
-5. **9.5 - Exportacao de relatorio em PDF**
-6. **9.6 - Validacao empirica pessoal T1/T2**
-7. **9.7 - F9: camada de autoconhecimento com perguntas/reflexoes**
+1. **11.1 - QA manual da nova devolutiva pessoal**
+2. **11.2 - Historico visual entre aplicacoes**
+3. **11.3 - Exportacao de relatorio pessoal em PDF**
+4. **11.4 - Validacao empirica pessoal T1/T2**
+5. **11.5 - F9: camada de autoconhecimento com perguntas/reflexoes**
 
-Recomendacao central: nao mexer profundamente no motor psicometrico agora. O foco e experiencia, QA manual, historico, relatorio e clareza documental.
+Recomendacao central: nao mexer profundamente no motor psicometrico agora. O foco e experiencia, historico, exportacao, QA manual e clareza da devolutiva.
 
 ---
 
@@ -87,14 +88,9 @@ Recomendacao central: nao mexer profundamente no motor psicometrico agora. O foc
 
 ## Pendencias reais
 
-Melhorar devolutiva textual:
-- Visao geral do perfil.
-- Tracos mais marcantes.
-- Pontos fortes provaveis.
-- Pontos de atencao.
-- Sugestoes praticas.
-- Como usar o resultado no dia a dia.
-- Limites da avaliacao.
+Devolutiva textual:
+- Sprint 10 implementou a estrutura principal.
+- Pendente: QA manual completo da nova tela e ajuste fino de copy apos uso real.
 
 Historico visual entre aplicacoes:
 - Lista de aplicacoes anteriores.

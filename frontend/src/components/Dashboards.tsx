@@ -281,6 +281,111 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
       .map((key) => ({ key, ...selfData.bigfive.factors[key] }));
   };
 
+  const factorGuide: Record<string, { description: string; high: string; low: string; attentionHigh: string; attentionLow: string; practice: string }> = {
+    O: {
+      description: "Relacionada à curiosidade, imaginação, flexibilidade mental e interesse por novas ideias.",
+      high: "Facilidade para explorar possibilidades, aprender por caminhos variados e imaginar alternativas.",
+      low: "Preferência por caminhos conhecidos, critérios concretos e decisões mais ancoradas na experiência.",
+      attentionHigh: "Muita abertura pode trazer dispersão se houver excesso de ideias sem priorização.",
+      attentionLow: "Baixa abertura pode reduzir a disposição para experimentar soluções novas quando o contexto pede.",
+      practice: "Reserve um pequeno espaço para testar uma ideia nova, mas defina um critério simples para decidir se ela continua."
+    },
+    C: {
+      description: "Relacionada à organização, disciplina, responsabilidade e persistência.",
+      high: "Boa tendência a planejar, cumprir combinados e sustentar esforço até concluir o que começou.",
+      low: "Maior flexibilidade e espontaneidade, com possível preferência por ajustar o caminho enquanto anda.",
+      attentionHigh: "Conscienciosidade muito alta pode virar rigidez ou autocobrança excessiva.",
+      attentionLow: "Conscienciosidade mais baixa pode pedir apoio externo para rotina, prazos e continuidade.",
+      practice: "Escolha uma tarefa importante e quebre em próximos passos pequenos, com horário realista para começar."
+    },
+    E: {
+      description: "Relacionada à energia social, expressividade, busca por interação e iniciativa social.",
+      high: "Maior facilidade para iniciar contato, verbalizar ideias e ganhar energia em interação.",
+      low: "Maior tendência a preservar energia, refletir antes de se expor e preferir interações mais selecionadas.",
+      attentionHigh: "Extroversão alta pode levar a agir ou falar rápido demais em momentos que pedem escuta.",
+      attentionLow: "Extroversão baixa pode fazer boas ideias ficarem pouco visíveis para outras pessoas.",
+      practice: "Observe em quais interações você ganha energia e em quais precisa de recuperação depois."
+    },
+    A: {
+      description: "Relacionada à cooperação, empatia, confiança e cuidado com os outros.",
+      high: "Boa tendência a cooperar, considerar sentimentos alheios e preservar vínculos.",
+      low: "Maior franqueza, autonomia e disposição para questionar expectativas externas.",
+      attentionHigh: "Amabilidade alta pode dificultar dizer não ou sustentar limites pessoais.",
+      attentionLow: "Amabilidade mais baixa pode pedir cuidado extra com tom, escuta e negociação.",
+      practice: "Antes de aceitar algo, pergunte: isto cabe na minha energia e nos meus limites atuais?"
+    },
+    N: {
+      description: "Relacionada à sensibilidade ao estresse, preocupação e reatividade emocional.",
+      high: "Maior sensibilidade para perceber riscos, tensões e sinais emocionais cedo.",
+      low: "Maior estabilidade diante de pressão e tendência a se recuperar com mais facilidade.",
+      attentionHigh: "Neuroticismo alto pode ampliar ruminação, preocupação e desgaste em fases intensas.",
+      attentionLow: "Neuroticismo muito baixo pode reduzir a percepção de sinais sutis de incômodo ou risco.",
+      practice: "Quando notar tensão, nomeie o que está sentindo e escolha uma ação pequena antes de decidir no impulso."
+    }
+  };
+
+  const getFactorBasis = (factor: any) => {
+    if (factor.percentile != null) return Number(factor.percentile);
+    return Math.max(0, Math.min(100, Number(factor.mean ?? 0) * 20));
+  };
+
+  const getFactorLevel = (factor: any) => {
+    const basis = getFactorBasis(factor);
+    if (basis >= 67) return "high";
+    if (basis <= 33) return "low";
+    return "middle";
+  };
+
+  const getMostMarkedFactors = () => {
+    return getBigFiveFactors()
+      .map((factor: any) => ({ ...factor, basis: getFactorBasis(factor), distance: Math.abs(getFactorBasis(factor) - 50) }))
+      .sort((a: any, b: any) => b.distance - a.distance)
+      .slice(0, 2);
+  };
+
+  const getStrengths = () => {
+    const marked = getMostMarkedFactors();
+    if (marked.length === 0) return ["Ainda não há dados suficientes para destacar forças prováveis."];
+    return marked.map((factor: any) => {
+      const guide = factorGuide[factor.key];
+      const level = getFactorLevel(factor);
+      if (level === "middle") return `${factor.label}: nesta aplicação apareceu em faixa intermediária, sugerindo flexibilidade conforme o contexto.`;
+      return `${factor.label}: ${level === "high" ? guide.high : guide.low}`;
+    });
+  };
+
+  const getAttentionPoints = () => {
+    const marked = getMostMarkedFactors();
+    if (marked.length === 0) return ["Use este resultado como ponto de partida, não como conclusão final sobre você."];
+    return marked.map((factor: any) => {
+      const guide = factorGuide[factor.key];
+      const level = getFactorLevel(factor);
+      if (level === "middle") return `${factor.label}: observe em quais situações esse traço muda de intensidade.`;
+      return `${factor.label}: ${level === "high" ? guide.attentionHigh : guide.attentionLow}`;
+    });
+  };
+
+  const getResultContextText = () => {
+    if (selfData?.bigfive?.is_first_assessment) {
+      return "Esta é sua primeira aplicação. O sistema criou uma linha de base interna; a comparação intraindividual ficará mais útil a partir do reteste.";
+    }
+    if (selfData?.bigfive?.has_intraindividual_history) {
+      return "A comparação mostra variações em relação à sua aplicação anterior. Pequenas mudanças podem refletir contexto do dia, cansaço, humor ou forma de responder.";
+    }
+    if (selfData?.bigfive?.has_population_norm) {
+      return "A leitura usa uma norma pública exploratória. Ela ajuda a contextualizar tendências, mas não é norma brasileira validada.";
+    }
+    return "Suas respostas sugerem tendências para reflexão pessoal nesta aplicação.";
+  };
+
+  const getJungHelpText = () => {
+    const type = selfData?.jung_continuo?.tipo_resumo;
+    if (!type || type === "indefinido") {
+      return "Os eixos ficaram próximos do centro. Isso não é um erro; apenas indica que o sistema não tem segurança suficiente para atribuir um tipo fechado nesta aplicação.";
+    }
+    return "Use esse resumo apenas como uma narrativa exploratória derivada do Big Five, não como uma tipagem fixa.";
+  };
+
   const getQualityColor = (label: string) => {
     if (label === "baixa") return "bg-red-500/20 text-red-300 border-red-500/30";
     if (label === "media") return "bg-amber-500/20 text-amber-300 border-amber-500/30";
@@ -355,7 +460,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
       {loading && (
         <div className="flex flex-col items-center justify-center min-h-[300px] gap-4">
           <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-400 text-sm">Carregando métricas estatísticas...</p>
+          <p className="text-gray-400 text-sm">Carregando sua devolutiva...</p>
         </div>
       )}
 
@@ -369,7 +474,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
               <div className="col-span-12 glass-premium p-5 sm:p-6 rounded-3xl">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-1">Big Five</h3>
+                    <h3 className="text-lg font-bold text-white mb-1">Resumo geral do perfil</h3>
                     <p className="text-xs text-gray-400">{selfData.bigfive.norm_label}</p>
                   </div>
                   <div className="flex items-center gap-3 flex-wrap">
@@ -397,24 +502,78 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                   {selfData.notice || "Este resultado é uma ferramenta de autoconhecimento e não constitui diagnóstico psicológico, laudo psicológico ou avaliação psicológica profissional."}
                 </div>
 
+                <div className="mb-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
+                    <h4 className="text-sm font-bold text-white mb-2">O que apareceu nesta aplicação</h4>
+                    <p className="text-xs leading-relaxed text-gray-300">
+                      {getResultContextText()}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
+                    <h4 className="text-sm font-bold text-white mb-2">Traços mais marcantes</h4>
+                    <p className="text-xs leading-relaxed text-gray-300">
+                      {getMostMarkedFactors().map((factor: any) => factor.label).join(", ") || "Aguardando dados suficientes para destacar traços."}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4">
+                    <h4 className="text-sm font-bold text-white mb-2">Como usar agora</h4>
+                    <p className="text-xs leading-relaxed text-gray-300">
+                      Use este resultado como ponto de reflexão: observe em quais situações essas tendências ajudam, atrapalham ou mudam de intensidade.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="rounded-2xl border border-emerald-400/15 bg-emerald-400/5 p-4">
+                    <h4 className="text-sm font-bold text-emerald-100 mb-3">Pontos fortes prováveis</h4>
+                    <ul className="space-y-2 text-xs leading-relaxed text-gray-300">
+                      {getStrengths().map((item, idx) => <li key={idx}>{item}</li>)}
+                    </ul>
+                  </div>
+                  <div className="rounded-2xl border border-sky-400/15 bg-sky-400/5 p-4">
+                    <h4 className="text-sm font-bold text-sky-100 mb-3">Pontos de atenção</h4>
+                    <ul className="space-y-2 text-xs leading-relaxed text-gray-300">
+                      {getAttentionPoints().map((item, idx) => <li key={idx}>{item}</li>)}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="mb-6 rounded-2xl border border-brand-400/15 bg-brand-400/5 p-4">
+                  <h4 className="text-sm font-bold text-white mb-3">Sugestões práticas para o dia a dia</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs leading-relaxed text-gray-300">
+                    {getMostMarkedFactors().map((factor: any) => (
+                      <p key={factor.key}>{factorGuide[factor.key]?.practice}</p>
+                    ))}
+                    <p>Releia este resultado em outro dia e veja quais frases ainda parecem úteis. O objetivo é gerar conversa consigo mesmo, não fechar uma definição.</p>
+                  </div>
+                </div>
+
+                <div className="mb-5">
+                  <h3 className="text-base font-bold text-white mb-1">Big Five medido</h3>
+                  <p className="text-xs leading-relaxed text-gray-400">
+                    Os cinco fatores abaixo são o núcleo medido diretamente. As demais leituras da tela são derivadas ou exploratórias.
+                  </p>
+                </div>
+
                 <div className="space-y-5">
                   {getBigFiveFactors().map((factor: any) => (
                     <div key={factor.key} className="space-y-2 rounded-2xl border border-white/5 bg-white/[0.03] p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-white">{factor.label}</p>
-                          <p className="text-[11px] text-gray-500">média {Number(factor.mean ?? 0).toFixed(1)}/5</p>
+                          <p className="text-[11px] leading-relaxed text-gray-400">{factorGuide[factor.key]?.description}</p>
+                          <p className="mt-1 text-[11px] text-gray-500">média {Number(factor.mean ?? 0).toFixed(1)}/5 nesta aplicação</p>
                         </div>
                         <div className="shrink-0 text-right">
                           <p className="text-lg font-black text-brand-300">{Math.round(factor.raw)}/{factor.max_raw || 50}</p>
-                          <p className="text-[11px] text-gray-500">bruto</p>
+                          <p className="text-[11px] text-gray-500">resultado bruto</p>
                         </div>
                       </div>
 
                       <div className="w-full">
                         {factor.percentile == null ? (
                           <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-300">
-                            Linha de base interna criada; percentil intraindividual ainda não interpretável.
+                            Linha de base interna criada; comparação intraindividual ainda não interpretável.
                           </div>
                         ) : (
                           <>
@@ -425,7 +584,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                               <div className="h-full rounded-full bg-gradient-to-r from-brand-500 to-sky-400" style={{ width: `${factor.percentile}%` }} />
                             </div>
                             <div className="mt-1 flex justify-between text-[10px] text-gray-500">
-                              <span>IC {factor.ci_low}</span>
+                              <span>faixa provável {factor.ci_low}</span>
                               <span>{factor.ci_high}</span>
                             </div>
                           </>
@@ -439,8 +598,8 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
               <div className="col-span-12 lg:col-span-5 glass p-5 sm:p-6 rounded-3xl">
                 <div className="flex items-center justify-between gap-4 mb-5">
                   <div>
-                    <h3 className="text-base font-bold text-white">Jung Contínuo</h3>
-                    <p className="text-[11px] text-gray-400">Resumo derivado dos fatores Big Five.</p>
+                    <h3 className="text-base font-bold text-white">Jung exploratório</h3>
+                    <p className="text-[11px] text-gray-400">Leitura derivada do Big Five, sem tipagem fechada quando há dúvida.</p>
                   </div>
                   <div className="bg-brand-500/20 text-brand-300 font-bold border border-brand-500/30 text-xl px-4 py-2 rounded-2xl text-center">
                     {selfData.jung_continuo?.tipo_resumo || "indefinido"}
@@ -452,6 +611,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                     {selfData.jung_continuo.aviso}
                   </div>
                 )}
+                <p className="mb-4 text-xs leading-relaxed text-gray-300">{getJungHelpText()}</p>
 
                 <div className="space-y-4">
                   {getJungAxes().map((axis: any) => (
@@ -473,7 +633,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
               <div className="col-span-12 lg:col-span-3 glass p-5 sm:p-6 rounded-3xl flex flex-col justify-between">
                 <div>
                   <h3 className="text-base font-bold text-white">Estabilidade Emocional</h3>
-                  <p className="text-[11px] text-gray-400">Inverso do Neuroticismo.</p>
+                  <p className="text-[11px] text-gray-400">Inverso do Neuroticismo: indica menor sensibilidade ao estresse quando aparece mais alta.</p>
                 </div>
                 <div className="py-8 text-center">
                   <div className="text-5xl font-black text-emerald-300">{Math.round(selfData.jung_continuo?.estabilidade_emocional || 0)}</div>
@@ -487,6 +647,9 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                 <h3 className="text-base font-bold text-white mb-2">DISC Derivado</h3>
                 <p className="mb-4 text-[11px] leading-relaxed text-gray-400">
                   {selfData.disc?.aviso || "DISC derivado — leitura ilustrativa baseada nos fatores Big Five. Não substitui um instrumento DISC validado."}
+                </p>
+                <p className="mb-4 text-xs leading-relaxed text-gray-300">
+                  Use como linguagem simples para refletir sobre estilo de ação, não como medida independente.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   {Object.entries(selfData.disc.natural).map(([key, value]: any) => (
@@ -502,6 +665,9 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                 <h3 className="text-base font-bold text-white mb-2">Spranger Derivado</h3>
                 <p className="mb-4 text-[11px] leading-relaxed text-gray-400">
                   {selfData.spranger?.aviso || "Spranger derivado — leitura ilustrativa baseada nos fatores Big Five. Não substitui um instrumento motivacional validado."}
+                </p>
+                <p className="mb-4 text-xs leading-relaxed text-gray-300">
+                  Esta leitura sugere temas motivacionais possíveis a partir do Big Five, sem fechar valores ou identidade.
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                   {Object.entries(selfData.spranger)
@@ -689,14 +855,14 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                 <span className="text-[10px] text-gray-500">Mapeamento DISC + Spranger + Jung cruzados.</span>
               </div>
 
-              {/* Relatório Narrativo da IA (Streaming/Gemini) */}
+              {/* Relatório narrativo pessoal */}
               <div className="col-span-12 glass-premium p-8 rounded-3xl mt-4">
                 <div className="flex justify-between items-center mb-6">
                   <div className="flex items-center gap-3">
                     <FileText className="w-8 h-8 text-brand-400" />
                     <div>
-                      <h3 className="text-xl font-bold text-white">Relatório Narrativo Completo</h3>
-                      <p className="text-xs text-gray-400">Análise gerada por Inteligência Artificial estatística e clínica.</p>
+                      <h3 className="text-xl font-bold text-white">Devolutiva pessoal guiada</h3>
+                      <p className="text-xs text-gray-400">Resumo em linguagem natural para reflexão, sem valor de laudo ou diagnóstico.</p>
                     </div>
                   </div>
 
@@ -713,7 +879,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                         </>
                       ) : (
                         <>
-                          Gerar Relatório por IA
+                          Gerar devolutiva
                           <Zap className="w-4 h-4 fill-[#030014]" />
                         </>
                       )}
@@ -730,7 +896,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                 ) : (
                   <div className="flex flex-col items-center justify-center py-10 text-center text-gray-400">
                     <Award className="w-12 h-12 text-white/10 mb-3" />
-                    <p className="text-sm">Ao clicar no botão superior, a API do Gemini processará todos os dados estatísticos para gerar o relatório narrativo estruturado de competências.</p>
+                    <p className="text-sm max-w-xl">Ao clicar no botão superior, o sistema organiza os resultados em sete partes: resumo, traços marcantes, forças prováveis, pontos de atenção, sugestões práticas, uso no dia a dia e limites da avaliação.</p>
                   </div>
                 )}
               </div>

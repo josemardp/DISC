@@ -97,6 +97,20 @@ Diferenças importantes:
 - Percentil intraindividual: comparação contra histórico do próprio respondente, não populacional.
 - Percentil público exploratório: cálculo contra norma pública versionada, com limitações de amostra.
 
+## Devolutiva pessoal
+
+A tela de resultados prioriza linguagem de autoconhecimento:
+
+- resumo geral do perfil;
+- traços mais marcantes;
+- pontos fortes prováveis;
+- pontos de atenção;
+- sugestões práticas;
+- como usar o resultado no dia a dia;
+- limites da avaliação.
+
+O Big Five permanece como núcleo medido. Jung, DISC e Spranger aparecem apenas como leituras derivadas/exploratórias. A primeira aplicação em `NORM_MODE=intra` cria uma linha de base interna; a comparação intraindividual fica mais útil a partir do reteste.
+
 ## Produção e cuidados mínimos
 
 Em produção:

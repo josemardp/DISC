@@ -1,6 +1,6 @@
 # STATUS — Fotografia do estado atual
 
-> Última atualização: 2026-06-17 (pós-commit `7bc0094`; sprint técnica estável; 30/30 verdes).
+> Última atualização: 2026-06-18 (Sprint 10: devolutiva pessoal dos resultados; sprint técnica estável; 30/30 verdes).
 > Para o roadmap e próximas fases, ver [ROADMAP.md](ROADMAP.md).
 
 ---
@@ -54,6 +54,7 @@
 | Detecção de fricções | `math_engine.py` | `detect_frictions()` — 3 fricções implementadas |
 | Relatório narrativo anti-Barnum | `gemini_service.py` | Gemini 1.5 Flash + fallback local; 7 seções; limites obrigatórios |
 | Motor de resultados | `main.py` | `/results/me` retorna bigfive + jung_continuo + disc + spranger + qualidade |
+| Devolutiva pessoal | `Dashboards.tsx`, `gemini_service.py` | resumo, traços marcantes, forças prováveis, pontos de atenção, sugestões práticas, uso no dia a dia e limites |
 | Admin stats | `main.py` | `/admin/stats` — omega_bigfive por fator |
 | Proxy ASGI Vercel | `api/index.py` | lazy import + lifespan próprio + error JSON |
 

@@ -5,6 +5,14 @@ Branch: evolucao-cientifica
 
 > Nota de sincronização: as seções antigas abaixo ficam como histórico. O estado atual oficial, pós-commit `7bc0094`, é: backend 30 testes passando, 0 warnings no pytest, frontend build OK, `NORM_MODE=public` funcional e pendência menor no chunk `charts`/Recharts.
 
+## Atualizacao QA - Sprint 10 - 2026-06-18
+
+- Devolutiva de resultados reorganizada para uso pessoal: resumo geral, tracos marcantes, pontos fortes provaveis, pontos de atencao, sugestoes praticas, uso no dia a dia e limites.
+- Big Five ganhou explicacoes simples por fator na UI.
+- Jung, DISC e Spranger continuam rotulados como derivados/exploratorios.
+- Aviso de nao diagnostico, nao laudo e nao avaliacao psicologica profissional preservado.
+- Motor psicometrico, calculos, normas, autenticacao e seguranca nao foram alterados nesta sprint.
+
 ## Atualizacao QA - 2026-06-17
 
 ### Estado inicial medido nesta rodada

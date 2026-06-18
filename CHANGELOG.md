@@ -4,6 +4,19 @@ Formato: [Versão Semântica](https://semver.org/) — `[MAJOR.MINOR.PATCH] — 
 
 ---
 
+## [1.7.3] — 2026-06-18 — Devolutiva pessoal dos resultados
+
+### Alterado
+- Tela de resultados reorganizada para uma devolutiva pessoal com resumo, traços marcantes, forças prováveis, pontos de atenção, sugestões práticas, uso no dia a dia e limites.
+- Big Five ganhou explicações simples por fator, com separação mais clara entre núcleo medido e leituras derivadas.
+- Relatório narrativo por IA/fallback passou a usar linguagem mais humana, cautelosa e orientada a autoconhecimento.
+
+### Mantido
+- Motor psicométrico, pontuação, normas, autenticação, segurança e estrutura de endpoints sem alteração de cálculo.
+- Aviso de não diagnóstico, não laudo e não avaliação psicológica profissional preservado.
+
+---
+
 ## [1.7.2] — 2026-06-18 — Linguagem de app pessoal
 
 ### Alterado
