@@ -4,6 +4,19 @@ Formato: [Versão Semântica](https://semver.org/) — `[MAJOR.MINOR.PATCH] — 
 
 ---
 
+## [1.7.6] — 2026-06-18 — Polimento mobile e impressão
+
+### Alterado
+- QA manual de desktop, mobile e relatório imprimível reforçou a estabilidade da devolutiva pessoal.
+- CSS de impressão ajustado para reduzir espaço da capa e evitar que cards do relatório quebrem de forma ruim entre páginas.
+- Fluxo mobile em viewport aproximado de 390px conferido sem overflow horizontal.
+
+### Mantido
+- Sem alteração no motor psicométrico, fórmulas, normas, banco, autenticação, segurança ou endpoints.
+- Chunk `charts`/Recharts permanece como pendência conhecida de performance leve.
+
+---
+
 ## [1.7.5] — 2026-06-18 — Relatório pessoal em PDF
 
 ### Adicionado

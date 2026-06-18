@@ -111,7 +111,7 @@
   }
 
   .print-cover {
-    min-height: 120mm;
+    min-height: 96mm;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -132,7 +132,7 @@
     margin: 0;
     max-width: 150mm;
     color: #111827;
-    font-size: 31pt;
+    font-size: 29pt;
     line-height: 1.05;
   }
 
@@ -273,5 +273,14 @@
     color: #5c4410;
     border-color: #f2c94c;
     background: #fff8df;
+  }
+
+  .print-factor-card,
+  .print-derived-grid div,
+  .print-history-list div,
+  .print-warning,
+  .print-note {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }

@@ -5,6 +5,17 @@ Branch: evolucao-cientifica
 
 > Nota de sincronização: as seções antigas abaixo ficam como histórico. O estado atual oficial, pós-commit `7bc0094`, é: backend 30 testes passando, 0 warnings no pytest, frontend build OK, `NORM_MODE=public` funcional e pendência menor no chunk `charts`/Recharts.
 
+## Atualizacao QA - Sprint 13 - 2026-06-18
+
+- QA manual local conferiu desktop, mobile em viewport aproximado de 390px e relatório imprimível.
+- Primeira aplicação preservou linha de base interna e não exibiu percentil 50 enganoso.
+- Reteste exibiu histórico visual e comparação com aplicação anterior.
+- Relatório imprimível manteve aviso de não diagnóstico/laudo, Big Five como núcleo medido e DISC/Jung/Spranger como derivados/exploratórios.
+- CSS de impressão foi polido para reduzir espaço da capa e evitar cortes ruins de cards entre páginas.
+- Console do navegador sem erros/warnings relevantes durante o QA.
+- Chunk `charts`/Recharts permanece como pendência conhecida de performance leve.
+- Motor psicométrico, cálculos, normas, banco, autenticação, segurança e endpoints não foram alterados nesta sprint.
+
 ## Atualizacao QA - Sprint 12 - 2026-06-18
 
 - Tela de resultados passou a oferecer relatório pessoal imprimível/salvável em PDF pelo navegador.

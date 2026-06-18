@@ -80,6 +80,7 @@ npm run build
 > Estado estável da sprint técnica: commit `7bc0094` (`fix(psychometrics): corrige normas e resultados derivados`). Backend com 30 testes passando; frontend com build OK. Pendência conhecida: chunk `charts`/Recharts >500 kB, isolado no Dashboard.
 > Sprint 11 estável: histórico visual entre aplicações Big Five implementado sem alteração no motor psicométrico.
 > Sprint 12 estável: relatório pessoal imprimível/salvável em PDF pelo navegador, sem dependências novas e sem alteração no motor psicométrico.
+> Sprint 13 estável: QA mobile/desktop/print concluído; CSS de impressão polido sem alteração no motor psicométrico.
 
 ---
 

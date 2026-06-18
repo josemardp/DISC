@@ -1,6 +1,6 @@
 # STATUS — Fotografia do estado atual
 
-> Última atualização: 2026-06-18 (Sprint 12: relatório pessoal em PDF; sprint técnica estável; 30/30 verdes).
+> Última atualização: 2026-06-18 (Sprint 13: polimento mobile/print/performance leve; sprint técnica estável; 30/30 verdes).
 > Para o roadmap e próximas fases, ver [ROADMAP.md](ROADMAP.md).
 
 ---
@@ -49,6 +49,7 @@
 | Refazer teste (nova rodada) | `App.tsx`, `Dashboards.tsx` | botão na aba "Meu Perfil"; sessão-only; reabre TestRoom no Big Five; histórico preservado no DB |
 | Histórico visual entre aplicações | `main.py`, `Dashboards.tsx` | `/results/me` retorna `history`; UI lista aplicações e compara a mais recente com a anterior |
 | Relatório pessoal em PDF | `Dashboards.tsx`, `index.css` | versão imprimível/salvável pelo navegador; usa dados já carregados no Dashboard |
+| Polimento mobile/print | `index.css` | QA desktop/mobile; ajuste de impressão para reduzir espaço da capa e evitar cortes ruins de cards |
 | Invariante de preservação Big Five | `main.py` | DELETE consolidado restrito a `bigfive_percentis IS NULL`; ADR-11; teste dedicado |
 | Ômega de McDonald | `science_engine.py` | `mcdonald_omega()` — via PCA unifatorial aproximado |
 | SEM e IC95% | `science_engine.py` | `standard_error_of_measurement()` + `confidence_interval()` |

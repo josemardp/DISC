@@ -1,6 +1,6 @@
 # Contexto DISC - proximo chat
 
-> Retomada oficial pos-commits `7bc0094` (`fix(psychometrics): corrige normas e resultados derivados`), `76373d4` (`ux(copy): ajusta linguagem para app pessoal`), Sprint 10 de devolutiva pessoal, Sprint 11 de historico visual e Sprint 12 de relatorio pessoal em PDF.
+> Retomada oficial pos-commits `7bc0094` (`fix(psychometrics): corrige normas e resultados derivados`), `76373d4` (`ux(copy): ajusta linguagem para app pessoal`), Sprint 10 de devolutiva pessoal, Sprint 11 de historico visual, Sprint 12 de relatorio pessoal em PDF e Sprint 13 de polimento mobile/print.
 > Projeto atual: aplicativo pessoal de autoconhecimento. Nao e produto comercial, nao e RH em producao, nao e diagnostico, nao e laudo psicologico e nao e avaliacao psicologica profissional.
 
 ---
@@ -17,6 +17,7 @@ Frontend:
 - Devolutiva pessoal estruturada em resumo, tracos marcantes, pontos fortes, pontos de atencao, sugestoes praticas, uso no dia a dia e limites.
 - Historico visual entre aplicacoes Big Five disponivel na tela de resultados.
 - Relatorio pessoal imprimivel/salvavel em PDF pelo navegador, sem dependencia nova.
+- QA desktop/mobile/print concluido na Sprint 13, com polimento leve do CSS de impressao.
 
 Psicometria:
 - Big Five/IPIP-50 e o nucleo medido diretamente.
@@ -51,6 +52,7 @@ Escopo:
 15. Sprint 10 melhorou a devolutiva textual/humana sem alterar o motor psicometrico.
 16. Sprint 11 adicionou historico visual entre aplicacoes, com lista cronologica e comparacao contra a aplicacao anterior.
 17. Sprint 12 adicionou relatorio pessoal em PDF via versao imprimivel, sem endpoint novo e sem dependencia nova.
+18. Sprint 13 fez QA mobile/desktop/print e reduziu risco de cortes ruins no relatorio imprimivel.
 
 Nao refazer essas correcoes sem um bug novo confirmado.
 
@@ -58,17 +60,17 @@ Nao refazer essas correcoes sem um bug novo confirmado.
 
 ## Proxima sprint recomendada
 
-**Sprint 13 - Polimento mobile/performance ou F9 com perguntas reflexivas**
+**Sprint 14 - F9 com perguntas reflexivas de autoconhecimento**
 
 Ordem recomendada:
 
-1. **13.1 - Polimento final mobile/performance**
-2. **13.2 - Reducao do chunk charts/Recharts**
-3. **13.3 - Historico visual ampliado T1/T2/T3**
-4. **13.4 - F9: camada de autoconhecimento com perguntas/reflexoes**
-5. **13.5 - Validacao empirica pessoal T1/T2**
+1. **14.1 - Desenhar perguntas reflexivas sem entrar no motor de pontuacao**
+2. **14.2 - Guardar respostas abertas separadas dos escores psicometricos**
+3. **14.3 - Usar respostas abertas apenas na devolutiva textual/reflexiva**
+4. **14.4 - QA etico para evitar diagnostico, laudo ou aconselhamento clinico**
+5. **14.5 - Validacao empirica pessoal T1/T2**
 
-Recomendacao central: nao mexer profundamente no motor psicometrico agora. O foco e experiencia, exportacao, QA manual e clareza da devolutiva.
+Recomendacao central: nao mexer profundamente no motor psicometrico. F9 deve ser camada reflexiva, separada dos escores.
 
 ---
 
@@ -102,7 +104,8 @@ Historico visual entre aplicacoes:
 
 Relatorio PDF:
 - Concluido na Sprint 12: capa, data, aviso de nao diagnostico, Big Five, DISC derivado, Jung exploratorio, Spranger derivado, pontos fortes, pontos de atencao e historico quando houver.
-- Pendente futuro: refinar layout apos uso real e considerar exportacao nativa se a experiencia de impressao do navegador nao for suficiente.
+- Sprint 13 refinou o CSS de impressao para reduzir espaco da capa e evitar cortes ruins de cards.
+- Pendente futuro: considerar exportacao nativa se a experiencia de impressao do navegador nao for suficiente.
 
 Validacao empirica pessoal T1/T2:
 - Josemar e Esdra respondem T1.
