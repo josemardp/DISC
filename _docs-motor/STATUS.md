@@ -52,7 +52,7 @@
 | SEM e IC95% | `science_engine.py` | `standard_error_of_measurement()` + `confidence_interval()` |
 | Qualidade de resposta | `science_engine.py` | `response_quality_index()` — atenção, straight-lining, velocidade |
 | Detecção de fricções | `math_engine.py` | `detect_frictions()` — 3 fricções implementadas |
-| Laudo narrativo anti-Barnum | `gemini_service.py` | Gemini 1.5 Flash + fallback local; 7 seções; limites obrigatórios |
+| Relatório narrativo anti-Barnum | `gemini_service.py` | Gemini 1.5 Flash + fallback local; 7 seções; limites obrigatórios |
 | Motor de resultados | `main.py` | `/results/me` retorna bigfive + jung_continuo + disc + spranger + qualidade |
 | Admin stats | `main.py` | `/admin/stats` — omega_bigfive por fator |
 | Proxy ASGI Vercel | `api/index.py` | lazy import + lifespan próprio + error JSON |
@@ -148,10 +148,10 @@ pytest backend/app/ -v
 │   └── index.py              # Proxy ASGI para Vercel (lazy import + lifespan + error JSON)
 ├── backend/
 │   ├── app/
-│   │   ├── main.py           # FastAPI: auth, questionário, resultados, RH, admin
+│   │   ├── main.py           # FastAPI: auth, questionário, resultados e área administrativa
 │   │   ├── science_engine.py # Big Five, Jung, DISC, Spranger, Ômega, IC, qualidade
 │   │   ├── math_engine.py    # Percentil, distâncias, detecção de fricções, Alpha (legacy)
-│   │   ├── gemini_service.py # Laudo narrativo via Gemini 1.5 Flash + fallback local
+│   │   ├── gemini_service.py # Relatório narrativo via Gemini 1.5 Flash + fallback local
 │   │   ├── database.py       # Engine SQLAlchemy (Postgres ou SQLite)
 │   │   ├── models.py         # ORM: Tenant, User, QuestionnaireItem, Response, PsychometricResult, Report, Job
 │   │   ├── config.py         # Settings: DATABASE_URL, SECRET_KEY, GEMINI_API_KEY, NORM_MODE

@@ -208,7 +208,7 @@ Lido de `.env` por `backend/app/config.py`: `NORM_MODE=intra`.
 
 ---
 
-## 8. Laudo narrativo — `gemini_service.py`
+## 8. Relatório narrativo — `gemini_service.py`
 
 **Modelo:** Gemini 1.5 Flash (`gemini-1.5-flash`), temperatura 0.3. Fallback local quando `GEMINI_API_KEY` ausente ou API indisponível.
 
@@ -229,7 +229,7 @@ Lido de `.env` por `backend/app/config.py`: `NORM_MODE=intra`.
 - Seção de limites obrigatória.
 
 **Dados passados ao prompt:**
-- Nome do candidato
+- Nome da pessoa
 - Big Five: escore, IC95%, bruto por fator
 - Jung contínuo: tipo_resumo, eixos
 - Estabilidade Emocional
@@ -264,6 +264,6 @@ Lido de `.env` por `backend/app/config.py`: `NORM_MODE=intra`.
 ## 10. Changelog interno
 
 - v0.4 — 2026-06-17 — Pós-commit `7bc0094`: baseline intra corrigido, `NORM_MODE=public` funcional, Jung borderline indefinido, DISC/Spranger derivados explicitados, suite 30/30 e 0 warnings.
-- v0.3 — 2026-06-13 — F3: documentação viva concluída. Referências cruzadas adicionadas. Seções de Alpha e laudo narrativo expandidas. Tabelas de DISC/Spranger/Jung com fórmulas reais do código.
+- v0.3 — 2026-06-13 — F3: documentação viva concluída. Referências cruzadas adicionadas. Seções de Alpha e relatório narrativo expandidas. Tabelas de DISC/Spranger/Jung com fórmulas reais do código.
 - v0.2 — 2026-06-10 — F1 + F2 concluídas: Supabase Postgres em produção; 22/22 testes passando; conftest.py com fixture autouse; import órfão `calculate_cronbach_alpha` removido de `main.py`.
 - v0.1 — 2026-06-05 — versão inicial: Big Five IPIP-50, itens de atenção, camadas derivadas, régua interna, confiabilidade, IC95%, qualidade de resposta, laudo anti-Barnum.

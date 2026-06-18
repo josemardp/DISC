@@ -165,7 +165,7 @@ export default function App() {
             Antigravity Psico
           </h2>
           <p className="text-sm text-brand-300">
-            Plataforma Corporativa de Inteligência Psicométrica
+            Painel pessoal de autoconhecimento
           </p>
         </div>
 
@@ -178,7 +178,7 @@ export default function App() {
             )}
 
             {isRegister ? (
-              /* CADASTRO DE CANDIDATO OU RH */
+              /* CADASTRO DE USUARIO */
               <form className="space-y-4" onSubmit={handleRegister}>
                 <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Nome Completo</label>
@@ -196,7 +196,7 @@ export default function App() {
                     type="email" required
                     value={registerEmail}
                     onChange={e => setRegisterEmail(e.target.value)}
-                    placeholder="Ex: joao@empresa.com"
+                    placeholder="Ex: joao@email.com"
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-500 text-sm"
                   />
                 </div>
@@ -211,12 +211,12 @@ export default function App() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Nome da Empresa (Para RH / Opcional)</label>
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Identificação do perfil (opcional)</label>
                   <input
                     type="text"
                     value={registerCompany}
                     onChange={e => setRegisterCompany(e.target.value)}
-                    placeholder="Ex: Antigravity Ltda (Em branco se for candidato)"
+                    placeholder="Ex: uso pessoal, estudo ou projeto"
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-500 text-sm"
                   />
                 </div>
@@ -245,7 +245,7 @@ export default function App() {
                     type="email" required
                     value={loginEmail}
                     onChange={e => setLoginEmail(e.target.value)}
-                    placeholder="Ex: joao@empresa.com"
+                    placeholder="Ex: joao@email.com"
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-brand-500 text-sm"
                   />
                 </div>
@@ -287,7 +287,7 @@ export default function App() {
   // ==============================================================================
   return (
     <div className="min-h-screen bg-[#030014]">
-      {/* Header Corporativo Premium */}
+      {/* Header do app autenticado */}
       <header className="glass border-b border-white/5 py-4 px-6 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -301,7 +301,7 @@ export default function App() {
               {user.company_name ? (
                 <span className="text-brand-300 text-[10px]">{user.company_name} ({user.role.toUpperCase()})</span>
               ) : (
-                <span className="text-gray-400 text-[10px]">Candidato</span>
+                <span className="text-gray-400 text-[10px]">Pessoa</span>
               )}
             </div>
 

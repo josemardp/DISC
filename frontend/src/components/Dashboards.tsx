@@ -28,14 +28,14 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
   const [narrativeReport, setNarrativeReport] = useState<string | null>(null);
   const [loadingReport, setLoadingReport] = useState(false);
 
-  // 2. Dados de RH
+  // 2. Dados da area administrativa
   const [jobs, setJobs] = useState<any[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const [jobRankings, setJobRankings] = useState<any[]>([]);
   const [teamMatrix, setTeamMatrix] = useState<any[]>([]);
   const [showNewJobModal, setShowNewJobModal] = useState(false);
   
-  // Form de Vaga
+  // Form de perfil de referencia
   const [newJob, setNewJob] = useState({
     title: "",
     description: "",
@@ -79,7 +79,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
     }
   }, [activeTab]);
 
-  // Carrega rankings ao mudar vaga selecionada
+  // Carrega comparativos ao mudar perfil selecionado
   useEffect(() => {
     if (selectedJobId) {
       loadJobRankings(selectedJobId);
@@ -129,7 +129,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
 
   const loadRHData = () => {
     setLoading(true);
-    // Vagas
+    // Perfis de referencia
     fetch(`${apiBaseUrl}/rh/jobs`, {
       headers: { "Authorization": `Bearer ${token}` }
     })
@@ -225,7 +225,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
         },
         body: JSON.stringify(payload)
       });
-      if (!res.ok) throw new Error("Erro ao criar vaga.");
+      if (!res.ok) throw new Error("Erro ao criar perfil de referência.");
       const jobCreated = await res.json();
       setJobs(prev => [...prev, jobCreated]);
       setSelectedJobId(jobCreated.id);
@@ -302,7 +302,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
       {/* Abas Superiores de Controle de Dashboard */}
       <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-8">
         <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-violet-300 to-indigo-100">
-          Resultados & Analytics
+          Meu perfil de autoconhecimento
         </h1>
 
         <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5">
@@ -326,7 +326,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
               }`}
             >
               <Users className="w-4 h-4" />
-              Módulo RH
+              Área administrativa
             </button>
           )}
 
@@ -739,20 +739,20 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
           )}
 
           {/* ==============================================================================
-              TAB 2: GESTÃO DE RH / GESTORES
+              TAB 2: AREA ADMINISTRATIVA
               ============================================================================== */}
           {activeTab === "rh" && (
             <div className="grid grid-cols-12 gap-6">
               
-              {/* Painel Esquerdo: Vagas e Candidatos */}
+              {/* Painel Esquerdo: perfis de referencia e pessoas */}
               <div className="col-span-12 lg:col-span-7 flex flex-col gap-6">
                 
-                {/* Seletor de Vagas */}
+                {/* Seletor de perfis de referencia */}
                 <div className="glass-premium p-6 rounded-3xl">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
                       <Briefcase className="w-5 h-5 text-brand-400" />
-                      Engenharia de Cargos (Vagas)
+                      Perfis de referência
                     </h3>
 
                     <button
@@ -765,7 +765,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                   </div>
 
                   {jobs.length === 0 ? (
-                    <p className="text-sm text-gray-400 text-center py-6">Nenhum perfil de cargo cadastrado no sistema corporativo.</p>
+                    <p className="text-sm text-gray-400 text-center py-6">Nenhum perfil de referência cadastrado.</p>
                   ) : (
                     <div className="flex flex-wrap gap-2">
                       {jobs.map((job) => (
@@ -785,12 +785,12 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                   )}
                 </div>
 
-                {/* Lista de Matching de Candidatos */}
+                {/* Lista de comparativos de pessoas */}
                 <div className="glass-premium p-6 rounded-3xl min-h-[350px]">
-                  <h3 className="text-lg font-bold text-white mb-4">Ranking de Job Matching (Similaridade de Cosseno)</h3>
+                  <h3 className="text-lg font-bold text-white mb-4">Comparativo com perfil de referência</h3>
 
                   {jobRankings.length === 0 ? (
-                    <p className="text-sm text-gray-400 text-center py-10">Selecione uma vaga para exibir a compatibilidade vetorial dos candidatos.</p>
+                    <p className="text-sm text-gray-400 text-center py-10">Selecione um perfil de referência para exibir a proximidade vetorial das pessoas.</p>
                   ) : (
                     <div className="space-y-4">
                       {jobRankings.map((cand, idx) => (
@@ -811,7 +811,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
 
                             {/* Score de Matching com Progresso */}
                             <div className="flex flex-col items-end gap-1">
-                              <span className="text-xs text-gray-400">Match de Cosseno</span>
+                              <span className="text-xs text-gray-400">Proximidade vetorial</span>
                               <span className="text-xl font-black text-brand-300">{cand.matching_score}%</span>
                             </div>
                           </div>
@@ -823,11 +823,11 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
 
               </div>
 
-              {/* Painel Direito: Matrix do Time (Heatmap) */}
+              {/* Painel Direito: matriz de grupo */}
               <div className="col-span-12 lg:col-span-5 glass-premium p-6 rounded-3xl flex flex-col justify-between min-h-[480px]">
                 <div>
-                  <h3 className="text-lg font-bold text-white mb-1">Team Building Matrix (Mapa de Polarizações)</h3>
-                  <p className="text-xs text-gray-400 mb-4">Visualização espacial de tendências atencionais e de execução do time.</p>
+                  <h3 className="text-lg font-bold text-white mb-1">Mapa de tendências do grupo</h3>
+                  <p className="text-xs text-gray-400 mb-4">Visualização espacial de tendências atencionais e de execução.</p>
                 </div>
 
                 <div className="w-full h-[320px] bg-black/35 rounded-2xl border border-white/5 relative overflow-hidden">
@@ -844,7 +844,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
 
                   {teamMatrix.length === 0 ? (
                     <div className="flex items-center justify-center h-full text-sm text-gray-400">
-                      Nenhum candidato mapeado na base.
+                      Nenhuma pessoa mapeada na base.
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
@@ -864,7 +864,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                 </div>
 
                 <div className="text-[10px] text-gray-500 leading-relaxed mt-2 text-center">
-                  Pontos vermelhos indicam profissionais com alto desvio adaptado e propensão a estresse severo.
+                  Pontos vermelhos indicam alto desvio entre modos de resposta e possível atenção a estresse.
                 </div>
               </div>
 
@@ -935,15 +935,15 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
       )}
 
       {/* ==============================================================================
-          MODAL: DESENHAR VAGA (RH)
+          MODAL: DESENHAR PERFIL DE REFERENCIA
           ============================================================================== */}
       {showNewJobModal && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="glass-premium max-w-2xl w-full p-8 rounded-3xl flex flex-col gap-6 max-h-[90vh] overflow-y-auto my-8">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-xl font-bold text-white">Desenhar Requisitos do Cargo</h3>
-                <p className="text-xs text-gray-400">Configure o vetor comportamental e de motivadores ideais para a vaga.</p>
+                <h3 className="text-xl font-bold text-white">Desenhar perfil de referência</h3>
+                <p className="text-xs text-gray-400">Configure um vetor comportamental e de motivadores para comparação exploratória.</p>
               </div>
               <button 
                 onClick={() => setShowNewJobModal(false)}
@@ -956,13 +956,13 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
             <form onSubmit={handleCreateJob} className="flex flex-col gap-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className="text-xs text-gray-400 font-bold block mb-1">Título do Cargo</label>
+                  <label className="text-xs text-gray-400 font-bold block mb-1">Título do perfil</label>
                   <input
                     type="text"
                     required
                     value={newJob.title}
                     onChange={e => setNewJob(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Ex: Engenheiro de Software Sênior"
+                    placeholder="Ex: perfil analítico, criativo ou executor"
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500"
                   />
                 </div>
@@ -971,13 +971,13 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                   <textarea
                     value={newJob.description}
                     onChange={e => setNewJob(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Descrição sumária das atribuições operacionais da vaga..."
+                    placeholder="Descrição breve do contexto ou perfil de referência..."
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 h-20"
                   />
                 </div>
               </div>
 
-              {/* Vetor DISC da Vaga */}
+              {/* Vetor DISC do perfil */}
               <div>
                 <h4 className="text-sm font-bold text-brand-300 border-b border-white/5 pb-1 mb-3">Vetor Comportamental Ideal (DISC)</h4>
                 <div className="grid grid-cols-4 gap-4">
@@ -1022,7 +1022,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
 
               {/* Motivadores Spranger */}
               <div>
-                <h4 className="text-sm font-bold text-brand-300 border-b border-white/5 pb-1 mb-3">Motivadores da Vaga (Intensidade 0-100)</h4>
+                <h4 className="text-sm font-bold text-brand-300 border-b border-white/5 pb-1 mb-3">Motivadores do perfil (Intensidade 0-100)</h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="text-xs text-gray-400 block mb-1">Teórico: {newJob.target_teorico}</label>
@@ -1083,7 +1083,7 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
 
               {/* Dicotomias Jung */}
               <div>
-                <h4 className="text-sm font-bold text-brand-300 border-b border-white/5 pb-1 mb-3">Preferências Junguianas da Vaga</h4>
+                <h4 className="text-sm font-bold text-brand-300 border-b border-white/5 pb-1 mb-3">Preferências junguianas do perfil</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs text-gray-400 block mb-1">Extroversão (E) vs Introversão (I): E={newJob.target_E_I}% / I={100 - newJob.target_E_I}%</label>

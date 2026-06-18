@@ -29,7 +29,7 @@ Branch: evolucao-cientifica
 - Jung borderline majoritario retorna `tipo_resumo="indefinido"` e `tipo_fechado=false`.
 - DISC e Spranger aparecem como derivados heurísticos, nao instrumentos independentes.
 - Endpoint `/questionnaire/submit` valida `test_type`, `phase`, escala de `value`, `item_id`, duplicidade, itens ausentes, bloco incompatível e campos extras.
-- Cadastro com empresa nao promove usuario para `hr`; fica como `respondent`.
+- Campo opcional de perfil nao promove usuario para `hr`; fica como `respondent`.
 - Producao exige `SECRET_KEY` segura e `ALLOWED_ORIGINS`; wildcard CORS, seed demo e criacao automatica de schema ficam restritos fora de producao.
 - Layout Big Five separa nome/score, barra e metadados em linhas proprias.
 - Code splitting com `React.lazy()` para `Dashboards` e `TestRoom`; chunk grande restante fica isolado em `recharts`.

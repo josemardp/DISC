@@ -4,6 +4,19 @@ Formato: [Versão Semântica](https://semver.org/) — `[MAJOR.MINOR.PATCH] — 
 
 ---
 
+## [1.7.2] — 2026-06-18 — Linguagem de app pessoal
+
+### Alterado
+- UX copy do frontend ajustada para comunicar app pessoal de autoconhecimento.
+- Textos visíveis de login, cadastro, instruções, resultados e área administrativa suavizados para reduzir linguagem corporativa/RH.
+- README reposicionado de "plataforma de avaliação" para aplicativo pessoal de autoconhecimento.
+
+### Mantido
+- Motor psicométrico, pontuação, normas, segurança, backend e rotas técnicas sem alteração funcional.
+- Avisos de não diagnóstico, não laudo e leituras derivadas/exploratórias preservados.
+
+---
+
 ## [1.7.1] — 2026-06-17 — Sincronização documental e preparação da Sprint 9
 
 ### Alterado

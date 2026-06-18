@@ -253,7 +253,7 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
       // Gerencia o fluxo de transições entre testes
       if (currentTest === "DISC" && currentPhase === "natural") {
         triggerCerebralPause(
-          "Perfil Natural Concluído. Agora, avaliaremos o seu Perfil Adaptado (Ambiente Corporativo).",
+          "Perfil essencial concluído. Agora, vamos observar como seu modo de agir pode mudar em contextos do dia a dia.",
           "DISC",
           "adaptado"
         );
@@ -336,7 +336,7 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
             </li>
             <li className="flex gap-3">
               <span className="w-5 h-5 flex items-center justify-center bg-brand-500/30 text-brand-300 rounded-full text-xs font-bold shrink-0 mt-0.5">2</span>
-              <span><strong>Espontaneidade</strong>: Não tente adivinhar respostas "corretas" ou corporativamente esperadas. O motor do backend possui sensores telemétricos e algoritmos de detecção de coerência para calibrar o perfil.</span>
+              <span><strong>Espontaneidade</strong>: Não tente adivinhar respostas "certas". Responda como você se percebe na maior parte do tempo.</span>
             </li>
             <li className="flex gap-3">
               <span className="w-5 h-5 flex items-center justify-center bg-brand-500/30 text-brand-300 rounded-full text-xs font-bold shrink-0 mt-0.5">3</span>
@@ -406,7 +406,7 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
           <p>👉 Responda de forma rápida e espontânea. Indique nas colunas qual adjetivo **MAIS** e qual **MENOS** descreve sua essência comportamental (natural).</p>
         )}
         {currentTest === "DISC" && currentPhase === "adaptado" && (
-          <p>💼 Ancoragem Corporativa: Pense no seu cargo e ambiente de trabalho atual. Escolha qual adjetivo representa **MAIS** e qual **MENOS** a forma como você é obrigado a se comportar.</p>
+          <p>💼 Contexto do dia a dia: pense nas situações em que você precisa se adaptar a expectativas externas. Escolha qual adjetivo representa **MAIS** e qual **MENOS** esse modo de agir.</p>
         )}
         {currentTest === "SPRANGER" && (
           <p>🎯 Avalie a afirmação abaixo de acordo com sua prioridade de valores. Escala de 1 a 6 (1 = Discordo Totalmente, 6 = Concordo Totalmente).</p>

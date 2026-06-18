@@ -1,6 +1,6 @@
-# Sistema Psicométrico — Antigravity Psico
+# Antigravity Psico — Autoconhecimento
 
-Plataforma de avaliação psicométrica baseada em Big Five (IPIP-50) com derivação de Jung contínuo, DISC e Spranger. Backend FastAPI + Frontend React, deployado na Vercel com banco Supabase Postgres.
+Aplicativo pessoal de autoconhecimento baseado em Big Five (IPIP-50), com leituras derivadas/exploratórias de Jung contínuo, DISC e Spranger. Backend FastAPI + Frontend React, deployado na Vercel com banco Supabase Postgres.
 
 ---
 
@@ -12,7 +12,7 @@ Plataforma de avaliação psicométrica baseada em Big Five (IPIP-50) com deriva
 | Frontend | React, TypeScript, Vite, Tailwind CSS |
 | Banco | Supabase Postgres (produção) / SQLite (dev local) |
 | Deploy | Vercel — Serverless Functions via proxy ASGI em `api/index.py` |
-| IA | Google Gemini 1.5 Flash (laudos narrativos) com fallback local |
+| IA | Google Gemini 1.5 Flash (relatórios narrativos) com fallback local |
 | Testes | pytest, httpx, FastAPI TestClient |
 
 ---
@@ -105,7 +105,7 @@ Em produção:
 - `ALLOWED_ORIGINS` é obrigatório; CORS wildcard só é permitido fora de produção.
 - `ENABLE_DEMO_SEED` não deve ficar ativo.
 - `AUTO_CREATE_SCHEMA` não deve substituir migrações em produção.
-- Cadastro com empresa não promove usuário para RH automaticamente; RH exige aprovação/flag administrativa futura.
+- Campo opcional de perfil não muda permissões automaticamente; área administrativa exige aprovação/flag futura.
 
 Cuidados mínimos mantidos nesta sprint:
 
@@ -166,10 +166,10 @@ O deploy é automático via push na branch `main`.
 │   └── index.py              # Proxy ASGI (Vercel entrypoint)
 ├── backend/
 │   ├── app/
-│   │   ├── main.py           # FastAPI: auth, questionário, resultados, RH, admin
+│   │   ├── main.py           # FastAPI: auth, questionário, resultados e área administrativa
 │   │   ├── science_engine.py # Big Five, Jung, DISC, Spranger, Ômega, IC, qualidade
 │   │   ├── math_engine.py    # Percentil, distâncias, detecção de fricções
-│   │   ├── gemini_service.py # Laudo narrativo + fallback local
+│   │   ├── gemini_service.py # Relatório narrativo + fallback local
 │   │   ├── database.py       # Engine SQLAlchemy (Postgres / SQLite)
 │   │   ├── models.py         # ORM models (Tenant, User, QuestionnaireItem, ...)
 │   │   ├── config.py         # Settings (DATABASE_URL, SECRET_KEY, NORM_MODE, ...)

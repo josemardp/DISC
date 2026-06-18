@@ -40,7 +40,7 @@ Escopo:
 7. `/questionnaire/submit` valida payload com rigor.
 8. Producao exige `SECRET_KEY` segura e `ALLOWED_ORIGINS`.
 9. CORS wildcard, seed demo e schema automatico ficam bloqueados em producao.
-10. Cadastro com empresa nao autoeleva usuario para RH.
+10. Campo opcional de perfil nao autoeleva usuario para area administrativa.
 11. Historico Big Five permanece append-only.
 12. SQLAlchemy usa `DeclarativeBase`.
 13. `Dashboards` e `TestRoom` usam `React.lazy()`.
