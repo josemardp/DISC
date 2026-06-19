@@ -15,7 +15,7 @@
 | Questionário Big Five | ✅ Funcionando | `/questionnaire/items?test_type=BIGFIVE` retorna 53 itens (50 IPIP + 3 atenção) |
 | GEMINI_API_KEY | ✅ Setada no Vercel | salva em `Drive/segredos/disc-env.txt` |
 | DATABASE_URL | ✅ Setada no Vercel | salva em `Drive/segredos/disc-env.txt` |
-| Migração `personal_reflections` | ⚠️ Pronta, não executada nesta sprint | aplicar manualmente conforme `backend/schema/README.md` antes de publicar a API |
+| Migração `personal_reflections` | ✅ Aplicada e validada em 2026-06-19 | preflight, backup, schema, permissões e QA funcional concluídos |
 
 ---
 

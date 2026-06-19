@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.8.3] — 2026-06-19 — Migração aplicada no Supabase
+
+- Backup schema-only criado fora do repositório antes do DDL.
+- Preflight confirmou ausência de `public.personal_reflections`.
+- Migração aplicada e validada: colunas, constraints, índices e permissões corretos.
+- `anon` e `authenticated` permanecem sem privilégios diretos; RLS continua desabilitado conforme a arquitetura server-side.
+- QA funcional no Supabase passou para primeira aplicação, relatório, reteste, histórico e isolamento das reflexões atuais.
+- Usuário e registros temporários do QA foram removidos ao final.
+
 ## [1.8.2] — 2026-06-19 — Preflight seguro da migração
 
 - Guia agora verifica previamente se `public.personal_reflections` já existe.

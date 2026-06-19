@@ -1,6 +1,6 @@
 # Contexto DISC - proximo chat
 
-> Retomada oficial apos a Sprint 15, que revisou e documentou a migracao Supabase de `personal_reflections` sem executa-la em producao.
+> Retomada oficial apos a aplicacao e validacao da migracao Supabase de `personal_reflections` em 2026-06-19.
 > Projeto atual: aplicativo pessoal de autoconhecimento. Nao e produto comercial, nao e RH em producao, nao e diagnostico, nao e laudo psicologico e nao e avaliacao psicologica profissional.
 
 ---
@@ -20,7 +20,7 @@ Frontend:
 - QA desktop/mobile/print concluido na Sprint 13, com polimento leve do CSS de impressao.
 - F9 concluida: duas reflexoes opcionais por aplicacao aparecem no Dashboard e no relatorio imprimivel.
 - Persistencia em `personal_reflections`, vinculada a `psychometric_results`; SQL de producao em `backend/schema/2026-06-19_personal_reflections.sql`.
-- Guia de aplicacao em `backend/schema/README.md`; migracao nao executada no Supabase nesta sprint.
+- Guia e registro de aplicacao em `backend/schema/README.md`; migracao aplicada com backup, preflight e verificacao pos-migracao.
 - RLS nao habilitado porque a arquitetura usa JWT proprio e acesso server-side, sem Supabase Auth; SQL revoga `anon`/`authenticated`; revisar policies se houver acesso direto futuro.
 
 Psicometria:
@@ -59,6 +59,7 @@ Escopo:
 18. Sprint 13 fez QA mobile/desktop/print e reduziu risco de cortes ruins no relatorio imprimivel.
 19. Sprint 14 adicionou perguntas reflexivas qualitativas sem alterar Big Five, DISC, Jung, Spranger, normas, percentis ou historico.
 20. Sprint 15 alinhou SQL e ORM, adicionou `ON DELETE CASCADE`, checks locais e guia seguro de aplicacao no Supabase.
+21. A migracao `personal_reflections` foi aplicada e validada no Supabase; QA de primeira aplicacao/reteste passou e os dados temporarios foram removidos.
 
 Nao refazer essas correcoes sem um bug novo confirmado.
 

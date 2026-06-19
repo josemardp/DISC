@@ -1,5 +1,18 @@
 # Relatorio de QA - Evolucao Cientifica
 
+## Aplicacao da migracao Supabase - 2026-06-19
+
+- Alvo confirmado por arquivo externo documentado, host Supabase redigido, porta 6543 e assinatura estrutural do app com 53 itens Big Five.
+- Backup schema-only criado fora do repositorio antes do DDL; nenhuma linha de dados foi copiada.
+- Preflight `to_regclass('public.personal_reflections')` retornou `null`.
+- Primeira tentativa de DDL foi bloqueada por sessao read-only e nao deixou tabela parcial; nova verificacao confirmou tabela ausente.
+- Migracao executada em sessao read-write controlada e concluida com sucesso.
+- Pos-migracao: 6 colunas corretas, PK, 2 FKs com cascade, unicidade de `result_id`, 2 checks de tamanho e 3 indices.
+- RLS permaneceu desabilitado; `anon`/`authenticated` sem privilegios na tabela e na sequence; backend com acesso preservado.
+- QA funcional: primeira aplicacao, Dashboard, relatorio imprimivel, reteste, duas aplicacoes no historico e apenas reflexoes atuais visiveis.
+- Console sem erros/warnings relevantes. Usuario temporario e todos os dados relacionados removidos ao final.
+- Backend local: 33/33 testes passando. Frontend: build OK; aviso conhecido do chunk `charts` em 557,81 kB.
+
 ## Atualizacao QA - Sprint 15 - 2026-06-19
 
 - Preflight adicionado ao guia: a migracao so deve prosseguir diretamente quando `to_regclass('public.personal_reflections')` retornar `null`.

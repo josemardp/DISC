@@ -2,6 +2,10 @@
 
 O projeto ainda não usa Alembic. Os scripts desta pasta são mudanças de schema explícitas, revisadas e aplicadas manualmente pelo SQL Editor do Supabase.
 
+## Estado da migração `personal_reflections`
+
+Aplicada no Supabase em 2026-06-19, após backup schema-only externo e preflight com resultado `null`. A verificação pós-migração confirmou colunas, PK, FKs com `ON DELETE CASCADE`, unicidade de `result_id`, checks de 1000 caracteres, índices e ausência de privilégios diretos para `anon`/`authenticated`. O QA funcional de primeira aplicação e reteste passou, e os dados temporários foram removidos.
+
 ## Como aplicar a migração `personal_reflections`
 
 Pré-condições:
