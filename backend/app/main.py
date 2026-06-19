@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 import csv
 import hashlib
 import io
@@ -19,7 +19,7 @@ from jose import JWTError, jwt
 
 from backend.app.config import settings
 from backend.app.database import engine, Base, get_db
-from backend.app.models import Tenant, User, QuestionnaireItem, Response, TelemetrySession, PsychometricResult, Report, Job
+from backend.app.models import Tenant, User, QuestionnaireItem, Response, TelemetrySession, PsychometricResult, PersonalReflection, Report, Job
 from backend.app.math_engine import (
     raw_to_percentile, calculate_euclidean_distance, calculate_cosine_similarity,
     detect_frictions
@@ -201,6 +201,12 @@ class AnswerItem(BaseModel):
     block_number: int
     value: int  # DISC: +1 (Mais), -1 (Menos). Likert: 1-6.
 
+class ReflectionSubmission(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    self_understanding_goal: Optional[str] = Field(default=None, max_length=1000)
+    current_pattern_to_observe: Optional[str] = Field(default=None, max_length=1000)
+
 class TestSubmission(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -212,6 +218,7 @@ class TestSubmission(BaseModel):
     irt_avg: float
     rvi_count: int
     raw_telemetry: Optional[List[Dict[str, Any]]] = None
+    reflections: Optional[ReflectionSubmission] = None
 
 class JobCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -373,6 +380,8 @@ def submit_responses(submission: TestSubmission, current_user: User = Depends(ge
     submission.test_type = submission.test_type.upper()
     submission.phase = submission.phase.lower()
     _validate_submission_payload(submission, db)
+    if submission.reflections is not None and submission.test_type != "BIGFIVE":
+        raise HTTPException(status_code=422, detail="Reflexões pessoais só podem acompanhar uma aplicação Big Five.")
     # 1. Apaga respostas anteriores do mesmo teste/fase para evitar duplicados
     db.query(Response).filter(
         Response.respondent_id == current_user.id,
@@ -427,7 +436,18 @@ def submit_responses(submission: TestSubmission, current_user: User = Depends(ge
     db.commit()
 
     if submission.test_type == "BIGFIVE":
-        process_psychometric_results(current_user.id, db)
+        result = process_psychometric_results(current_user.id, db)
+        if submission.reflections is not None:
+            self_goal = (submission.reflections.self_understanding_goal or "").strip() or None
+            pattern = (submission.reflections.current_pattern_to_observe or "").strip() or None
+            if self_goal or pattern:
+                db.add(PersonalReflection(
+                    respondent_id=current_user.id,
+                    result_id=result.id,
+                    self_understanding_goal=self_goal,
+                    current_pattern_to_observe=pattern
+                ))
+                db.commit()
         return {"status": "success", "all_completed": True}
 
     # 4. Verifica se completou TODOS os testes requeridos para processar o perfil consolidado
@@ -779,6 +799,16 @@ def process_psychometric_results(user_id: int, db: Session):
 # ROTAS DE RESULTADOS E INTELIGÊNCIA ARTIFICIAL
 # ==============================================================================
 
+def _reflection_payload(result_id: int, db: Session) -> Dict[str, Optional[str]]:
+    reflection = db.query(PersonalReflection).filter(
+        PersonalReflection.result_id == result_id
+    ).first()
+    return {
+        "self_understanding_goal": reflection.self_understanding_goal if reflection else None,
+        "current_pattern_to_observe": reflection.current_pattern_to_observe if reflection else None
+    }
+
+
 @app.get("/results/me")
 def get_my_results(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     result = db.query(PsychometricResult).filter(
@@ -884,6 +914,7 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
                 "norm_label": bigfive_dict["norm_label"],
             },
             "history": history_entries,
+            "reflections": _reflection_payload(result.id, db),
             "notice": NON_DIAGNOSTIC_NOTICE
         }
         
@@ -909,6 +940,7 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
             "dominant_type": result.jung_dominant_type,
             "scores": result.jung_scores
         },
+        "reflections": _reflection_payload(result.id, db),
         "frictions": result.frictions
     }
 

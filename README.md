@@ -66,7 +66,7 @@ npm run dev
 
 ```powershell
 pytest backend/app/ -v
-# Resultado atual: 30 passed, 0 failed, 0 warnings
+# Resultado atual: 32 passed, 0 failed, 0 warnings
 ```
 
 Build frontend:
@@ -77,10 +77,11 @@ npm run build
 # Resultado atual: build OK; chunk grande restante isolado em Recharts/Dashboard.
 ```
 
-> Estado estável da sprint técnica: commit `7bc0094` (`fix(psychometrics): corrige normas e resultados derivados`). Backend com 30 testes passando; frontend com build OK. Pendência conhecida: chunk `charts`/Recharts >500 kB, isolado no Dashboard.
+> Estado estável da sprint técnica: backend com 32 testes passando; frontend com build OK. Pendência conhecida: chunk `charts`/Recharts >500 kB, isolado no Dashboard.
 > Sprint 11 estável: histórico visual entre aplicações Big Five implementado sem alteração no motor psicométrico.
 > Sprint 12 estável: relatório pessoal imprimível/salvável em PDF pelo navegador, sem dependências novas e sem alteração no motor psicométrico.
 > Sprint 13 estável: QA mobile/desktop/print concluído; CSS de impressão polido sem alteração no motor psicométrico.
+> Sprint 14 estável: F9 adiciona duas perguntas reflexivas opcionais, armazenadas por aplicação e separadas do motor psicométrico.
 
 ---
 
@@ -122,7 +123,9 @@ O histórico visual entre aplicações mostra:
 - comparação simples com a aplicação anterior usando resultados brutos;
 - aviso de que pequenas mudanças podem refletir contexto, cansaço, humor ou forma de responder.
 
-A tela também permite baixar/salvar um relatório pessoal em PDF pelo navegador. O relatório inclui capa, data, aviso de não diagnóstico/laudo, Big Five medido, pontos fortes prováveis, pontos de atenção, sugestões práticas, leituras derivadas e histórico/comparação quando houver reteste.
+A tela também permite baixar/salvar um relatório pessoal em PDF pelo navegador. O relatório inclui capa, data, aviso de não diagnóstico/laudo, Big Five medido, pontos fortes prováveis, pontos de atenção, sugestões práticas, leituras derivadas, reflexões pessoais e histórico/comparação quando houver reteste.
+
+As respostas reflexivas são opcionais, têm até 1000 caracteres por campo e ficam em `personal_reflections`, vinculadas ao resultado da aplicação. Elas não entram no `science_engine` e não alteram Big Five, DISC, Jung, Spranger, normas, percentis ou histórico.
 
 ## Produção e cuidados mínimos
 
@@ -155,6 +158,7 @@ LGPD completa fica como pendência futura caso o aplicativo pessoal evolua para 
 1. Crie um projeto em [supabase.com](https://supabase.com)
 2. Em *Database → Extensions*, ative **`vector` (pgvector)** — obrigatório para a F9 (camada de autoconhecimento)
 3. Em *Project Settings → Database*, copie a **connection string do pooler Transaction** (port 6543)
+4. Antes de publicar a Sprint 14, execute `backend/schema/2026-06-19_personal_reflections.sql` no SQL Editor do Supabase
 
 ### 2. Vercel
 

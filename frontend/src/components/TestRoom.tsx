@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { telemetryTracker } from "../utils/telemetry";
 import { draftStorage } from "../utils/indexedDB";
-import { Brain, ArrowRight, Play, CheckCircle2, ShieldAlert } from "lucide-react";
+import { Brain, ArrowRight, Play, CheckCircle2, ShieldAlert, BookOpen } from "lucide-react";
 
 interface Item {
   id: number;
@@ -32,6 +32,12 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
   const [started, setStarted] = useState(false);
+  const [showReflection, setShowReflection] = useState(false);
+  const [pendingAnswers, setPendingAnswers] = useState<any[]>([]);
+  const [reflections, setReflections] = useState({
+    self_understanding_goal: "",
+    current_pattern_to_observe: ""
+  });
   
   // Respostas locais do bloco ativo
   // DISC: { mostId: number | null, leastId: number | null }
@@ -215,12 +221,17 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
       setCurrentBlockIndex(nextIdx);
       telemetryTracker.startBlock(blocks[nextIdx].block_number);
     } else {
-      // Fim do teste ativo! Submete ao Backend
-      await submitCurrentPhase(newAnswers);
+      if (currentTest === "BIGFIVE") {
+        setPendingAnswers(newAnswers);
+        setShowReflection(true);
+      } else {
+        // Fim do teste ativo! Submete ao Backend
+        await submitCurrentPhase(newAnswers);
+      }
     }
   };
 
-  const submitCurrentPhase = async (answersToSend: any[]) => {
+  const submitCurrentPhase = async (answersToSend: any[], personalReflections?: typeof reflections) => {
     setLoading(true);
     const summary = telemetryTracker.getSummary();
     
@@ -231,7 +242,8 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
       ttfc_avg: summary.ttfcAvg,
       irt_avg: summary.irtAvg,
       rvi_count: summary.rviCount,
-      raw_telemetry: summary.raw
+      raw_telemetry: summary.raw,
+      ...(currentTest === "BIGFIVE" && personalReflections ? { reflections: personalReflections } : {})
     };
 
     try {
@@ -351,6 +363,75 @@ export default function TestRoom({ userId, token, apiBaseUrl, onTestComplete }: 
             Iniciar Avaliação Psicométrica
             <ArrowRight className="w-5 h-5" />
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (showReflection) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
+        <div className="glass-premium p-6 sm:p-8 rounded-3xl flex flex-col gap-6">
+          <div className="flex items-start gap-3">
+            <div className="p-3 bg-brand-500/20 rounded-2xl text-brand-300 shrink-0">
+              <BookOpen className="w-7 h-7" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white">Reflexão pessoal</h2>
+              <p className="mt-1 text-sm leading-relaxed text-gray-400">
+                Estas respostas são pessoais e não alteram sua pontuação. Elas ajudam você a contextualizar sua devolutiva e acompanhar sua jornada de autoconhecimento.
+              </p>
+            </div>
+          </div>
+
+          {error && (
+            <div className="p-4 bg-red-900/20 border border-red-500/30 rounded-2xl text-red-200 text-sm">
+              {error}
+            </div>
+          )}
+
+          <label className="flex flex-col gap-2 text-sm text-gray-200">
+            <span className="font-semibold">O que você espera compreender melhor sobre si mesmo com este teste?</span>
+            <textarea
+              value={reflections.self_understanding_goal}
+              onChange={(event) => setReflections(prev => ({ ...prev, self_understanding_goal: event.target.value }))}
+              maxLength={1000}
+              rows={5}
+              className="w-full resize-y rounded-2xl border border-white/10 bg-white/5 p-4 text-sm leading-relaxed text-white outline-none transition focus:border-brand-400/60 focus:ring-2 focus:ring-brand-500/20"
+              placeholder="Escreva se fizer sentido para você..."
+            />
+            <span className="text-right text-xs text-gray-500">{reflections.self_understanding_goal.length}/1000</span>
+          </label>
+
+          <label className="flex flex-col gap-2 text-sm text-gray-200">
+            <span className="font-semibold">Ao olhar para sua rotina atual, qual comportamento, padrão ou dificuldade você gostaria de observar com mais atenção nas próximas semanas?</span>
+            <textarea
+              value={reflections.current_pattern_to_observe}
+              onChange={(event) => setReflections(prev => ({ ...prev, current_pattern_to_observe: event.target.value }))}
+              maxLength={1000}
+              rows={5}
+              className="w-full resize-y rounded-2xl border border-white/10 bg-white/5 p-4 text-sm leading-relaxed text-white outline-none transition focus:border-brand-400/60 focus:ring-2 focus:ring-brand-500/20"
+              placeholder="Registre um contexto pessoal que queira acompanhar..."
+            />
+            <span className="text-right text-xs text-gray-500">{reflections.current_pattern_to_observe.length}/1000</span>
+          </label>
+
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+            <button
+              onClick={() => submitCurrentPhase(pendingAnswers, { self_understanding_goal: "", current_pattern_to_observe: "" })}
+              disabled={loading}
+              className="px-5 py-3 text-sm font-medium text-gray-300 hover:text-white disabled:opacity-50"
+            >
+              Pular por agora
+            </button>
+            <button
+              onClick={() => submitCurrentPhase(pendingAnswers, reflections)}
+              disabled={loading}
+              className="px-6 py-3 bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-semibold rounded-2xl transition disabled:opacity-50"
+            >
+              {loading ? "Salvando..." : "Salvar reflexões e ver resultado"}
+            </button>
+          </div>
         </div>
       </div>
     );

@@ -1,6 +1,6 @@
 # STATUS — Fotografia do estado atual
 
-> Última atualização: 2026-06-18 (Sprint 13: polimento mobile/print/performance leve; sprint técnica estável; 30/30 verdes).
+> Última atualização: 2026-06-19 (Sprint 14: perguntas reflexivas F9; 32/32 verdes).
 > Para o roadmap e próximas fases, ver [ROADMAP.md](ROADMAP.md).
 
 ---
@@ -22,7 +22,7 @@
 
 | Item | Estado | Detalhe |
 |---|---|---|
-| Total de testes | ✅ **30/30 passando** | baseline intra, public norm, API hardening e segurança |
+| Total de testes | ✅ **32/32 passando** | baseline intra, public norm, API hardening, reflexões F9 e segurança |
 | Tempo de execução | ✅ ~2.7s | `pytest backend/app/ -v` |
 | test_bigfive_submit_to_results_e2e | ✅ Passando | usa `with TestClient(app) as client:` |
 | test_delete_consolidado_preserva_bigfive | ✅ Passando | prova a invariante de preservação Big Five (DELETE IS NULL não remove histórico) |
@@ -50,6 +50,7 @@
 | Histórico visual entre aplicações | `main.py`, `Dashboards.tsx` | `/results/me` retorna `history`; UI lista aplicações e compara a mais recente com a anterior |
 | Relatório pessoal em PDF | `Dashboards.tsx`, `index.css` | versão imprimível/salvável pelo navegador; usa dados já carregados no Dashboard |
 | Polimento mobile/print | `index.css` | QA desktop/mobile; ajuste de impressão para reduzir espaço da capa e evitar cortes ruins de cards |
+| Perguntas reflexivas F9 | `TestRoom.tsx`, `models.py`, `main.py`, `Dashboards.tsx` | duas respostas opcionais por aplicação; fora do motor; Dashboard e PDF |
 | Invariante de preservação Big Five | `main.py` | DELETE consolidado restrito a `bigfive_percentis IS NULL`; ADR-11; teste dedicado |
 | Ômega de McDonald | `science_engine.py` | `mcdonald_omega()` — via PCA unifatorial aproximado |
 | SEM e IC95% | `science_engine.py` | `standard_error_of_measurement()` + `confidence_interval()` |
@@ -125,7 +126,7 @@ npm run dev
 ```powershell
 # Na raiz do projeto 1-disc-app:
 pytest backend/app/ -v
-# Resultado esperado: 30 passed, 0 failed, 0 warnings
+# Resultado esperado: 32 passed, 0 failed, 0 warnings
 ```
 
 **Nota:** a fixture autouse em `backend/app/conftest.py` garante criação de tabelas e seed antes de qualquer teste. O banco de teste usa SQLite local (`psicometrico.db` ou o DATABASE_URL do `.env`).
@@ -177,17 +178,13 @@ pytest backend/app/ -v
 
 ## Próxima fase
 
-**Sprint 9 — Sincronização documental, QA manual e preparação da experiência pessoal.**
+**Próxima evolução recomendada — edição posterior das reflexões.**
 
 Ordem recomendada:
 
-1. Sincronização documental pós-commit `7bc0094`.
-2. QA manual completo da interface.
-3. Melhorar devolutiva textual/humana.
-4. Histórico visual entre aplicações.
-5. Exportação de relatório em PDF.
-6. Validação empírica pessoal T1/T2.
-7. F9: camada de autoconhecimento com perguntas/reflexões.
+1. Permitir editar as reflexões da aplicação atual sem refazer o teste.
+2. Manter versionamento por aplicação e sem qualquer efeito sobre pontuação.
+3. Prosseguir com validação empírica pessoal T1/T2 quando houver dados reais suficientes.
 
 **Não priorizar agora:** TIRT/F8, RH corporativo, dashboard de equipe, ranking de pessoas, seleção profissional, LGPD completa, produto comercial, alteração profunda do motor, promessa CFP/SATEPSI, laudo psicológico ou diagnóstico.
 

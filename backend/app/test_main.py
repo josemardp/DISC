@@ -284,6 +284,58 @@ def _submit_payload(answers):
     }
 
 
+def test_reflections_are_optional_returned_and_do_not_change_scores():
+    with TestClient(app) as client:
+        with_reflections = _auth_headers(client)
+        without_reflections = _auth_headers(client)
+        answers_a = _valid_bigfive_answers(client, with_reflections)
+        answers_b = _valid_bigfive_answers(client, without_reflections)
+
+        payload_a = _submit_payload(answers_a)
+        payload_a["reflections"] = {
+            "self_understanding_goal": "Compreender melhor como organizo minhas prioridades.",
+            "current_pattern_to_observe": "Observar quando adio conversas importantes."
+        }
+        response_a = client.post("/questionnaire/submit", json=payload_a, headers=with_reflections)
+        response_b = client.post(
+            "/questionnaire/submit",
+            json=_submit_payload(answers_b),
+            headers=without_reflections
+        )
+        assert response_a.status_code == 200
+        assert response_b.status_code == 200
+
+        result_a = client.get("/results/me", headers=with_reflections).json()
+        result_b = client.get("/results/me", headers=without_reflections).json()
+
+        assert result_a["reflections"] == payload_a["reflections"]
+        assert result_b["reflections"] == {
+            "self_understanding_goal": None,
+            "current_pattern_to_observe": None
+        }
+        assert result_a["bigfive"] == result_b["bigfive"]
+        assert result_a["jung_continuo"] == result_b["jung_continuo"]
+        assert result_a["disc"] == result_b["disc"]
+        assert result_a["spranger"] == result_b["spranger"]
+
+
+def test_reflections_enforce_length_and_forbid_extra_fields():
+    with TestClient(app) as client:
+        headers = _auth_headers(client)
+        answers = _valid_bigfive_answers(client, headers)
+
+        too_long = _submit_payload(answers)
+        too_long["reflections"] = {"self_understanding_goal": "x" * 1001}
+        assert client.post("/questionnaire/submit", json=too_long, headers=headers).status_code == 422
+
+        unexpected = _submit_payload(answers)
+        unexpected["reflections"] = {
+            "self_understanding_goal": "Resposta válida",
+            "clinical_label": "campo indevido"
+        }
+        assert client.post("/questionnaire/submit", json=unexpected, headers=headers).status_code == 422
+
+
 def test_questionnaire_submit_rejects_missing_duplicate_unknown_and_bad_value():
     with TestClient(app) as client:
         headers = _auth_headers(client)

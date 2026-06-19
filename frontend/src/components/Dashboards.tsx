@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import {
   User, Users, Shield, Briefcase, Plus, TrendingUp, AlertTriangle,
-  FileText, Award, Layers, Zap, Info, HelpCircle, RotateCcw, Printer
+  FileText, Award, Layers, Zap, Info, HelpCircle, RotateCcw, Printer, BookOpen
 } from "lucide-react";
 
 interface DashboardsProps {
@@ -692,6 +692,36 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                     )}
                     <div className="mt-3 rounded-xl border border-amber-400/20 bg-amber-400/10 p-3 text-[11px] leading-relaxed text-amber-100">
                       Mudanças pequenas podem refletir contexto, cansaço, humor ou forma de responder. Use como pista de reflexão, não como conclusão definitiva.
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-6 rounded-2xl border border-violet-400/20 bg-violet-400/5 p-4 sm:p-5">
+                  <div className="flex items-start gap-3">
+                    <BookOpen className="mt-0.5 h-5 w-5 shrink-0 text-violet-300" />
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-bold text-white">Minhas reflexões</h4>
+                      <p className="mt-1 text-xs leading-relaxed text-gray-400">
+                        Contexto pessoal escrito por você. Não altera pontuação e não é diagnóstico.
+                      </p>
+                      {selfData.reflections?.self_understanding_goal || selfData.reflections?.current_pattern_to_observe ? (
+                        <dl className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                          {selfData.reflections?.self_understanding_goal && (
+                            <div className="min-w-0 rounded-xl border border-white/5 bg-white/[0.03] p-3">
+                              <dt className="text-xs font-semibold text-violet-200">O que eu queria compreender melhor</dt>
+                              <dd className="mt-2 whitespace-pre-wrap break-words text-xs leading-relaxed text-gray-300">{selfData.reflections.self_understanding_goal}</dd>
+                            </div>
+                          )}
+                          {selfData.reflections?.current_pattern_to_observe && (
+                            <div className="min-w-0 rounded-xl border border-white/5 bg-white/[0.03] p-3">
+                              <dt className="text-xs font-semibold text-violet-200">Padrão que quero observar</dt>
+                              <dd className="mt-2 whitespace-pre-wrap break-words text-xs leading-relaxed text-gray-300">{selfData.reflections.current_pattern_to_observe}</dd>
+                            </div>
+                          )}
+                        </dl>
+                      ) : (
+                        <p className="mt-4 text-xs leading-relaxed text-gray-300">Você ainda não registrou reflexões pessoais para esta aplicação.</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1442,7 +1472,30 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
           </section>
 
           <section className="print-section">
-            <h2>9. Limites da avaliação</h2>
+            <h2>9. Reflexões pessoais</h2>
+            <p>Estas respostas foram escritas por você e não fazem parte da pontuação psicométrica.</p>
+            {selfData.reflections?.self_understanding_goal || selfData.reflections?.current_pattern_to_observe ? (
+              <dl className="print-reflections">
+                {selfData.reflections?.self_understanding_goal && (
+                  <div>
+                    <dt>O que eu queria compreender melhor</dt>
+                    <dd>{selfData.reflections.self_understanding_goal}</dd>
+                  </div>
+                )}
+                {selfData.reflections?.current_pattern_to_observe && (
+                  <div>
+                    <dt>Padrão que quero observar</dt>
+                    <dd>{selfData.reflections.current_pattern_to_observe}</dd>
+                  </div>
+                )}
+              </dl>
+            ) : (
+              <p className="print-note">Nenhuma reflexão pessoal foi registrada nesta aplicação.</p>
+            )}
+          </section>
+
+          <section className="print-section">
+            <h2>10. Limites da avaliação</h2>
             <p>
               Este material não é diagnóstico, laudo psicológico, avaliação psicológica profissional, ferramenta de seleção ou resultado definitivo sobre personalidade.
             </p>

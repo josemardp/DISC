@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0] — 2026-06-19 — Perguntas reflexivas F9
+
+- Adicionada etapa opcional “Reflexão pessoal” após os 53 itens Big Five, com duas perguntas abertas e limite de 1000 caracteres por resposta.
+- Respostas armazenadas em `personal_reflections`, vinculadas ao `PsychometricResult` da aplicação e separadas das respostas psicométricas.
+- `/results/me` passa a retornar `reflections` para o resultado atual.
+- Dashboard ganhou o card “Minhas reflexões”; o relatório imprimível/PDF ganhou seção própria com aviso de que o conteúdo não faz parte da pontuação.
+- Incluído SQL idempotente para criação da tabela no Supabase, sem introduzir Alembic.
+- Testes provam que reflexões opcionais não alteram Big Five, DISC, Jung ou Spranger e validam limite/fields extras.
+- QA local completo: primeira aplicação, reteste, histórico, relatório, console e viewport ~390 px.
+- Motor psicométrico, fórmulas, normas, percentis, autenticação e segurança não foram alterados.
+- Validação final: **32/32 testes backend** e **build frontend OK**; aviso conhecido do chunk `charts` em 557,81 kB permanece.
+
 Formato: [Versão Semântica](https://semver.org/) — `[MAJOR.MINOR.PATCH] — data — título`
 
 ---

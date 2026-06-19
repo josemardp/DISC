@@ -1,6 +1,6 @@
 # Contexto DISC - proximo chat
 
-> Retomada oficial pos-commits `7bc0094` (`fix(psychometrics): corrige normas e resultados derivados`), `76373d4` (`ux(copy): ajusta linguagem para app pessoal`), Sprint 10 de devolutiva pessoal, Sprint 11 de historico visual, Sprint 12 de relatorio pessoal em PDF e Sprint 13 de polimento mobile/print.
+> Retomada oficial apos a Sprint 14, que concluiu a F9 com perguntas reflexivas opcionais separadas do motor psicometrico.
 > Projeto atual: aplicativo pessoal de autoconhecimento. Nao e produto comercial, nao e RH em producao, nao e diagnostico, nao e laudo psicologico e nao e avaliacao psicologica profissional.
 
 ---
@@ -8,7 +8,7 @@
 ## Estado atual
 
 Backend:
-- `python -m pytest backend/app/ -v`: 30 testes passando.
+- `python -m pytest backend/app/ -v`: 32 testes passando.
 - Warnings documentados no pytest: 0.
 
 Frontend:
@@ -18,6 +18,8 @@ Frontend:
 - Historico visual entre aplicacoes Big Five disponivel na tela de resultados.
 - Relatorio pessoal imprimivel/salvavel em PDF pelo navegador, sem dependencia nova.
 - QA desktop/mobile/print concluido na Sprint 13, com polimento leve do CSS de impressao.
+- F9 concluida: duas reflexoes opcionais por aplicacao aparecem no Dashboard e no relatorio imprimivel.
+- Persistencia em `personal_reflections`, vinculada a `psychometric_results`; SQL de producao em `backend/schema/2026-06-19_personal_reflections.sql`.
 
 Psicometria:
 - Big Five/IPIP-50 e o nucleo medido diretamente.
@@ -53,6 +55,7 @@ Escopo:
 16. Sprint 11 adicionou historico visual entre aplicacoes, com lista cronologica e comparacao contra a aplicacao anterior.
 17. Sprint 12 adicionou relatorio pessoal em PDF via versao imprimivel, sem endpoint novo e sem dependencia nova.
 18. Sprint 13 fez QA mobile/desktop/print e reduziu risco de cortes ruins no relatorio imprimivel.
+19. Sprint 14 adicionou perguntas reflexivas qualitativas sem alterar Big Five, DISC, Jung, Spranger, normas, percentis ou historico.
 
 Nao refazer essas correcoes sem um bug novo confirmado.
 
@@ -60,17 +63,16 @@ Nao refazer essas correcoes sem um bug novo confirmado.
 
 ## Proxima sprint recomendada
 
-**Sprint 14 - F9 com perguntas reflexivas de autoconhecimento**
+**Proxima evolucao - edicao posterior das reflexoes**
 
 Ordem recomendada:
 
-1. **14.1 - Desenhar perguntas reflexivas sem entrar no motor de pontuacao**
-2. **14.2 - Guardar respostas abertas separadas dos escores psicometricos**
-3. **14.3 - Usar respostas abertas apenas na devolutiva textual/reflexiva**
-4. **14.4 - QA etico para evitar diagnostico, laudo ou aconselhamento clinico**
-5. **14.5 - Validacao empirica pessoal T1/T2**
+1. Permitir editar reflexoes da aplicacao atual sem refazer o teste.
+2. Preservar a vinculacao por aplicacao e o limite de 1000 caracteres.
+3. Manter as reflexoes fora do motor e de qualquer inferencia clinica.
+4. Validacao empirica pessoal T1/T2 quando houver dados reais suficientes.
 
-Recomendacao central: nao mexer profundamente no motor psicometrico. F9 deve ser camada reflexiva, separada dos escores.
+Recomendacao central: manter F9 como camada reflexiva escrita pelo usuario, separada dos escores.
 
 ---
 

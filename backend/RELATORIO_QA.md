@@ -1,5 +1,19 @@
 # Relatorio de QA - Evolucao Cientifica
 
+## Atualizacao QA - Sprint 14 - 2026-06-19
+
+- Fluxo local completo executado com usuario temporario: cadastro, 53 itens Big Five, duas reflexoes, Dashboard e relatorio imprimivel.
+- Reteste executado com novas respostas reflexivas; historico passou a mostrar duas aplicacoes e comparacao com a anterior.
+- O resultado atual exibiu somente as reflexoes vinculadas a segunda aplicacao.
+- Card "Minhas reflexoes" e secao 9 do relatorio mostraram os textos integrais; secao 10 preservou os limites da avaliacao.
+- Viewport aproximado de 390 px: sem overflow horizontal na tela reflexiva e no Dashboard.
+- Console do navegador: sem erros ou warnings relevantes.
+- Testes automatizados confirmam igualdade de Big Five, Jung, DISC e Spranger com e sem reflexoes.
+- Validacoes de 1000 caracteres e rejeicao de campos extras: passando.
+- Backend: `python -m pytest backend/app/ -v` -> **32 passed**, 0 failed, 0 warnings.
+- Frontend: `npm run build` -> **OK**; aviso conhecido do chunk `charts`/Recharts em 557,81 kB.
+- Nenhum `.env`, segredo, banco local, `dist`, cache ou log temporario foi incluido.
+
 Data inicial: 2026-06-05
 Branch: evolucao-cientifica
 

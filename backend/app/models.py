@@ -29,6 +29,7 @@ class User(Base):
     telemetry_sessions = relationship("TelemetrySession", back_populates="respondent", cascade="all, delete-orphan")
     psychometric_results = relationship("PsychometricResult", back_populates="respondent", cascade="all, delete-orphan")
     reports = relationship("Report", back_populates="respondent", cascade="all, delete-orphan")
+    personal_reflections = relationship("PersonalReflection", back_populates="respondent", cascade="all, delete-orphan")
 
 class QuestionnaireItem(Base):
     __tablename__ = "questionnaire_items"
@@ -155,6 +156,20 @@ class PsychometricResult(Base):
 
     respondent = relationship("User", back_populates="psychometric_results")
     reports = relationship("Report", back_populates="result", cascade="all, delete-orphan")
+    personal_reflection = relationship("PersonalReflection", back_populates="result", uselist=False, cascade="all, delete-orphan")
+
+class PersonalReflection(Base):
+    __tablename__ = "personal_reflections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    respondent_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    result_id = Column(Integer, ForeignKey("psychometric_results.id"), nullable=False, unique=True, index=True)
+    self_understanding_goal = Column(Text, nullable=True)
+    current_pattern_to_observe = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    respondent = relationship("User", back_populates="personal_reflections")
+    result = relationship("PsychometricResult", back_populates="personal_reflection")
 
 class Report(Base):
     __tablename__ = "reports"
