@@ -1,6 +1,6 @@
 # STATUS — Fotografia do estado atual
 
-> Última atualização: 2026-06-19 (Sprint 15: migração Supabase de reflexões revisada; 33/33 verdes).
+> Última atualização: 2026-06-19 (Sprint 16: edição segura das reflexões atuais; 35/35 verdes).
 > Para o roadmap e próximas fases, ver [ROADMAP.md](ROADMAP.md).
 
 ---
@@ -23,7 +23,7 @@
 
 | Item | Estado | Detalhe |
 |---|---|---|
-| Total de testes | ✅ **33/33 passando** | baseline intra, public norm, API hardening, reflexões F9, contrato da migração e segurança |
+| Total de testes | ✅ **35/35 passando** | baseline intra, public norm, API hardening, reflexões F9, edição com ownership, contrato da migração e segurança |
 | Tempo de execução | ✅ ~2.7s | `pytest backend/app/ -v` |
 | test_bigfive_submit_to_results_e2e | ✅ Passando | usa `with TestClient(app) as client:` |
 | test_delete_consolidado_preserva_bigfive | ✅ Passando | prova a invariante de preservação Big Five (DELETE IS NULL não remove histórico) |
@@ -52,6 +52,7 @@
 | Relatório pessoal em PDF | `Dashboards.tsx`, `index.css` | versão imprimível/salvável pelo navegador; usa dados já carregados no Dashboard |
 | Polimento mobile/print | `index.css` | QA desktop/mobile; ajuste de impressão para reduzir espaço da capa e evitar cortes ruins de cards |
 | Perguntas reflexivas F9 | `TestRoom.tsx`, `models.py`, `main.py`, `Dashboards.tsx` | duas respostas opcionais por aplicação; fora do motor; Dashboard e PDF |
+| Edição das reflexões atuais | `main.py`, `Dashboards.tsx` | `PATCH /results/{result_id}/reflections`; upsert autenticado por proprietário; Dashboard/PDF atualizados sem recalcular escores |
 | Invariante de preservação Big Five | `main.py` | DELETE consolidado restrito a `bigfive_percentis IS NULL`; ADR-11; teste dedicado |
 | Ômega de McDonald | `science_engine.py` | `mcdonald_omega()` — via PCA unifatorial aproximado |
 | SEM e IC95% | `science_engine.py` | `standard_error_of_measurement()` + `confidence_interval()` |
@@ -179,13 +180,13 @@ pytest backend/app/ -v
 
 ## Próxima fase
 
-**Próxima evolução recomendada — edição posterior das reflexões.**
+**Próxima evolução recomendada — uso pessoal e validação empírica T1/T2.**
 
 Ordem recomendada:
 
-1. Permitir editar as reflexões da aplicação atual sem refazer o teste.
-2. Manter versionamento por aplicação e sem qualquer efeito sobre pontuação.
-3. Prosseguir com validação empírica pessoal T1/T2 quando houver dados reais suficientes.
+1. Usar o fluxo de reflexões e edição em aplicações reais, observando clareza e utilidade da experiência.
+2. Prosseguir com validação empírica pessoal T1/T2 quando houver dados reais suficientes.
+3. Considerar visualização ampliada T1/T2/T3 apenas depois de acumular histórico real.
 
 **Não priorizar agora:** TIRT/F8, RH corporativo, dashboard de equipe, ranking de pessoas, seleção profissional, LGPD completa, produto comercial, alteração profunda do motor, promessa CFP/SATEPSI, laudo psicológico ou diagnóstico.
 

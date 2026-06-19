@@ -1,6 +1,6 @@
 # Contexto DISC - proximo chat
 
-> Retomada oficial apos a aplicacao e validacao da migracao Supabase de `personal_reflections` em 2026-06-19.
+> Retomada oficial apos a Sprint 16, com edicao segura das reflexoes da aplicacao atual concluida em 2026-06-19.
 > Projeto atual: aplicativo pessoal de autoconhecimento. Nao e produto comercial, nao e RH em producao, nao e diagnostico, nao e laudo psicologico e nao e avaliacao psicologica profissional.
 
 ---
@@ -8,7 +8,7 @@
 ## Estado atual
 
 Backend:
-- `python -m pytest backend/app/ -v`: 33 testes passando.
+- `python -m pytest backend/app/ -v`: 35 testes passando.
 - Warnings documentados no pytest: 0.
 
 Frontend:
@@ -22,6 +22,8 @@ Frontend:
 - Persistencia em `personal_reflections`, vinculada a `psychometric_results`; SQL de producao em `backend/schema/2026-06-19_personal_reflections.sql`.
 - Guia e registro de aplicacao em `backend/schema/README.md`; migracao aplicada com backup, preflight e verificacao pos-migracao.
 - RLS nao habilitado porque a arquitetura usa JWT proprio e acesso server-side, sem Supabase Auth; SQL revoga `anon`/`authenticated`; revisar policies se houver acesso direto futuro.
+- Edicao inline disponivel em "Minhas reflexoes"; `PATCH /results/{result_id}/reflections` faz upsert apenas quando o resultado pertence ao usuario autenticado.
+- Dashboard e relatorio imprimivel refletem a edicao imediatamente; motor psicometrico e historico permanecem inalterados.
 
 Psicometria:
 - Big Five/IPIP-50 e o nucleo medido diretamente.
@@ -60,6 +62,7 @@ Escopo:
 19. Sprint 14 adicionou perguntas reflexivas qualitativas sem alterar Big Five, DISC, Jung, Spranger, normas, percentis ou historico.
 20. Sprint 15 alinhou SQL e ORM, adicionou `ON DELETE CASCADE`, checks locais e guia seguro de aplicacao no Supabase.
 21. A migracao `personal_reflections` foi aplicada e validada no Supabase; QA de primeira aplicacao/reteste passou e os dados temporarios foram removidos.
+22. Sprint 16 adicionou edicao das reflexoes atuais com ownership, upsert, limite de 1000 caracteres, rejeicao de campos extras e invariancia dos resultados psicometricos.
 
 Nao refazer essas correcoes sem um bug novo confirmado.
 
@@ -67,14 +70,14 @@ Nao refazer essas correcoes sem um bug novo confirmado.
 
 ## Proxima sprint recomendada
 
-**Proxima evolucao - edicao posterior das reflexoes**
+**Proxima evolucao - uso pessoal e validacao empirica T1/T2**
 
 Ordem recomendada:
 
-1. Permitir editar reflexoes da aplicacao atual sem refazer o teste.
-2. Preservar a vinculacao por aplicacao e o limite de 1000 caracteres.
-3. Manter as reflexoes fora do motor e de qualquer inferencia clinica.
-4. Validacao empirica pessoal T1/T2 quando houver dados reais suficientes.
+1. Usar o fluxo completo em aplicacoes reais e colher feedback de clareza/utilidade.
+2. Executar validacao empirica pessoal T1/T2 quando houver dados reais suficientes.
+3. Avaliar visualizacao ampliada T1/T2/T3 somente apos acumular historico real.
+4. Manter as reflexoes fora do motor e de qualquer inferencia clinica.
 
 Recomendacao central: manter F9 como camada reflexiva escrita pelo usuario, separada dos escores.
 

@@ -1,5 +1,18 @@
 # Relatorio de QA - Evolucao Cientifica
 
+## Atualizacao QA - Sprint 16 - 2026-06-19
+
+- `PATCH /results/{result_id}/reflections` validado para criacao e atualizacao, sempre restrito ao proprietario autenticado do resultado.
+- Testes automatizados cobrem upsert sem linha previa, bloqueio de outro usuario com 404, limite de 1000 caracteres, rejeicao de campo extra e limpeza de texto vazio para `null`.
+- Invariancia confirmada antes/depois da edicao para Big Five, Jung continuo, DISC, Spranger, historico, qualidade e metadados.
+- QA no Supabase: primeira aplicacao, reflexoes iniciais, descarte por Cancelar, salvamento, atualizacao imediata do Dashboard e conteudo imprimivel/PDF.
+- Reteste validou duas aplicacoes, comparacao preservada e edicao limitada as reflexoes da aplicacao atual.
+- Viewport de 390 x 844 sem overflow horizontal; textareas e acoes acessiveis. Console sem erros ou warnings.
+- Integridade no banco: 2 resultados, 2 reflexoes e 2 vinculacoes coerentes por proprietario. Usuario e todos os dados temporarios foram removidos ao final.
+- Backend: `python -m pytest backend/app/ -v` -> **35 passed**, 0 failed, 0 warnings.
+- Frontend: `npm run build` -> **OK**; aviso conhecido do chunk `charts`/Recharts em 557,81 kB.
+- Nenhum deploy, segredo, `.env`, schema ou motor psicometrico foi alterado.
+
 ## Aplicacao da migracao Supabase - 2026-06-19
 
 - Alvo confirmado por arquivo externo documentado, host Supabase redigido, porta 6543 e assinatura estrutural do app com 53 itens Big Five.

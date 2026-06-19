@@ -336,6 +336,93 @@ def test_reflections_enforce_length_and_forbid_extra_fields():
         assert client.post("/questionnaire/submit", json=unexpected, headers=headers).status_code == 422
 
 
+def test_user_edits_own_reflections_without_changing_psychometric_results():
+    with TestClient(app) as client:
+        headers = _auth_headers(client)
+        answers = _valid_bigfive_answers(client, headers)
+        payload = _submit_payload(answers)
+        payload["reflections"] = {
+            "self_understanding_goal": "Objetivo original",
+            "current_pattern_to_observe": "Padrão original"
+        }
+        assert client.post("/questionnaire/submit", json=payload, headers=headers).status_code == 200
+
+        before = client.get("/results/me", headers=headers).json()
+        result_id = before["result_id"]
+        updated_payload = {
+            "self_understanding_goal": "Compreender melhor minhas prioridades",
+            "current_pattern_to_observe": "Observar quando adio decisões"
+        }
+        edited = client.patch(
+            f"/results/{result_id}/reflections",
+            json=updated_payload,
+            headers=headers
+        )
+        assert edited.status_code == 200
+        assert edited.json() == {"result_id": result_id, "reflections": updated_payload}
+
+        after = client.get("/results/me", headers=headers).json()
+        assert after["reflections"] == updated_payload
+        for key in ["bigfive", "jung_continuo", "disc", "spranger", "history", "quality_label", "metadata"]:
+            assert after[key] == before[key]
+
+        cleared = client.patch(
+            f"/results/{result_id}/reflections",
+            json={"self_understanding_goal": "", "current_pattern_to_observe": None},
+            headers=headers
+        )
+        assert cleared.status_code == 200
+        assert cleared.json()["reflections"] == {
+            "self_understanding_goal": None,
+            "current_pattern_to_observe": None
+        }
+        assert client.get("/results/me", headers=headers).json()["reflections"] == cleared.json()["reflections"]
+
+
+def test_reflection_edit_upserts_and_enforces_ownership_and_payload_security():
+    with TestClient(app) as client:
+        owner_headers = _auth_headers(client)
+        other_headers = _auth_headers(client)
+        owner_answers = _valid_bigfive_answers(client, owner_headers)
+        other_answers = _valid_bigfive_answers(client, other_headers)
+        assert client.post("/questionnaire/submit", json=_submit_payload(owner_answers), headers=owner_headers).status_code == 200
+        assert client.post("/questionnaire/submit", json=_submit_payload(other_answers), headers=other_headers).status_code == 200
+
+        owner_result_id = client.get("/results/me", headers=owner_headers).json()["result_id"]
+        upserted = client.patch(
+            f"/results/{owner_result_id}/reflections",
+            json={"self_understanding_goal": "Criada depois do resultado"},
+            headers=owner_headers
+        )
+        assert upserted.status_code == 200
+        assert upserted.json()["reflections"] == {
+            "self_understanding_goal": "Criada depois do resultado",
+            "current_pattern_to_observe": None
+        }
+
+        forbidden = client.patch(
+            f"/results/{owner_result_id}/reflections",
+            json={"self_understanding_goal": "Tentativa de outro usuário"},
+            headers=other_headers
+        )
+        assert forbidden.status_code == 404
+
+        too_long = client.patch(
+            f"/results/{owner_result_id}/reflections",
+            json={"current_pattern_to_observe": "x" * 1001},
+            headers=owner_headers
+        )
+        assert too_long.status_code == 422
+
+        extra_field = client.patch(
+            f"/results/{owner_result_id}/reflections",
+            json={"self_understanding_goal": "Válida", "bigfive_O": 999},
+            headers=owner_headers
+        )
+        assert extra_field.status_code == 422
+        assert client.get("/results/me", headers=owner_headers).json()["reflections"]["self_understanding_goal"] == "Criada depois do resultado"
+
+
 def test_personal_reflection_model_and_supabase_migration_are_aligned():
     from pathlib import Path
     from backend.app.models import PersonalReflection

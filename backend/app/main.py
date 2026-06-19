@@ -809,6 +809,45 @@ def _reflection_payload(result_id: int, db: Session) -> Dict[str, Optional[str]]
     }
 
 
+@app.patch("/results/{result_id}/reflections")
+def update_result_reflections(
+    result_id: int,
+    submission: ReflectionSubmission,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    result = db.query(PsychometricResult).filter(
+        PsychometricResult.id == result_id,
+        PsychometricResult.respondent_id == current_user.id
+    ).first()
+    if not result:
+        raise HTTPException(status_code=404, detail="Aplicação não encontrada.")
+
+    self_goal = (submission.self_understanding_goal or "").strip() or None
+    pattern = (submission.current_pattern_to_observe or "").strip() or None
+    reflection = db.query(PersonalReflection).filter(
+        PersonalReflection.result_id == result.id,
+        PersonalReflection.respondent_id == current_user.id
+    ).first()
+    if reflection:
+        reflection.self_understanding_goal = self_goal
+        reflection.current_pattern_to_observe = pattern
+    else:
+        reflection = PersonalReflection(
+            respondent_id=current_user.id,
+            result_id=result.id,
+            self_understanding_goal=self_goal,
+            current_pattern_to_observe=pattern
+        )
+        db.add(reflection)
+
+    db.commit()
+    return {
+        "result_id": result.id,
+        "reflections": _reflection_payload(result.id, db)
+    }
+
+
 @app.get("/results/me")
 def get_my_results(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     result = db.query(PsychometricResult).filter(
@@ -883,6 +922,7 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
             }
 
         return {
+            "result_id": result.id,
             "candidate": current_user.full_name,
             "date": result.created_at,
             "bigfive": bigfive_dict,
@@ -919,6 +959,7 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
         }
         
     return {
+        "result_id": result.id,
         "candidate": current_user.full_name,
         "date": result.created_at,
         "disc": {

@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import {
   User, Users, Shield, Briefcase, Plus, TrendingUp, AlertTriangle,
-  FileText, Award, Layers, Zap, Info, HelpCircle, RotateCcw, Printer, BookOpen
+  FileText, Award, Layers, Zap, Info, HelpCircle, RotateCcw, Printer, BookOpen, Pencil
 } from "lucide-react";
 
 interface DashboardsProps {
@@ -28,6 +28,14 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
   const [narrativeReport, setNarrativeReport] = useState<string | null>(null);
   const [loadingReport, setLoadingReport] = useState(false);
   const [printError, setPrintError] = useState<string | null>(null);
+  const [editingReflections, setEditingReflections] = useState(false);
+  const [savingReflections, setSavingReflections] = useState(false);
+  const [reflectionError, setReflectionError] = useState<string | null>(null);
+  const [reflectionSuccess, setReflectionSuccess] = useState<string | null>(null);
+  const [reflectionDraft, setReflectionDraft] = useState({
+    self_understanding_goal: "",
+    current_pattern_to_observe: ""
+  });
 
   // 2. Dados da area administrativa
   const [jobs, setJobs] = useState<any[]>([]);
@@ -102,6 +110,9 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
       })
       .then(data => {
         setSelfData(data);
+        setEditingReflections(false);
+        setReflectionError(null);
+        setReflectionSuccess(null);
         setLoading(false);
       })
       .catch(err => {
@@ -280,6 +291,58 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
     return order
       .filter((key) => selfData.bigfive.factors[key])
       .map((key) => ({ key, ...selfData.bigfive.factors[key] }));
+  };
+
+  const beginReflectionEdit = () => {
+    setReflectionDraft({
+      self_understanding_goal: selfData?.reflections?.self_understanding_goal || "",
+      current_pattern_to_observe: selfData?.reflections?.current_pattern_to_observe || ""
+    });
+    setReflectionError(null);
+    setReflectionSuccess(null);
+    setEditingReflections(true);
+  };
+
+  const cancelReflectionEdit = () => {
+    setEditingReflections(false);
+    setReflectionError(null);
+    setReflectionDraft({
+      self_understanding_goal: selfData?.reflections?.self_understanding_goal || "",
+      current_pattern_to_observe: selfData?.reflections?.current_pattern_to_observe || ""
+    });
+  };
+
+  const saveReflections = async () => {
+    if (!selfData?.result_id) {
+      setReflectionError("Não foi possível identificar esta aplicação. Atualize a página e tente novamente.");
+      return;
+    }
+    setSavingReflections(true);
+    setReflectionError(null);
+    setReflectionSuccess(null);
+    try {
+      const response = await fetch(`${apiBaseUrl}/results/${selfData.result_id}/reflections`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(reflectionDraft)
+      });
+      if (!response.ok) throw new Error("Falha ao atualizar reflexões.");
+      const data = await response.json();
+      setSelfData((previous: any) => ({ ...previous, reflections: data.reflections }));
+      setReflectionDraft({
+        self_understanding_goal: data.reflections?.self_understanding_goal || "",
+        current_pattern_to_observe: data.reflections?.current_pattern_to_observe || ""
+      });
+      setEditingReflections(false);
+      setReflectionSuccess("Suas reflexões foram atualizadas.");
+    } catch {
+      setReflectionError("Não foi possível salvar agora. Tente novamente.");
+    } finally {
+      setSavingReflections(false);
+    }
   };
 
   const factorGuide: Record<string, { description: string; high: string; low: string; attentionHigh: string; attentionLow: string; practice: string }> = {
@@ -700,27 +763,103 @@ export default function Dashboards({ token, apiBaseUrl, userRole, onRetake }: Da
                   <div className="flex items-start gap-3">
                     <BookOpen className="mt-0.5 h-5 w-5 shrink-0 text-violet-300" />
                     <div className="min-w-0 flex-1">
-                      <h4 className="text-sm font-bold text-white">Minhas reflexões</h4>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <h4 className="text-sm font-bold text-white">Minhas reflexões</h4>
+                        {!editingReflections && (
+                          <button
+                            type="button"
+                            onClick={beginReflectionEdit}
+                            className="flex w-fit items-center gap-1.5 rounded-xl border border-violet-300/20 bg-violet-300/10 px-3 py-2 text-xs font-semibold text-violet-100 transition hover:bg-violet-300/15"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Editar minhas reflexões
+                          </button>
+                        )}
+                      </div>
                       <p className="mt-1 text-xs leading-relaxed text-gray-400">
-                        Contexto pessoal escrito por você. Não altera pontuação e não é diagnóstico.
+                        Estas respostas são pessoais e não alteram sua pontuação psicométrica.
                       </p>
-                      {selfData.reflections?.self_understanding_goal || selfData.reflections?.current_pattern_to_observe ? (
-                        <dl className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                          {selfData.reflections?.self_understanding_goal && (
-                            <div className="min-w-0 rounded-xl border border-white/5 bg-white/[0.03] p-3">
-                              <dt className="text-xs font-semibold text-violet-200">O que eu queria compreender melhor</dt>
-                              <dd className="mt-2 whitespace-pre-wrap break-words text-xs leading-relaxed text-gray-300">{selfData.reflections.self_understanding_goal}</dd>
-                            </div>
+
+                      {editingReflections ? (
+                        <div className="mt-4 space-y-4">
+                          <label className="block min-w-0">
+                            <span className="text-xs font-semibold leading-relaxed text-violet-100">
+                              O que você espera compreender melhor sobre si mesmo com este teste?
+                            </span>
+                            <textarea
+                              value={reflectionDraft.self_understanding_goal}
+                              onChange={(event) => setReflectionDraft(previous => ({ ...previous, self_understanding_goal: event.target.value }))}
+                              maxLength={1000}
+                              rows={4}
+                              className="mt-2 w-full min-w-0 resize-y rounded-xl border border-white/10 bg-white/5 p-3 text-sm leading-relaxed text-white outline-none transition focus:border-violet-300/60 focus:ring-2 focus:ring-violet-400/20"
+                            />
+                            <span className="mt-1 block text-right text-[11px] text-gray-500">{reflectionDraft.self_understanding_goal.length}/1000</span>
+                          </label>
+                          <label className="block min-w-0">
+                            <span className="text-xs font-semibold leading-relaxed text-violet-100">
+                              Ao olhar para sua rotina atual, qual comportamento, padrão ou dificuldade você gostaria de observar com mais atenção nas próximas semanas?
+                            </span>
+                            <textarea
+                              value={reflectionDraft.current_pattern_to_observe}
+                              onChange={(event) => setReflectionDraft(previous => ({ ...previous, current_pattern_to_observe: event.target.value }))}
+                              maxLength={1000}
+                              rows={4}
+                              className="mt-2 w-full min-w-0 resize-y rounded-xl border border-white/10 bg-white/5 p-3 text-sm leading-relaxed text-white outline-none transition focus:border-violet-300/60 focus:ring-2 focus:ring-violet-400/20"
+                            />
+                            <span className="mt-1 block text-right text-[11px] text-gray-500">{reflectionDraft.current_pattern_to_observe.length}/1000</span>
+                          </label>
+
+                          {reflectionError && (
+                            <p className="rounded-xl border border-red-400/20 bg-red-400/10 p-3 text-xs leading-relaxed text-red-100" role="alert">
+                              {reflectionError}
+                            </p>
                           )}
-                          {selfData.reflections?.current_pattern_to_observe && (
-                            <div className="min-w-0 rounded-xl border border-white/5 bg-white/[0.03] p-3">
-                              <dt className="text-xs font-semibold text-violet-200">Padrão que quero observar</dt>
-                              <dd className="mt-2 whitespace-pre-wrap break-words text-xs leading-relaxed text-gray-300">{selfData.reflections.current_pattern_to_observe}</dd>
-                            </div>
-                          )}
-                        </dl>
+
+                          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                            <button
+                              type="button"
+                              onClick={cancelReflectionEdit}
+                              disabled={savingReflections}
+                              className="rounded-xl border border-white/10 px-4 py-2.5 text-xs font-semibold text-gray-300 transition hover:bg-white/5 hover:text-white disabled:opacity-50"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={saveReflections}
+                              disabled={savingReflections}
+                              className="rounded-xl bg-violet-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-violet-500 disabled:opacity-50"
+                            >
+                              {savingReflections ? "Salvando..." : "Salvar reflexões"}
+                            </button>
+                          </div>
+                        </div>
                       ) : (
-                        <p className="mt-4 text-xs leading-relaxed text-gray-300">Você ainda não registrou reflexões pessoais para esta aplicação.</p>
+                        <>
+                          {selfData.reflections?.self_understanding_goal || selfData.reflections?.current_pattern_to_observe ? (
+                            <dl className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                              {selfData.reflections?.self_understanding_goal && (
+                                <div className="min-w-0 rounded-xl border border-white/5 bg-white/[0.03] p-3">
+                                  <dt className="text-xs font-semibold text-violet-200">O que eu queria compreender melhor</dt>
+                                  <dd className="mt-2 whitespace-pre-wrap break-words text-xs leading-relaxed text-gray-300">{selfData.reflections.self_understanding_goal}</dd>
+                                </div>
+                              )}
+                              {selfData.reflections?.current_pattern_to_observe && (
+                                <div className="min-w-0 rounded-xl border border-white/5 bg-white/[0.03] p-3">
+                                  <dt className="text-xs font-semibold text-violet-200">Padrão que quero observar</dt>
+                                  <dd className="mt-2 whitespace-pre-wrap break-words text-xs leading-relaxed text-gray-300">{selfData.reflections.current_pattern_to_observe}</dd>
+                                </div>
+                              )}
+                            </dl>
+                          ) : (
+                            <p className="mt-4 text-xs leading-relaxed text-gray-300">Você ainda não registrou reflexões pessoais para esta aplicação.</p>
+                          )}
+                          {reflectionSuccess && (
+                            <p className="mt-3 rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-xs text-emerald-100" role="status" aria-live="polite">
+                              {reflectionSuccess}
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

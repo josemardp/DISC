@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.9.0] — 2026-06-19 — Edição das reflexões atuais
+
+- Adicionado `PATCH /results/{result_id}/reflections`, autenticado e restrito ao proprietário do resultado.
+- A operação cria ou atualiza a reflexão vinculada ao resultado, normaliza campos em branco para `null`, preserva o limite de 1000 caracteres e rejeita campos extras.
+- O card "Minhas reflexões" ganhou edição inline, cancelamento, feedback de carregamento/erro/sucesso e contadores de caracteres.
+- Dashboard e conteúdo imprimível/PDF são atualizados imediatamente após salvar, sem recalcular ou alterar Big Five, Jung, DISC, Spranger, histórico, qualidade ou metadados.
+- QA no Supabase validou primeira aplicação, cancelamento, edição, reteste, isolamento por aplicação, viewport de 390 px, relatório e console; os dados temporários foram removidos.
+- Validação final: **35/35 testes backend** e **build frontend OK**; permanece o aviso conhecido do chunk `charts` em 557,81 kB.
+- Nenhum deploy, alteração de segredo, `.env`, schema ou motor psicométrico foi realizado.
+
 ## [1.8.3] — 2026-06-19 — Migração aplicada no Supabase
 
 - Backup schema-only criado fora do repositório antes do DDL.

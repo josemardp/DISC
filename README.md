@@ -66,7 +66,7 @@ npm run dev
 
 ```powershell
 pytest backend/app/ -v
-# Resultado atual: 33 passed, 0 failed, 0 warnings
+# Resultado atual: 35 passed, 0 failed, 0 warnings
 ```
 
 Build frontend:
@@ -77,12 +77,13 @@ npm run build
 # Resultado atual: build OK; chunk grande restante isolado em Recharts/Dashboard.
 ```
 
-> Estado estável da sprint técnica: backend com 33 testes passando; frontend com build OK. Pendência conhecida: chunk `charts`/Recharts >500 kB, isolado no Dashboard.
+> Estado estável da sprint técnica: backend com 35 testes passando; frontend com build OK. Pendência conhecida: chunk `charts`/Recharts >500 kB, isolado no Dashboard.
 > Sprint 11 estável: histórico visual entre aplicações Big Five implementado sem alteração no motor psicométrico.
 > Sprint 12 estável: relatório pessoal imprimível/salvável em PDF pelo navegador, sem dependências novas e sem alteração no motor psicométrico.
 > Sprint 13 estável: QA mobile/desktop/print concluído; CSS de impressão polido sem alteração no motor psicométrico.
 > Sprint 14 estável: F9 adiciona duas perguntas reflexivas opcionais, armazenadas por aplicação e separadas do motor psicométrico.
-> Sprint 15: migração `personal_reflections` revisada e documentada; execução no Supabase continua manual e não foi realizada nesta sprint.
+> Sprint 15 concluída: migração `personal_reflections` aplicada e validada no Supabase com backup e QA funcional.
+> Sprint 16 concluída: reflexões da aplicação atual podem ser editadas no Dashboard, com autorização por proprietário e sem alterar resultados psicométricos.
 
 ---
 
@@ -126,7 +127,7 @@ O histórico visual entre aplicações mostra:
 
 A tela também permite baixar/salvar um relatório pessoal em PDF pelo navegador. O relatório inclui capa, data, aviso de não diagnóstico/laudo, Big Five medido, pontos fortes prováveis, pontos de atenção, sugestões práticas, leituras derivadas, reflexões pessoais e histórico/comparação quando houver reteste.
 
-As respostas reflexivas são opcionais, têm até 1000 caracteres por campo e ficam em `personal_reflections`, vinculadas ao resultado da aplicação. Elas não entram no `science_engine` e não alteram Big Five, DISC, Jung, Spranger, normas, percentis ou histórico.
+As respostas reflexivas são opcionais, têm até 1000 caracteres por campo e ficam em `personal_reflections`, vinculadas ao resultado da aplicação. A pessoa pode editar as reflexões da aplicação atual no card "Minhas reflexões"; o Dashboard e o conteúdo imprimível/PDF são atualizados após o salvamento. Elas não entram no `science_engine` e não alteram Big Five, DISC, Jung, Spranger, normas, percentis ou histórico.
 
 ## Produção e cuidados mínimos
 
