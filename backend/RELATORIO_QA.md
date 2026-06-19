@@ -1,5 +1,17 @@
 # Relatorio de QA - Evolucao Cientifica
 
+## Atualizacao QA - Sprint 15 - 2026-06-19
+
+- SQL revisado sem conexao ou execucao no Supabase.
+- Contrato SQL x ORM validado para tabela, colunas, tipos, nullability, unicidade, FKs, `ON DELETE CASCADE`, `created_at`, checks e indices.
+- `id` corrigido de `BIGSERIAL` para `SERIAL`, alinhado ao `Integer` do SQLAlchemy.
+- Limites de 1000 caracteres adicionados ao metadata ORM para equivalencia com SQLite local.
+- RLS documentado como nao aplicavel a arquitetura atual: JWT proprio e acesso exclusivamente server-side. Privilegios de `anon`/`authenticated` sao revogados; policies ficam pendentes se houver acesso direto futuro.
+- Guia de aplicacao, verificacao, QA e reversao segura criado em `backend/schema/README.md`.
+- Nenhum deploy, SQL remoto, segredo ou `.env` real foi alterado.
+- Backend: `python -m pytest backend/app/ -v` -> **33 passed**, 0 failed, 0 warnings.
+- Frontend: `npm run build` -> **OK**; aviso conhecido do chunk `charts`/Recharts em 557,81 kB.
+
 ## Atualizacao QA - Sprint 14 - 2026-06-19
 
 - Fluxo local completo executado com usuario temporario: cadastro, 53 itens Big Five, duas reflexoes, Dashboard e relatorio imprimivel.

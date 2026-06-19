@@ -4,9 +4,9 @@
 
 ## 1. Versão e data
 
-- Versão: v0.5
+- Versão: v0.6
 - Data: 2026-06-19
-- Branch de trabalho: main (Sprint 14, 32/32 testes passando, 0 warnings no pytest)
+- Branch de trabalho: main (Sprint 15, 33/33 testes passando, 0 warnings no pytest)
 
 ---
 
@@ -248,7 +248,9 @@ Os campos são recebidos por `ReflectionSubmission`, persistidos em `personal_re
 
 Essas respostas são qualitativas e escritas pela própria pessoa. Não são enviadas ao `science_engine`, não geram classificação ou inferência clínica e não alteram Big Five, DISC, Jung, Spranger, percentis, normas ou histórico. O Dashboard e o relatório imprimível as apresentam em seção separada com aviso explícito.
 
-Em produção, criar a tabela com `backend/schema/2026-06-19_personal_reflections.sql` antes de publicar a API correspondente.
+Em produção, criar a tabela com `backend/schema/2026-06-19_personal_reflections.sql` antes de publicar a API correspondente, seguindo `backend/schema/README.md`. A migração usa `ON DELETE CASCADE`, checks de 1000 caracteres e transação explícita. `updated_at` foi omitido porque ainda não existe edição.
+
+RLS não é habilitado atualmente. A aplicação não usa Supabase Auth nem acesso direto do frontend; a API FastAPI autentica com JWT próprio e consulta pelo usuário corrente. A migração revoga privilégios de `anon` e `authenticated`. Se essa arquitetura mudar, criar policies de leitura, inserção e atualização baseadas na propriedade de `psychometric_results` antes de expor a tabela.
 
 ---
 
@@ -278,6 +280,7 @@ Em produção, criar a tabela com `backend/schema/2026-06-19_personal_reflection
 - v0.4 — 2026-06-17 — Pós-commit `7bc0094`: baseline intra corrigido, `NORM_MODE=public` funcional, Jung borderline indefinido, DISC/Spranger derivados explicitados, suite 30/30 e 0 warnings.
 - v0.4 — 2026-06-18 — Sprint 10: devolutiva pessoal narrativa reorganizada em sete seções humanas, sem alterar o motor psicométrico.
 - v0.5 — 2026-06-19 — Sprint 14: perguntas reflexivas F9 por aplicação, separadas do motor; suíte 32/32 e build frontend OK.
+- v0.6 — 2026-06-19 — Sprint 15: migração Supabase revisada, SQL/ORM alinhados, guia operacional e teste de contrato.
 - v0.3 — 2026-06-13 — F3: documentação viva concluída. Referências cruzadas adicionadas. Seções de Alpha e relatório narrativo expandidas. Tabelas de DISC/Spranger/Jung com fórmulas reais do código.
 - v0.2 — 2026-06-10 — F1 + F2 concluídas: Supabase Postgres em produção; 22/22 testes passando; conftest.py com fixture autouse; import órfão `calculate_cronbach_alpha` removido de `main.py`.
 - v0.1 — 2026-06-05 — versão inicial: Big Five IPIP-50, itens de atenção, camadas derivadas, régua interna, confiabilidade, IC95%, qualidade de resposta, laudo anti-Barnum.

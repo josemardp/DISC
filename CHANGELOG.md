@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.8.1] — 2026-06-19 — Preparo da migração Supabase
+
+- Migração `personal_reflections` alinhada ao ORM: `SERIAL`, `TIMESTAMPTZ`, nullability e nomes de colunas compatíveis.
+- FKs de usuário e resultado agora declaram `ON DELETE CASCADE` no SQL e no modelo.
+- Checks de 1000 caracteres foram adicionados ao metadata SQLAlchemy, mantendo SQLite local e Supabase coerentes.
+- Criado guia operacional em `backend/schema/README.md`, com backup, aplicação, verificação, QA e reversão segura.
+- RLS não foi habilitado: o app usa JWT próprio e conexão exclusivamente server-side. O SQL revoga acesso direto de `anon`/`authenticated`; policies ficam pendentes caso a arquitetura mude.
+- Adicionado teste automático do contrato ORM × migração.
+- Validação final: **33/33 testes backend** e **build frontend OK**; aviso conhecido do chunk `charts` em 557,81 kB.
+- Nenhum SQL foi executado no Supabase e nenhum deploy foi realizado nesta sprint.
+
 ## [1.8.0] — 2026-06-19 — Perguntas reflexivas F9
 
 - Adicionada etapa opcional “Reflexão pessoal” após os 53 itens Big Five, com duas perguntas abertas e limite de 1000 caracteres por resposta.

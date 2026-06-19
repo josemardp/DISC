@@ -66,7 +66,7 @@ npm run dev
 
 ```powershell
 pytest backend/app/ -v
-# Resultado atual: 32 passed, 0 failed, 0 warnings
+# Resultado atual: 33 passed, 0 failed, 0 warnings
 ```
 
 Build frontend:
@@ -77,11 +77,12 @@ npm run build
 # Resultado atual: build OK; chunk grande restante isolado em Recharts/Dashboard.
 ```
 
-> Estado estável da sprint técnica: backend com 32 testes passando; frontend com build OK. Pendência conhecida: chunk `charts`/Recharts >500 kB, isolado no Dashboard.
+> Estado estável da sprint técnica: backend com 33 testes passando; frontend com build OK. Pendência conhecida: chunk `charts`/Recharts >500 kB, isolado no Dashboard.
 > Sprint 11 estável: histórico visual entre aplicações Big Five implementado sem alteração no motor psicométrico.
 > Sprint 12 estável: relatório pessoal imprimível/salvável em PDF pelo navegador, sem dependências novas e sem alteração no motor psicométrico.
 > Sprint 13 estável: QA mobile/desktop/print concluído; CSS de impressão polido sem alteração no motor psicométrico.
 > Sprint 14 estável: F9 adiciona duas perguntas reflexivas opcionais, armazenadas por aplicação e separadas do motor psicométrico.
+> Sprint 15: migração `personal_reflections` revisada e documentada; execução no Supabase continua manual e não foi realizada nesta sprint.
 
 ---
 
@@ -156,9 +157,11 @@ LGPD completa fica como pendência futura caso o aplicativo pessoal evolua para 
 ### 1. Supabase
 
 1. Crie um projeto em [supabase.com](https://supabase.com)
-2. Em *Database → Extensions*, ative **`vector` (pgvector)** — obrigatório para a F9 (camada de autoconhecimento)
+2. Em *Database → Extensions*, ative **`vector` (pgvector)** somente se uma evolução futura realmente usar embeddings; a F9 atual não depende dessa extensão
 3. Em *Project Settings → Database*, copie a **connection string do pooler Transaction** (port 6543)
-4. Antes de publicar a Sprint 14, execute `backend/schema/2026-06-19_personal_reflections.sql` no SQL Editor do Supabase
+4. Antes de publicar a API com reflexões, siga [o guia de migração](backend/schema/README.md) e execute `backend/schema/2026-06-19_personal_reflections.sql` no SQL Editor do Supabase
+
+Não execute a migração em um banco com dados relevantes sem backup atualizado. A tabela não habilita RLS: o projeto usa autenticação e autorização próprias no backend, sem Supabase Auth ou acesso direto do frontend ao banco. O SQL revoga privilégios de `anon` e `authenticated`; se essa arquitetura mudar, RLS passa a ser requisito antes de expor a tabela ao cliente.
 
 ### 2. Vercel
 

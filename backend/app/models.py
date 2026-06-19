@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, DateTime, Text, JSON
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, DateTime, Text, JSON, CheckConstraint
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from backend.app.database import Base
@@ -160,13 +160,23 @@ class PsychometricResult(Base):
 
 class PersonalReflection(Base):
     __tablename__ = "personal_reflections"
+    __table_args__ = (
+        CheckConstraint(
+            "length(self_understanding_goal) <= 1000",
+            name="personal_reflections_self_goal_length"
+        ),
+        CheckConstraint(
+            "length(current_pattern_to_observe) <= 1000",
+            name="personal_reflections_pattern_length"
+        ),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
-    respondent_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    result_id = Column(Integer, ForeignKey("psychometric_results.id"), nullable=False, unique=True, index=True)
+    respondent_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    result_id = Column(Integer, ForeignKey("psychometric_results.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
     self_understanding_goal = Column(Text, nullable=True)
     current_pattern_to_observe = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     respondent = relationship("User", back_populates="personal_reflections")
     result = relationship("PsychometricResult", back_populates="personal_reflection")

@@ -1,6 +1,6 @@
 # STATUS — Fotografia do estado atual
 
-> Última atualização: 2026-06-19 (Sprint 14: perguntas reflexivas F9; 32/32 verdes).
+> Última atualização: 2026-06-19 (Sprint 15: migração Supabase de reflexões revisada; 33/33 verdes).
 > Para o roadmap e próximas fases, ver [ROADMAP.md](ROADMAP.md).
 
 ---
@@ -15,6 +15,7 @@
 | Questionário Big Five | ✅ Funcionando | `/questionnaire/items?test_type=BIGFIVE` retorna 53 itens (50 IPIP + 3 atenção) |
 | GEMINI_API_KEY | ✅ Setada no Vercel | salva em `Drive/segredos/disc-env.txt` |
 | DATABASE_URL | ✅ Setada no Vercel | salva em `Drive/segredos/disc-env.txt` |
+| Migração `personal_reflections` | ⚠️ Pronta, não executada nesta sprint | aplicar manualmente conforme `backend/schema/README.md` antes de publicar a API |
 
 ---
 
@@ -22,7 +23,7 @@
 
 | Item | Estado | Detalhe |
 |---|---|---|
-| Total de testes | ✅ **32/32 passando** | baseline intra, public norm, API hardening, reflexões F9 e segurança |
+| Total de testes | ✅ **33/33 passando** | baseline intra, public norm, API hardening, reflexões F9, contrato da migração e segurança |
 | Tempo de execução | ✅ ~2.7s | `pytest backend/app/ -v` |
 | test_bigfive_submit_to_results_e2e | ✅ Passando | usa `with TestClient(app) as client:` |
 | test_delete_consolidado_preserva_bigfive | ✅ Passando | prova a invariante de preservação Big Five (DELETE IS NULL não remove histórico) |
@@ -126,7 +127,7 @@ npm run dev
 ```powershell
 # Na raiz do projeto 1-disc-app:
 pytest backend/app/ -v
-# Resultado esperado: 32 passed, 0 failed, 0 warnings
+# Resultado esperado: 33 passed, 0 failed, 0 warnings
 ```
 
 **Nota:** a fixture autouse em `backend/app/conftest.py` garante criação de tabelas e seed antes de qualquer teste. O banco de teste usa SQLite local (`psicometrico.db` ou o DATABASE_URL do `.env`).

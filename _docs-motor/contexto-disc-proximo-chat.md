@@ -1,6 +1,6 @@
 # Contexto DISC - proximo chat
 
-> Retomada oficial apos a Sprint 14, que concluiu a F9 com perguntas reflexivas opcionais separadas do motor psicometrico.
+> Retomada oficial apos a Sprint 15, que revisou e documentou a migracao Supabase de `personal_reflections` sem executa-la em producao.
 > Projeto atual: aplicativo pessoal de autoconhecimento. Nao e produto comercial, nao e RH em producao, nao e diagnostico, nao e laudo psicologico e nao e avaliacao psicologica profissional.
 
 ---
@@ -8,7 +8,7 @@
 ## Estado atual
 
 Backend:
-- `python -m pytest backend/app/ -v`: 32 testes passando.
+- `python -m pytest backend/app/ -v`: 33 testes passando.
 - Warnings documentados no pytest: 0.
 
 Frontend:
@@ -20,6 +20,8 @@ Frontend:
 - QA desktop/mobile/print concluido na Sprint 13, com polimento leve do CSS de impressao.
 - F9 concluida: duas reflexoes opcionais por aplicacao aparecem no Dashboard e no relatorio imprimivel.
 - Persistencia em `personal_reflections`, vinculada a `psychometric_results`; SQL de producao em `backend/schema/2026-06-19_personal_reflections.sql`.
+- Guia de aplicacao em `backend/schema/README.md`; migracao nao executada no Supabase nesta sprint.
+- RLS nao habilitado porque a arquitetura usa JWT proprio e acesso server-side, sem Supabase Auth; SQL revoga `anon`/`authenticated`; revisar policies se houver acesso direto futuro.
 
 Psicometria:
 - Big Five/IPIP-50 e o nucleo medido diretamente.
@@ -56,6 +58,7 @@ Escopo:
 17. Sprint 12 adicionou relatorio pessoal em PDF via versao imprimivel, sem endpoint novo e sem dependencia nova.
 18. Sprint 13 fez QA mobile/desktop/print e reduziu risco de cortes ruins no relatorio imprimivel.
 19. Sprint 14 adicionou perguntas reflexivas qualitativas sem alterar Big Five, DISC, Jung, Spranger, normas, percentis ou historico.
+20. Sprint 15 alinhou SQL e ORM, adicionou `ON DELETE CASCADE`, checks locais e guia seguro de aplicacao no Supabase.
 
 Nao refazer essas correcoes sem um bug novo confirmado.
 

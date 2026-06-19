@@ -336,6 +336,53 @@ def test_reflections_enforce_length_and_forbid_extra_fields():
         assert client.post("/questionnaire/submit", json=unexpected, headers=headers).status_code == 422
 
 
+def test_personal_reflection_model_and_supabase_migration_are_aligned():
+    from pathlib import Path
+    from backend.app.models import PersonalReflection
+
+    table = PersonalReflection.__table__
+    assert table.name == "personal_reflections"
+    assert set(table.columns.keys()) == {
+        "id", "respondent_id", "result_id", "self_understanding_goal",
+        "current_pattern_to_observe", "created_at"
+    }
+    assert not table.c.respondent_id.nullable
+    assert not table.c.result_id.nullable
+    assert table.c.result_id.unique
+    assert table.c.self_understanding_goal.nullable
+    assert table.c.current_pattern_to_observe.nullable
+    assert table.c.created_at.type.timezone
+
+    respondent_fk = next(iter(table.c.respondent_id.foreign_keys))
+    result_fk = next(iter(table.c.result_id.foreign_keys))
+    assert respondent_fk.target_fullname == "users.id"
+    assert result_fk.target_fullname == "psychometric_results.id"
+    assert respondent_fk.ondelete == "CASCADE"
+    assert result_fk.ondelete == "CASCADE"
+
+    constraint_names = {constraint.name for constraint in table.constraints}
+    assert "personal_reflections_self_goal_length" in constraint_names
+    assert "personal_reflections_pattern_length" in constraint_names
+
+    migration_path = Path(__file__).parents[1] / "schema" / "2026-06-19_personal_reflections.sql"
+    sql = migration_path.read_text(encoding="utf-8").lower()
+    for fragment in [
+        "create table if not exists personal_reflections",
+        "id serial primary key",
+        "respondent_id integer not null references users(id) on delete cascade",
+        "result_id integer not null unique references psychometric_results(id) on delete cascade",
+        "self_understanding_goal text null",
+        "current_pattern_to_observe text null",
+        "created_at timestamptz not null default now()",
+        "check (length(self_understanding_goal) <= 1000)",
+        "check (length(current_pattern_to_observe) <= 1000)",
+        "create index if not exists ix_personal_reflections_respondent_id",
+        "revoke all on table personal_reflections from anon, authenticated",
+        "revoke all on sequence personal_reflections_id_seq from anon, authenticated"
+    ]:
+        assert fragment in sql
+
+
 def test_questionnaire_submit_rejects_missing_duplicate_unknown_and_bad_value():
     with TestClient(app) as client:
         headers = _auth_headers(client)
