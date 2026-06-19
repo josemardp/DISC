@@ -1,6 +1,8 @@
 -- Sprint 15: migração revisada da F9 (reflexões pessoais).
 -- Executar no SQL Editor do Supabase antes de publicar a versão da API.
--- Reexecutável: CREATE TABLE/INDEX usam IF NOT EXISTS.
+-- Pré-condição: a tabela personal_reflections ainda não deve existir.
+-- IF NOT EXISTS evita falha acidental, mas não reconcilia uma tabela preexistente
+-- com tipos, constraints ou FKs diferentes. Nesse caso, pare e revise o schema.
 -- Não altera tabelas nem cálculos psicométricos existentes.
 -- Faça backup antes da execução quando houver dados relevantes.
 

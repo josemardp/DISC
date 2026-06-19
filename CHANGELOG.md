@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.2] — 2026-06-19 — Preflight seguro da migração
+
+- Guia agora verifica previamente se `public.personal_reflections` já existe.
+- Documentado que `IF NOT EXISTS` evita recriação, mas não corrige automaticamente schemas antigos ou divergentes.
+- Orientação explícita para interromper a execução e revisar o schema quando a tabela já existir.
+
 ## [1.8.1] — 2026-06-19 — Preparo da migração Supabase
 
 - Migração `personal_reflections` alinhada ao ORM: `SERIAL`, `TIMESTAMPTZ`, nullability e nomes de colunas compatíveis.

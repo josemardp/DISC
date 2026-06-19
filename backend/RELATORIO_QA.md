@@ -2,6 +2,7 @@
 
 ## Atualizacao QA - Sprint 15 - 2026-06-19
 
+- Preflight adicionado ao guia: a migracao so deve prosseguir diretamente quando `to_regclass('public.personal_reflections')` retornar `null`.
 - SQL revisado sem conexao ou execucao no Supabase.
 - Contrato SQL x ORM validado para tabela, colunas, tipos, nullability, unicidade, FKs, `ON DELETE CASCADE`, `created_at`, checks e indices.
 - `id` corrigido de `BIGSERIAL` para `SERIAL`, alinhado ao `Integer` do SQLAlchemy.

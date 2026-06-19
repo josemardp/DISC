@@ -10,6 +10,14 @@ Pré-condições:
 - confirme que as tabelas `users` e `psychometric_results` existem;
 - não publique uma versão da API que leia ou grave reflexões antes de concluir esta migração.
 
+Antes de colar a migração, execute este preflight no SQL Editor:
+
+```sql
+select to_regclass('public.personal_reflections') as existing_table;
+```
+
+O resultado esperado é `null`. Se retornar `personal_reflections`, pare: `CREATE TABLE IF NOT EXISTS` não corrige automaticamente uma tabela antiga. Compare colunas, constraints, FKs e permissões antes de prosseguir.
+
 Passos:
 
 1. Entre no painel do projeto Supabase correto.
@@ -24,7 +32,7 @@ Passos:
 10. Confirme as reflexões no Dashboard e no relatório imprimível/PDF.
 11. Faça um reteste com novas reflexões e confirme que o histórico Big Five e o vínculo por aplicação foram preservados.
 
-O script usa uma transação e pode ser executado novamente sem recriar a tabela ou o índice. `updated_at` não foi incluído porque a aplicação ainda não permite editar reflexões.
+O script usa uma transação. Os `IF NOT EXISTS` evitam recriação, mas não são uma ferramenta de upgrade para schemas divergentes. `updated_at` não foi incluído porque a aplicação ainda não permite editar reflexões.
 
 ## RLS e políticas
 
