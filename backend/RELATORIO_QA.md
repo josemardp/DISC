@@ -1,5 +1,13 @@
 # Relatorio de QA - Evolucao Cientifica
 
+## Preparacao documental - Sprint 17 - 2026-06-19
+
+- Projeto registrado em fase de uso pessoal real e observacao T1/T2.
+- Checklist cobre T1, reflexoes, PDF privado, intervalo de 2-4 semanas, T2, comparacao do historico, avaliacao da devolutiva e registro de ajustes desejados.
+- Limite documentado: observacao pessoal nao equivale a validacao cientifica formal, estudo normativo, aprovacao do CFP ou avaliacao pelo SATEPSI.
+- Nenhum codigo funcional, motor psicometrico, backend, frontend, Supabase, deploy, `.env` ou segredo foi alterado.
+- Testes e build nao foram repetidos porque a Sprint 17 alterou exclusivamente arquivos de documentacao; baseline anterior permanece 35/35 e build OK.
+
 ## Atualizacao QA - Sprint 16 - 2026-06-19
 
 - `PATCH /results/{result_id}/reflections` validado para criacao e atualizacao, sempre restrito ao proprietario autenticado do resultado.

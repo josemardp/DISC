@@ -1,6 +1,6 @@
 # Contexto DISC - proximo chat
 
-> Retomada oficial apos a Sprint 16, com edicao segura das reflexoes da aplicacao atual concluida em 2026-06-19.
+> Retomada oficial na Sprint 17: fase de uso pessoal real e observacao T1/T2 preparada em 2026-06-19, sem alteracao funcional.
 > Projeto atual: aplicativo pessoal de autoconhecimento. Nao e produto comercial, nao e RH em producao, nao e diagnostico, nao e laudo psicologico e nao e avaliacao psicologica profissional.
 
 ---
@@ -24,6 +24,7 @@ Frontend:
 - RLS nao habilitado porque a arquitetura usa JWT proprio e acesso server-side, sem Supabase Auth; SQL revoga `anon`/`authenticated`; revisar policies se houver acesso direto futuro.
 - Edicao inline disponivel em "Minhas reflexoes"; `PATCH /results/{result_id}/reflections` faz upsert apenas quando o resultado pertence ao usuario autenticado.
 - Dashboard e relatorio imprimivel refletem a edicao imediatamente; motor psicometrico e historico permanecem inalterados.
+- Sprint 17 e documental: backend/frontend, motor, Supabase, deploy, `.env` e segredos nao foram alterados.
 
 Psicometria:
 - Big Five/IPIP-50 e o nucleo medido diretamente.
@@ -63,23 +64,29 @@ Escopo:
 20. Sprint 15 alinhou SQL e ORM, adicionou `ON DELETE CASCADE`, checks locais e guia seguro de aplicacao no Supabase.
 21. A migracao `personal_reflections` foi aplicada e validada no Supabase; QA de primeira aplicacao/reteste passou e os dados temporarios foram removidos.
 22. Sprint 16 adicionou edicao das reflexoes atuais com ownership, upsert, limite de 1000 caracteres, rejeicao de campos extras e invariancia dos resultados psicometricos.
+23. Sprint 17 iniciou a fase de uso pessoal real com checklist T1/T2 e limites explicitos sobre o alcance dessa observacao.
 
 Nao refazer essas correcoes sem um bug novo confirmado.
 
 ---
 
-## Proxima sprint recomendada
+## Fase atual
 
-**Proxima evolucao - uso pessoal e validacao empirica T1/T2**
+**Sprint 17 - uso pessoal real e observacao T1/T2**
 
 Ordem recomendada:
 
-1. Usar o fluxo completo em aplicacoes reais e colher feedback de clareza/utilidade.
-2. Executar validacao empirica pessoal T1/T2 quando houver dados reais suficientes.
-3. Avaliar visualizacao ampliada T1/T2/T3 somente apos acumular historico real.
-4. Manter as reflexoes fora do motor e de qualquer inferencia clinica.
+1. Usuario real faz T1 e registra a data.
+2. Responde as reflexoes e salva o PDF em local privado.
+3. Aguarda de 2 a 4 semanas sem consultar as respostas anteriores.
+4. Faz T2 pelo fluxo de reteste e salva o novo PDF.
+5. Compara historico e relatorios T1/T2.
+6. Avalia o que faz sentido, o que nao faz e o que ficou pouco claro.
+7. Registra ajustes desejados para analise posterior, sem mudar o motor durante a coleta.
 
 Recomendacao central: manter F9 como camada reflexiva escrita pelo usuario, separada dos escores.
+
+Limite: esta atividade e observacao pessoal de uso e estabilidade. Nao e validacao cientifica formal, estudo normativo, aprovacao do CFP ou avaliacao pelo SATEPSI.
 
 ---
 
@@ -116,14 +123,13 @@ Relatorio PDF:
 - Sprint 13 refinou o CSS de impressao para reduzir espaco da capa e evitar cortes ruins de cards.
 - Pendente futuro: considerar exportacao nativa se a experiencia de impressao do navegador nao for suficiente.
 
-Validacao empirica pessoal T1/T2:
-- Josemar e Esdra respondem T1.
+Observacao pessoal T1/T2:
+- Participantes reais concluem T1, reflexoes e PDF.
 - Aguardar 2-4 semanas.
-- Josemar e Esdra respondem T2.
-- Exportar CSV.
-- Rodar analise test-retest.
-- Interpretar estabilidade com cuidado.
-- Isso nao torna o sistema um teste psicologico validado; e apenas uma checagem de estabilidade para uso pessoal.
+- Participantes concluem T2 e salvam o novo PDF.
+- Comparar historico e registrar clareza, utilidade e ajustes desejados.
+- Qualquer exportacao ou analise test-retest futura deve ser interpretada com cuidado.
+- Isso nao torna o sistema um teste psicologico validado e nao representa avaliacao pelo SATEPSI.
 
 F9 - camada de autoconhecimento:
 - Perguntas abertas/reflexivas nao entram no motor de pontuacao.

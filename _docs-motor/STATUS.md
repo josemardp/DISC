@@ -1,6 +1,6 @@
 # STATUS — Fotografia do estado atual
 
-> Última atualização: 2026-06-19 (Sprint 16: edição segura das reflexões atuais; 35/35 verdes).
+> Última atualização: 2026-06-19 (Sprint 17: fase de uso pessoal real e observação T1/T2 preparada; baseline técnico permanece 35/35 verde).
 > Para o roadmap e próximas fases, ver [ROADMAP.md](ROADMAP.md).
 
 ---
@@ -178,16 +178,20 @@ pytest backend/app/ -v
 
 ---
 
-## Próxima fase
+## Fase atual
 
-**Próxima evolução recomendada — uso pessoal e validação empírica T1/T2.**
+**Sprint 17 — uso pessoal real e observação T1/T2.**
 
-Ordem recomendada:
+Ordem operacional:
 
-1. Usar o fluxo de reflexões e edição em aplicações reais, observando clareza e utilidade da experiência.
-2. Prosseguir com validação empírica pessoal T1/T2 quando houver dados reais suficientes.
-3. Considerar visualização ampliada T1/T2/T3 apenas depois de acumular histórico real.
+1. Participante real conclui T1, responde às reflexões e salva o PDF em local privado.
+2. Aguarda de 2 a 4 semanas e conclui T2 sem consultar respostas anteriores.
+3. Compara histórico e relatórios, avaliando clareza e utilidade da devolutiva.
+4. Registra ajustes desejados para análise posterior, sem mudar o motor durante a coleta.
+5. Considera visualização ampliada T1/T2/T3 apenas depois de acumular histórico real.
+
+**Limite:** esta fase é observação pessoal de uso e estabilidade. Não é validação científica formal, estudo normativo, aprovação do CFP ou avaliação pelo SATEPSI.
 
 **Não priorizar agora:** TIRT/F8, RH corporativo, dashboard de equipe, ranking de pessoas, seleção profissional, LGPD completa, produto comercial, alteração profunda do motor, promessa CFP/SATEPSI, laudo psicológico ou diagnóstico.
 
-**Pendência F5 empírica:** infraestrutura pronta; teste-reteste real (Josemar + Esdra, intervalo 2–4 semanas) ainda não executado. A rodada 2 agora é feita pelo botão "Refazer teste" na aba "Meu Perfil". Quando tiver os dois snapshots, rodar `test_retest_reliability()` conforme `PROTOCOLO_VALIDACAO.md`.
+**Pendência F5 empírica:** infraestrutura pronta; observações pessoais T1/T2 com intervalo de 2–4 semanas ainda não executadas. A rodada 2 é feita pelo botão "Refazer teste" na aba "Meu Perfil". Qualquer análise posterior deve ser interpretada como exploração pessoal, conforme `PROTOCOLO_VALIDACAO.md`.

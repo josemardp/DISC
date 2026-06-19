@@ -84,6 +84,7 @@ npm run build
 > Sprint 14 estável: F9 adiciona duas perguntas reflexivas opcionais, armazenadas por aplicação e separadas do motor psicométrico.
 > Sprint 15 concluída: migração `personal_reflections` aplicada e validada no Supabase com backup e QA funcional.
 > Sprint 16 concluída: reflexões da aplicação atual podem ser editadas no Dashboard, com autorização por proprietário e sem alterar resultados psicométricos.
+> Sprint 17 iniciada: o projeto entrou em fase de uso pessoal real e observação T1/T2, sem mudanças no motor ou no produto funcional.
 
 ---
 
@@ -128,6 +129,21 @@ O histórico visual entre aplicações mostra:
 A tela também permite baixar/salvar um relatório pessoal em PDF pelo navegador. O relatório inclui capa, data, aviso de não diagnóstico/laudo, Big Five medido, pontos fortes prováveis, pontos de atenção, sugestões práticas, leituras derivadas, reflexões pessoais e histórico/comparação quando houver reteste.
 
 As respostas reflexivas são opcionais, têm até 1000 caracteres por campo e ficam em `personal_reflections`, vinculadas ao resultado da aplicação. A pessoa pode editar as reflexões da aplicação atual no card "Minhas reflexões"; o Dashboard e o conteúdo imprimível/PDF são atualizados após o salvamento. Elas não entram no `science_engine` e não alteram Big Five, DISC, Jung, Spranger, normas, percentis ou histórico.
+
+## Sprint 17 — uso pessoal e observação T1/T2
+
+Checklist para cada participante real:
+
+- [ ] Fazer a primeira aplicação (T1) e registrar a data.
+- [ ] Responder às reflexões pessoais com contexto suficiente para uma releitura futura.
+- [ ] Salvar o relatório/PDF de T1 em local privado.
+- [ ] Aguardar de 2 a 4 semanas, sem tentar reproduzir respostas anteriores.
+- [ ] Fazer a segunda aplicação (T2) pelo fluxo de reteste.
+- [ ] Salvar o relatório/PDF de T2 e comparar o histórico com T1.
+- [ ] Avaliar quais partes da devolutiva fazem sentido, quais não fazem e quais ficaram pouco claras.
+- [ ] Registrar separadamente os ajustes de texto, experiência ou interpretação desejados, sem alterar respostas ou resultados já salvos.
+
+Esta etapa é uma observação pessoal de uso e estabilidade ao longo do tempo. Não constitui validação científica formal, estudo normativo, validação para uso profissional, aprovação do CFP ou avaliação pelo SATEPSI.
 
 ## Produção e cuidados mínimos
 

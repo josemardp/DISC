@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.1] — 2026-06-19 — Preparação da observação pessoal T1/T2
+
+- Projeto registrado em fase de uso pessoal real, sem alteração de código funcional.
+- Criado checklist para T1, reflexões, PDF, intervalo de 2–4 semanas, T2, comparação do histórico e registro de ajustes desejados.
+- Reforçado que a atividade é uma observação pessoal e não equivale a validação científica formal, aprovação do CFP ou avaliação pelo SATEPSI.
+- Motor psicométrico, backend, frontend, Supabase, deploy, `.env` e segredos permaneceram inalterados.
+- Testes e build não foram repetidos porque o diff contém exclusivamente documentação.
+
 ## [1.9.0] — 2026-06-19 — Edição das reflexões atuais
 
 - Adicionado `PATCH /results/{result_id}/reflections`, autenticado e restrito ao proprietário do resultado.
