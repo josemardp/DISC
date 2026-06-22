@@ -29,7 +29,7 @@ from backend.app.science_engine import (
     derive_jung_from_big_five,
     derive_disc_from_big_five, derive_spranger_from_big_five,
     mcdonald_omega, standard_error_of_measurement, confidence_interval,
-    response_quality_index
+    response_quality_index, _aplica_reverso
 )
 from backend.app.seed_big_five_ipip import ITENS_ATENCAO
 from backend.app.gemini_service import generate_psychometric_report
@@ -405,10 +405,11 @@ def submit_responses(submission: TestSubmission, current_user: User = Depends(ge
     is_fraud = False
     reasons = []
     
-    # Se latência média for menor que 800ms
+    # Se duração média por bloco for menor que 800ms
+    # Nota: irt_avg = tempo médio por BLOCO (não por item); para Big Five cada bloco tem 1 item.
     if submission.irt_avg < 800:
         is_fraud = True
-        reasons.append("LinearResponsePattern: Velocidade de clique excessiva (< 800ms por item).")
+        reasons.append("LinearResponsePattern: Velocidade de clique excessiva (< 800ms por bloco).")
         
     # Detecção de Social Desirability em adjetivos/perguntas sensíveis
     # Se mudou de ideia muitas vezes (RVI alto > 10) em termos comportamentais estruturados
@@ -857,8 +858,6 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
         raise HTTPException(status_code=404, detail="Você ainda não concluiu todas as fases do teste.")
 
     if result.bigfive_percentis:
-        sem = standard_error_of_measurement(sd=15.0, reliability=0.84)
-        fatores = {}
         nomes = {
             "O": "Abertura",
             "C": "Conscienciosidade",
@@ -887,7 +886,28 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
                 "Percentis calculados com base em norma pública exploratória disponível no projeto. "
                 "Este resultado não constitui diagnóstico psicológico, laudo psicológico ou teste psicológico validado para uso profissional no Brasil."
             )
+
+        # Bug B fix: usa ômega medido por fator apenas quando N >= _MIN_N_OMEGA.
+        # Abaixo do piso, usa default da literatura (0.84) para evitar IC instável com N pequeno.
+        from sqlalchemy import func, distinct as sa_distinct
+        n_respondentes = db.query(
+            func.count(sa_distinct(PsychometricResult.respondent_id))
+        ).filter(PsychometricResult.bigfive_percentis.isnot(None)).scalar() or 0
+
+        _DEFAULT_RELIABILITY = 0.84
+        if n_respondentes >= _MIN_N_OMEGA:
+            omega_por_fator = _compute_omega_por_fator(db)
+            reliability_source = "omega_medido"
+        else:
+            omega_por_fator = {}
+            reliability_source = "default_literatura"
+
+        fatores = {}
         for factor, percentile in result.bigfive_percentis.items():
+            rel = omega_por_fator.get(factor, _DEFAULT_RELIABILITY)
+            if not (0.0 < rel < 1.0):
+                rel = _DEFAULT_RELIABILITY
+            sem = standard_error_of_measurement(sd=15.0, reliability=rel)
             ci_low, ci_high = (None, None)
             if percentile is not None:
                 ci_low, ci_high = confidence_interval(percentile, sem, bounds=(0, 100))
@@ -911,7 +931,8 @@ def get_my_results(current_user: User = Depends(get_current_user), db: Session =
             "interpretation_confidence": "baseline" if is_first_assessment else "exploratory",
             "warnings": warnings,
             "measured": ["Big Five"],
-            "derived": ["Jung contínuo", "DISC derivado", "Spranger derivado"]
+            "derived": ["Jung contínuo", "DISC derivado", "Spranger derivado"],
+            "reliability_source": reliability_source,
         }
         if settings.NORM_MODE == "public":
             norm_src = load_norm_source(settings.NORM_SOURCE)
@@ -1019,7 +1040,6 @@ def get_narrative_report(current_user: User = Depends(get_current_user), db: Ses
     bigfive_factors = None
     emotional_stability = None
     if result.bigfive_percentis:
-        sem = standard_error_of_measurement(sd=15.0, reliability=0.84)
         raw_scores = {
             "O": result.bigfive_O,
             "C": result.bigfive_C,
@@ -1027,8 +1047,21 @@ def get_narrative_report(current_user: User = Depends(get_current_user), db: Ses
             "A": result.bigfive_A,
             "N": result.bigfive_N
         }
+        # Bug B fix: mesma lógica de piso de N do /results/me
+        from sqlalchemy import func, distinct as sa_distinct
+        n_respondentes = db.query(
+            func.count(sa_distinct(PsychometricResult.respondent_id))
+        ).filter(PsychometricResult.bigfive_percentis.isnot(None)).scalar() or 0
+
+        _DEFAULT_RELIABILITY = 0.84
+        omega_por_fator_rep = _compute_omega_por_fator(db) if n_respondentes >= _MIN_N_OMEGA else {}
+
         bigfive_factors = {}
         for factor, score in result.bigfive_percentis.items():
+            rel = omega_por_fator_rep.get(factor, _DEFAULT_RELIABILITY)
+            if not (0.0 < rel < 1.0):
+                rel = _DEFAULT_RELIABILITY
+            sem = standard_error_of_measurement(sd=15.0, reliability=rel)
             ci_low, ci_high = (None, None)
             if score is not None:
                 ci_low, ci_high = confidence_interval(score, sem, bounds=(0, 100))
@@ -1192,6 +1225,41 @@ def get_team_matrix(current_user: User = Depends(get_current_user), db: Session 
 # ROTA ADMINISTRATIVA (BACKOFFICE GLOBAL)
 # ==============================================================================
 
+# Piso de N respondentes distintos para usar ômega medido no lugar do default da literatura.
+# Abaixo deste limiar o ômega é instável (N pequeno → estimativa ruidosa).
+_MIN_N_OMEGA = 30
+
+
+def _compute_omega_por_fator(db: Session) -> Dict[str, float]:
+    """
+    Computa ômega de McDonald por fator Big Five com recodificação de reversos.
+    Usa a mesma lógica de _aplica_reverso de score_big_five — não reimplementa.
+    Retorna {fator: omega}; omega = 0.0 quando há dados insuficientes (≤3 users ou ≤3 itens).
+    """
+    omega_bigfive: Dict[str, float] = {}
+    for factor in ["O", "C", "E", "A", "N"]:
+        factor_rows = db.query(Response, QuestionnaireItem).join(
+            QuestionnaireItem, Response.item_id == QuestionnaireItem.id
+        ).filter(
+            Response.test_type == "BIGFIVE",
+            QuestionnaireItem.dimension == factor
+        ).all()
+
+        user_ids = sorted(set(resp.respondent_id for resp, _ in factor_rows))
+        item_ids = sorted(set(resp.item_id for resp, _ in factor_rows))
+        omega_value = 0.0
+        if len(user_ids) > 3 and len(item_ids) > 3:
+            matrix = [[0.0] * len(item_ids) for _ in range(len(user_ids))]
+            user_to_idx = {uid: idx for idx, uid in enumerate(user_ids)}
+            item_to_idx = {iid: idx for idx, iid in enumerate(item_ids)}
+            for resp, item in factor_rows:
+                v = _aplica_reverso(int(resp.value), bool(item.reverse_keyed))
+                matrix[user_to_idx[resp.respondent_id]][item_to_idx[resp.item_id]] = float(v)
+            omega_value = mcdonald_omega(matrix)
+        omega_bigfive[factor] = omega_value
+    return omega_bigfive
+
+
 @app.get("/admin/stats")
 def get_global_statistics(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if current_user.role != "admin":
@@ -1228,26 +1296,7 @@ def get_global_statistics(current_user: User = Depends(get_current_user), db: Se
             "y": int(hist[i])
         })
         
-    omega_bigfive = {}
-    for factor in ["O", "C", "E", "A", "N"]:
-        factor_rows = db.query(Response).join(
-            QuestionnaireItem, Response.item_id == QuestionnaireItem.id
-        ).filter(
-            Response.test_type == "BIGFIVE",
-            QuestionnaireItem.dimension == factor
-        ).all()
-
-        user_ids = sorted(set(r.respondent_id for r in factor_rows))
-        item_ids = sorted(set(r.item_id for r in factor_rows))
-        omega_value = 0.0
-        if len(user_ids) > 3 and len(item_ids) > 3:
-            matrix = [[0.0] * len(item_ids) for _ in range(len(user_ids))]
-            user_to_idx = {uid: idx for idx, uid in enumerate(user_ids)}
-            item_to_idx = {iid: idx for idx, iid in enumerate(item_ids)}
-            for r in factor_rows:
-                matrix[user_to_idx[r.respondent_id]][item_to_idx[r.item_id]] = r.value
-            omega_value = mcdonald_omega(matrix)
-        omega_bigfive[factor] = omega_value
+    omega_bigfive = _compute_omega_por_fator(db)
 
     return {
         "total_evaluations": len(results),

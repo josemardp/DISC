@@ -48,6 +48,44 @@ def test_itens_atencao_sao_ignorados_no_escore():
 
 # ---------- Confiabilidade ----------
 
+def test_omega_reverso_corrigido_maior_que_bugado():
+    """
+    Bug A: ômega calculado sem recodificar reversos subestima a consistência interna.
+    Com recodificação (_aplica_reverso, mesma lógica de score_big_five), o ômega
+    deve ser maior para uma matriz onde os itens reversos foram respondidos de forma coerente.
+    Usa matriz fixa em memória — não persiste nenhum dado.
+    """
+    # 8 respondentes × 4 itens; itens 1 e 3 são reverse_keyed.
+    # Respondentes "altos" marcam 5,1,5,1 (bruto); "baixos" marcam 1,5,1,5.
+    # Após recodificação, todos os itens ficam na mesma direção → correlações altas.
+    raw = [
+        [5, 1, 5, 1],
+        [4, 2, 4, 2],
+        [4, 1, 5, 2],
+        [5, 2, 4, 1],
+        [1, 5, 1, 5],
+        [2, 4, 2, 4],
+        [1, 4, 2, 5],
+        [2, 5, 1, 4],
+    ]
+    reverse_keyed = [False, True, False, True]
+
+    omega_sem_reverso = se.mcdonald_omega(raw)
+
+    corrigido = [
+        [se._aplica_reverso(int(raw[r][c]), reverse_keyed[c]) for c in range(4)]
+        for r in range(8)
+    ]
+    omega_corrigido = se.mcdonald_omega(corrigido)
+
+    assert omega_corrigido > omega_sem_reverso, (
+        f"omega_corrigido ({omega_corrigido:.4f}) deve ser > omega_sem_reverso ({omega_sem_reverso:.4f})"
+    )
+    assert omega_corrigido > 0.70, (
+        f"ômega com recodificação deve ser alto (> 0.70) para itens coerentes: {omega_corrigido:.4f}"
+    )
+
+
 def test_omega_alto_para_itens_coerentes():
     # Dados em que todos os itens correlacionam forte -> omega alto
     rng = np.random.default_rng(42)

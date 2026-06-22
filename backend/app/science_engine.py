@@ -306,7 +306,7 @@ def response_quality_index(valores: List[int],
     """
     Avalia a qualidade do preenchimento.
       - straight_lining: variância ~0 (marcou tudo igual)
-      - muito_rapido: tempo médio por item < 800ms
+      - muito_rapido: tempo médio por bloco < 800ms
       - atencao_ok: passou nos itens de atenção
     """
     straight = False

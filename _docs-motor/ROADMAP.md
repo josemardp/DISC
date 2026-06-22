@@ -9,7 +9,7 @@
 
 | Area | Estado |
 |---|---|
-| Backend | 30 testes passando, 0 warnings no pytest |
+| Backend | 38 testes passando, 0 warnings no pytest; isolamento por teste via `reset_db_state`; `pytest-randomly` em `requirements-dev.txt` |
 | Frontend | build OK |
 | Pendencia tecnica menor | chunk `charts`/Recharts > 500 kB, isolado no Dashboard |
 | Escopo | aplicativo pessoal de autoconhecimento |

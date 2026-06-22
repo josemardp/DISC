@@ -1,6 +1,6 @@
 # STATUS — Fotografia do estado atual
 
-> Última atualização: 2026-06-19 (Sprint 17: fase de uso pessoal real e observação T1/T2 preparada; baseline técnico permanece 35/35 verde).
+> Última atualização: 2026-06-22 (Sprint de calibração + isolamento: bugs A/B/C corrigidos; suíte hardened com isolamento por teste; 38/38 verde).
 > Para o roadmap e próximas fases, ver [ROADMAP.md](ROADMAP.md).
 
 ---
@@ -23,11 +23,14 @@
 
 | Item | Estado | Detalhe |
 |---|---|---|
-| Total de testes | ✅ **35/35 passando** | baseline intra, public norm, API hardening, reflexões F9, edição com ownership, contrato da migração e segurança |
-| Tempo de execução | ✅ ~2.7s | `pytest backend/app/ -v` |
+| Total de testes | ✅ **38/38 passando** | baseline intra, public norm, API hardening, reflexões F9, edição com ownership, contrato da migração, segurança, bugs A/B/C calibração |
+| Tempo de execução | ✅ ~6s | `pytest backend/app/ -v` (inclui limpeza+reseed por teste) |
+| Isolamento por teste | ✅ `reset_db_state` (function-scoped autouse) | DELETE em `reversed(Base.metadata.sorted_tables)` + `seed_db` antes de cada teste; cresce automaticamente com o schema |
+| Independência de ordem | ✅ Comprovada | `--randomly-seed=42` e `--randomly-seed=7919` → 38/38 |
+| pytest-randomly | ✅ Instalado (v4.1.0) | `backend/requirements-dev.txt` |
 | test_bigfive_submit_to_results_e2e | ✅ Passando | usa `with TestClient(app) as client:` |
-| test_delete_consolidado_preserva_bigfive | ✅ Passando | prova a invariante de preservação Big Five (DELETE IS NULL não remove histórico) |
-| conftest.py | ✅ Fixture autouse | cria tabelas + seed antes de qualquer teste |
+| test_delete_consolidado_preserva_bigfive | ✅ Passando | sem limpeza manual; isolamento via fixture |
+| conftest.py | ✅ Duas fixtures autouse | session-scoped: cria schema; function-scoped: limpa+reseed |
 | Warnings | ✅ Zero | Pytest final sem warnings |
 
 ---
@@ -127,11 +130,15 @@ npm run dev
 
 ```powershell
 # Na raiz do projeto 1-disc-app:
-pytest backend/app/ -v
-# Resultado esperado: 33 passed, 0 failed, 0 warnings
+python -m pytest backend/app/ -v
+# Resultado esperado: 38 passed, 0 failed, 0 warnings
+
+# Com ordem aleatória reproduzível (requer pytest-randomly):
+pip install -r backend/requirements-dev.txt
+python -m pytest backend/app/ -v --randomly-seed=42
 ```
 
-**Nota:** a fixture autouse em `backend/app/conftest.py` garante criação de tabelas e seed antes de qualquer teste. O banco de teste usa SQLite local (`psicometrico.db` ou o DATABASE_URL do `.env`).
+**Nota:** a fixture `reset_db_state` em `backend/app/conftest.py` limpa e reseed o banco SQLite `:memory:` antes de cada teste, garantindo isolamento e independência de ordem. O banco de teste nunca usa o arquivo local (`psicometrico.db`).
 
 ---
 

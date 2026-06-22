@@ -207,9 +207,9 @@ def test_omega_por_fator_coerente():
 
 
 def test_bigfive_public_norm(monkeypatch):
-    from backend.app.config import settings as _settings
-    monkeypatch.setattr(_settings, "NORM_MODE", "public")
-    monkeypatch.setattr(_settings, "NORM_SOURCE", "open_psychometrics_2018")
+    import backend.app.main as _main
+    monkeypatch.setattr(_main.settings, "NORM_MODE", "public")
+    monkeypatch.setattr(_main.settings, "NORM_SOURCE", "open_psychometrics_2018")
 
     with TestClient(app) as client:
         email = f"public-norm-{uuid4().hex}@example.com"
@@ -507,17 +507,39 @@ def test_secret_key_required_in_production(monkeypatch):
     monkeypatch.setenv("ENV", "production")
     monkeypatch.setenv("SECRET_KEY", "")
     monkeypatch.setenv("ALLOWED_ORIGINS", "https://frontend.example")
-    import backend.app.config as config_module
+    from backend.app.config import Settings
     try:
-        importlib.reload(config_module)
+        Settings()
         assert False, "Settings deveria falhar sem SECRET_KEY segura em produção"
     except RuntimeError as exc:
         assert "SECRET_KEY" in str(exc)
-    finally:
-        monkeypatch.setenv("ENV", "test")
-        monkeypatch.setenv("DATABASE_URL", "sqlite:///:memory:")
-        monkeypatch.setenv("ENABLE_DEMO_SEED", "true")
-        importlib.reload(config_module)
+
+
+def test_reliability_source_existe_na_resposta():
+    """Bug B (a): campo reliability_source deve estar presente em bigfive da rota /results/me."""
+    with TestClient(app) as client:
+        headers = _auth_headers(client)
+        answers = _valid_bigfive_answers(client, headers)
+        r = client.post("/questionnaire/submit", json=_submit_payload(answers), headers=headers)
+        assert r.status_code == 200
+        data = client.get("/results/me", headers=headers).json()
+        assert "reliability_source" in data["bigfive"], (
+            "Campo 'reliability_source' ausente em data['bigfive']"
+        )
+
+
+def test_reliability_source_default_com_poucos_respondentes():
+    """Bug B (b): com N < 30 respondentes, reliability_source deve ser 'default_literatura'."""
+    with TestClient(app) as client:
+        headers = _auth_headers(client)
+        answers = _valid_bigfive_answers(client, headers)
+        r = client.post("/questionnaire/submit", json=_submit_payload(answers), headers=headers)
+        assert r.status_code == 200
+        data = client.get("/results/me", headers=headers).json()
+        src = data["bigfive"].get("reliability_source")
+        assert src == "default_literatura", (
+            f"Com N < {30} respondentes esperava 'default_literatura', obteve '{src}'"
+        )
 
 
 def test_delete_consolidado_preserva_bigfive():
@@ -530,14 +552,7 @@ def test_delete_consolidado_preserva_bigfive():
 
     db = SessionLocal()
     try:
-        # ID de usuário fictício isolado para este teste
         user_id = 999999
-
-        # Limpa qualquer resíduo de execuções anteriores
-        db.query(PsychometricResult).filter(
-            PsychometricResult.respondent_id == user_id
-        ).delete()
-        db.commit()
 
         # Linha Big Five: bigfive_percentis preenchido com dict (como _process_bigfive_results faz)
         r_bigfive = PsychometricResult(
@@ -570,9 +585,4 @@ def test_delete_consolidado_preserva_bigfive():
         assert len(restantes) == 1, f"Esperava 1 resultado, encontrou {len(restantes)}"
         assert restantes[0].bigfive_percentis is not None, "Resultado Big Five foi removido — invariante violada"
     finally:
-        # Limpeza
-        db.query(PsychometricResult).filter(
-            PsychometricResult.respondent_id == user_id
-        ).delete()
-        db.commit()
         db.close()
