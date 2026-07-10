@@ -9,7 +9,7 @@ Próximo passo de evolução: ler _docs-motor/PLANO_EVOLUCAO_DISC_v2.md e indica
 App psicométrico de autoconhecimento: núcleo Big Five (`science_engine.py`), DISC derivado, Jung contínuo, Spranger ilustrativo. Backend FastAPI (Python) + frontend React; IA via Gemini. Em produção: Vercel + Supabase.
 
 ## Contas e sync
-- GitHub: remote `espelho` → `espelho-privado/disc` (branch `main`) — **conta espelho-privado, não josemardp**.
+- GitHub: DOIS remotes — `origin` → `josemardp/DISC` (upstream da main, é para onde o push vai) e `espelho` → `espelho-privado/disc` (espelho). Push padrão: `origin main`.
 - Trabalho em duas máquinas: commit + push ao fim de todo bloco de trabalho (a REGRA_MESTRE_SYNC rege a relação GitHub × Google Drive).
 - Segredos: nunca ecoar no chat; seguir o local definido na REGRA_MESTRE_SYNC.
 
