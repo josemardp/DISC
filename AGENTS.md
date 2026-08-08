@@ -1,2 +1,5 @@
-REGRA OBRIGATÓRIA: antes de qualquer ação, ler e seguir _docs-motor/REGRA_MESTRE_SYNC.md. Nunca adicionar entradas novas ao .gitignore.
-Próximo passo de evolução: ler _docs-motor/PLANO_EVOLUCAO_DISC_v2.md e indicar a primeira fase ainda não concluída. Esse .md é a fonte única da verdade do roadmap.
+# AGENTS.md
+
+> Contexto e regras deste projeto — ver **[CLAUDE.md](CLAUDE.md)** (fonte única).
+
+Este arquivo existe porque agentes que seguem o padrão aberto `agents.md` (Codex CLI e outros) procuram por este nome na raiz. O conteúdo não é duplicado aqui de propósito: regra escrita em dois lugares diverge com o tempo. Aprendizado novo vai direto no `CLAUDE.md`.
