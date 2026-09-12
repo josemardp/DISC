@@ -2,6 +2,21 @@
 
 Aplicativo pessoal de autoconhecimento baseado em Big Five (IPIP-50), com leituras derivadas/exploratórias de Jung contínuo, DISC e Spranger. Backend FastAPI + Frontend React, deployado na Vercel com banco Supabase Postgres.
 
+## O que este repositório demonstra
+
+- **Psicometria implementada de verdade, não simulada.** O núcleo é o Big Five com
+  o banco de itens IPIP, normas aplicadas a partir de `norms_ipip_neo.json`, e as
+  leituras DISC, Jung e Spranger são derivadas dele e rotuladas como exploratórias.
+  A separação entre o que é psicometricamente sustentado e o que é leitura
+  interpretativa está explícita no código e na interface.
+- **LLM com rédea curta.** O Gemini gera o relatório narrativo a partir de escores já
+  calculados, nunca os calcula. Há fallback local para quando a API falha, então o
+  produto não deixa de funcionar por indisponibilidade de terceiro.
+- **Anti-Barnum como requisito de produto.** O gerador de texto é avaliado contra
+  descrições genéricas que serviriam para qualquer pessoa, que é a falha clássica de
+  instrumento de perfil.
+- **Testes onde o risco mora:** a bateria cobre o motor de cálculo, não só as rotas.
+
 ---
 
 ## Stack
